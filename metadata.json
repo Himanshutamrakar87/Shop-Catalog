@@ -1,0 +1,6 @@
+{
+  "name": "RBB - Product Catalogue Manager",
+  "description": "Private mobile-first product catalogue management system for single-owner inventory oversight.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
