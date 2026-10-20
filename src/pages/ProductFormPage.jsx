@@ -389,18 +389,18 @@ export default function ProductFormPage() {
 
     try {
       const targetCat = categories.find((c) => c.name === selectedCategoryName) || categories[0];
-      const catCode = targetCat ? targetCat.code : 'CO';
+      const catCode = targetCat ? targetCat.code : 'GN';
 
       const imagesList = [image1.preview, image2.preview].filter(Boolean);
 
       const productPayload = {
         name: name.trim(),
         productName: name.trim(),
-        categoryId: targetCat.id,
-        categoryName: targetCat.name,
-        category: targetCat.name,
+        categoryId: targetCat?.id || null,
+        categoryName: targetCat?.name || selectedCategoryName || '',
+        category: targetCat?.name || selectedCategoryName || '',
         categoryCode: catCode,
-        categoryDescription: targetCat.description || '',
+        categoryDescription: targetCat?.description || '',
         subCategory: selectedSubCategory.trim(),
         brand: selectedBrand.trim(),
         material: selectedMaterial.trim(),
@@ -652,11 +652,24 @@ export default function ProductFormPage() {
                   onChange={(e) => handleCategoryChange(e.target.value)}
                   className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 bg-white font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer"
                 >
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.name}>
-                      {cat.name} ({cat.code})
+                  {categories.length === 0 ? (
+                    <option value="" disabled>
+                      No categories yet — click '+ Add New' above
                     </option>
-                  ))}
+                  ) : (
+                    <>
+                      {!selectedCategoryName && (
+                        <option value="" disabled>
+                          Select a category
+                        </option>
+                      )}
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.name}>
+                          {cat.name} ({cat.code})
+                        </option>
+                      ))}
+                    </>
+                  )}
                 </select>
               </div>
 

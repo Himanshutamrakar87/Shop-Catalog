@@ -83,8 +83,12 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
         {/* Modal Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/60">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
-              <ShieldCheck className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-slate-200/90 shadow-2xs overflow-hidden shrink-0">
+              <img
+                src="/assets/aistudio/rbblogo_5ff1833f.png"
+                alt="RBB Logo"
+                className="w-full h-full object-contain p-0.5"
+              />
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900">Owner Authentication</h3>

@@ -126,39 +126,50 @@ export default function DashboardPage() {
           viewAllLink="/categories"
           viewAllText="Manage"
         >
-          <div className="space-y-4">
-            {categoryBreakdown.map((cat) => (
-              <div key={cat.name} className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs sm:text-sm">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="font-semibold text-slate-800 truncate">
-                      {cat.name}
-                    </span>
-                    <span className="text-[11px] text-slate-400 font-normal">
-                      ({cat.percentage}%)
-                    </span>
+          {categoryBreakdown.length === 0 ? (
+            <div className="py-8 text-center text-slate-400">
+              <p className="text-xs">No categories created yet.</p>
+              <Link to="/categories" className="mt-2 inline-block text-xs font-semibold text-blue-600 hover:text-blue-700">
+                + Add your first category
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-4">
+                {categoryBreakdown.map((cat) => (
+                  <div key={cat.name} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs sm:text-sm">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-semibold text-slate-800 truncate">
+                          {cat.name}
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-normal">
+                          ({cat.percentage}%)
+                        </span>
+                      </div>
+                      <span className="font-mono font-bold text-slate-900 shrink-0">
+                        {cat.count}
+                      </span>
+                    </div>
+                    {/* Clean, professional distribution bar */}
+                    <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${cat.color} transition-all duration-300`}
+                        style={{ width: `${cat.percentage}%` }}
+                      />
+                    </div>
                   </div>
-                  <span className="font-mono font-bold text-slate-900 shrink-0">
-                    {cat.count}
-                  </span>
-                </div>
-                {/* Clean, professional distribution bar */}
-                <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${cat.color} transition-all duration-300`}
-                    style={{ width: `${cat.percentage}%` }}
-                  />
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Primary Focus: Cookware & Kitchen Storage</span>
-            <Link to="/products" className="font-semibold text-blue-600 hover:text-blue-700">
-              Filter by Category &rarr;
-            </Link>
-          </div>
+              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                <span>Catalogue Categories</span>
+                <Link to="/products" className="font-semibold text-blue-600 hover:text-blue-700">
+                  Filter by Category &rarr;
+                </Link>
+              </div>
+            </>
+          )}
         </SectionCard>
 
         {/* Products by Material */}

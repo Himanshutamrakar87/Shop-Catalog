@@ -5,56 +5,9 @@
  * definitions with 2-letter codes, and deterministic code generator utilities.
  */
 
-export const INITIAL_CATEGORIES = [
-  {
-    id: 'cat-001',
-    name: 'Cookware',
-    code: 'CO',
-    description: 'Pots, pans, pressure cookers, kadais, and frying pans',
-    createdAt: '2026-09-01T08:00:00Z',
-    updatedAt: '2026-09-01T08:00:00Z',
-  },
-  {
-    id: 'cat-002',
-    name: 'Kitchen Storage',
-    code: 'KS',
-    description: 'Airtight containers, spice boxes, oil dispensers, canisters',
-    createdAt: '2026-09-01T08:00:00Z',
-    updatedAt: '2026-09-01T08:00:00Z',
-  },
-  {
-    id: 'cat-003',
-    name: 'Tableware',
-    code: 'TW',
-    description: 'Plates, thalis, copper glasses, jugs, and cutlery',
-    createdAt: '2026-09-01T08:00:00Z',
-    updatedAt: '2026-09-01T08:00:00Z',
-  },
-  {
-    id: 'cat-004',
-    name: 'Serving',
-    code: 'SE',
-    description: 'Handis, platters, serving spoons, buffet bowls, chafing dishes',
-    createdAt: '2026-09-01T08:00:00Z',
-    updatedAt: '2026-09-01T08:00:00Z',
-  },
-  {
-    id: 'cat-005',
-    name: 'Barware & Beverage',
-    code: 'BB',
-    description: 'Mugs, cocktail shakers, water filters, ice buckets',
-    createdAt: '2026-09-01T08:00:00Z',
-    updatedAt: '2026-09-01T08:00:00Z',
-  },
-  {
-    id: 'cat-006',
-    name: 'Kitchen Tools & Accessories',
-    code: 'KT',
-    description: 'Graters, tongs, strainers, rolling pins, cutters',
-    createdAt: '2026-09-01T08:00:00Z',
-    updatedAt: '2026-09-01T08:00:00Z',
-  },
-];
+// Production Clean State: Empty initial categories array.
+// Real production categories are created by the owner.
+export const INITIAL_CATEGORIES = [];
 
 // Production Clean State: Empty initial products array.
 // Real production products are created post-deployment.

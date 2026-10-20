@@ -1,1 +1,5 @@
 @import "tailwindcss";
+
+.font-devanagari {
+  font-family: 'Noto Sans Devanagari', 'Tiro Devanagari Sanskrit', 'Kokila', 'Mangal', 'Segoe UI', system-ui, sans-serif;
+}

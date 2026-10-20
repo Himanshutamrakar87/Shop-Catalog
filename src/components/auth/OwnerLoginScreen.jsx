@@ -13,6 +13,7 @@ import {
   Package
 } from 'lucide-react';
 import BrandLogo from '../common/BrandLogo';
+import DevotionalBanner from '../common/DevotionalBanner';
 import { signInOwnerWithPassword, getAuthRateLimitStatus } from '../../lib/supabaseService';
 
 /**
@@ -84,13 +85,26 @@ export default function OwnerLoginScreen({ onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col justify-center items-center p-4 sm:p-6 text-slate-100">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col justify-between items-center text-slate-100">
+      {/* Devotional Top Greeting Banner */}
+      <DevotionalBanner variant="dark" />
+
+      <div className="w-full max-w-md my-auto p-4 sm:p-6">
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 shadow-lg mb-4">
-            <BrandLogo />
+          <div className="bg-white p-3 rounded-2xl border border-white/20 shadow-2xl mb-3 flex items-center justify-center">
+            <img
+              src="/assets/aistudio/rbblogo_5ff1833f.png"
+              alt="Catalogue Logo"
+              className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
+            />
           </div>
+          <h1 className="text-2xl font-black tracking-tight text-white mb-1">
+            Product Catalogue
+          </h1>
+          <p className="text-xs text-slate-400 mb-3">
+            Commercial &amp; Domestic Utensils
+          </p>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-xs font-semibold tracking-wide uppercase">
             <Shield className="w-3.5 h-3.5" />
             <span>Owner Management Access</span>

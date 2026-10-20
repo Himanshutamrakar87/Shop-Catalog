@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, MoreVertical, Edit2, Trash2 } from 'lucide-react';
+import { Plus, MoreVertical, Edit2, Trash2, Layers } from 'lucide-react';
 import { useCatalogue } from '../context/CatalogueContext';
 import CategoryModal from '../components/categories/CategoryModal';
 import DeleteConfirmDialog from '../components/categories/DeleteConfirmDialog';
@@ -112,9 +112,32 @@ export default function CategoriesPage() {
         )}
       </div>
 
-      {/* ========================================================================= */}
-      {/* 2. Mobile Category Cards (Visible on screens < 768px)                     */}
-      {/* ========================================================================= */}
+      {/* Empty State when no categories exist */}
+      {categories.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-14 text-center max-w-lg mx-auto shadow-xs">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 mb-4 shadow-inner">
+            <Layers className="w-7 h-7" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 mb-1.5">No Categories Found</h3>
+          <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+            All previous categories have been removed. Create your own custom product categories with automatic 2-letter codes.
+          </p>
+          {isOwner && (
+            <button
+              type="button"
+              onClick={handleOpenAdd}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm shadow-xs transition-all active:scale-[0.98]"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Add Your First Category</span>
+            </button>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* ========================================================================= */}
+          {/* 2. Mobile Category Cards (Visible on screens < 768px)                     */}
+          {/* ========================================================================= */}
       <div className="md:hidden space-y-3">
         {categories.map((cat) => {
           const productCount = getCategoryProductCount(cat);
@@ -261,6 +284,8 @@ export default function CategoriesPage() {
           </tbody>
         </table>
       </div>
+    </>
+  )}
 
       {/* ========================================================================= */}
       {/* 4. Add / Edit Category Bottom Sheet Modal                                 */}

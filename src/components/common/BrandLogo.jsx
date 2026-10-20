@@ -1,41 +1,69 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useCatalogue } from '../../context/CatalogueContext';
+
+export const RBB_LOGO_SRC = '/assets/aistudio/rbblogo_5ff1833f.png';
 
 /**
  * RBB Brand Logo Component
- * Modern, minimal, premium identity for RBB Product Catalogue.
- * Uses deep navy primary with a crisp blue accent dot and geometric sans typography.
+ * 
+ * Displays the authentic RBB brand logo across all navigation headers,
+ * sidebars, mobile drawers, and authentication views without altering
+ * the original design.
  */
-export default function BrandLogo({ collapsed = false, showTagline = true, className = '' }) {
+export default function BrandLogo({
+  collapsed = false,
+  showTagline = true,
+  size = 'md', // 'sm' | 'md' | 'lg' | 'xl'
+  className = '',
+  imageOnly = false,
+  inverted = false,
+  to,
+}) {
+  const catalogue = useCatalogue ? useCatalogue() : null;
+  const isOwner = catalogue?.authStatus?.isOwner;
+
+  const targetLink = to || (isOwner ? '/dashboard' : '/products');
+
+  const sizeClasses = {
+    sm: 'w-8 h-8 rounded-lg',
+    md: 'w-10 h-10 rounded-xl',
+    lg: 'w-12 h-12 rounded-xl',
+    xl: 'w-16 h-16 rounded-2xl',
+  };
+
+  const currentSizeClass = sizeClasses[size] || sizeClasses.md;
+
   return (
-    <Link 
-      to="/dashboard" 
+    <Link
+      to={targetLink}
       className={`group flex items-center gap-3 select-none transition-opacity hover:opacity-95 ${className}`}
-      aria-label="RBB Product Catalogue Dashboard"
+      aria-label="Product Catalogue"
     >
-      {/* Brand Icon Mark */}
-      <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 shadow-sm text-white font-extrabold tracking-wider text-base shrink-0 group-hover:border-blue-600 transition-colors">
-        <span className="bg-gradient-to-br from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
-          RBB
-        </span>
-        {/* Blue accent indicator dot */}
-        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-blue-600 ring-2 ring-slate-900" />
+      {/* Official Brand Logo Mark */}
+      <div className={`relative flex items-center justify-center shrink-0 overflow-hidden bg-white border border-slate-200/90 shadow-xs transition-transform group-hover:scale-[1.02] ${currentSizeClass}`}>
+        <img
+          src={RBB_LOGO_SRC}
+          alt="Catalogue Logo"
+          className="w-full h-full object-contain p-0.5"
+          loading="eager"
+        />
       </div>
 
       {/* Brand Wordmark & Subtitle */}
-      {!collapsed && (
+      {!collapsed && !imageOnly && (
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-lg font-bold tracking-tight text-slate-900">
-              RBB
-            </span>
-            <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+            <span className={`text-base sm:text-lg font-extrabold tracking-tight ${inverted ? 'text-white' : 'text-slate-900'}`}>
               Catalogue
+            </span>
+            <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
+              Manager
             </span>
           </div>
           {showTagline && (
-            <span className="text-[11px] font-medium text-slate-500 tracking-tight truncate">
-              Private Management System
+            <span className={`text-[11px] font-medium tracking-tight truncate ${inverted ? 'text-slate-400' : 'text-slate-500'}`}>
+              Commercial &amp; Domestic Utensils
             </span>
           )}
         </div>

@@ -58,13 +58,38 @@ function isLegacyTestProduct(p) {
 }
 
 export function CatalogueProvider({ children }) {
-  // 1. Categories state with localStorage persistence
+  // 1. Categories state: Clean empty start, purging any legacy mock categories
   const [categories, setCategories] = useState(() => {
     try {
+      // One-time cleanup of legacy mock categories from localStorage
+      const hasCleaned = localStorage.getItem('rbb_legacy_categories_cleaned_v1');
+      if (!hasCleaned) {
+        localStorage.removeItem(STORAGE_KEYS.CATEGORIES);
+        localStorage.setItem('rbb_legacy_categories_cleaned_v1', 'true');
+        return [];
+      }
+
       const saved = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
-      return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const legacyIds = new Set(['cat-001', 'cat-002', 'cat-003', 'cat-004', 'cat-005', 'cat-006']);
+          const legacyNames = new Set([
+            'cookware',
+            'kitchen storage',
+            'tableware',
+            'serving',
+            'barware & beverage',
+            'kitchen tools & accessories',
+          ]);
+          return parsed.filter(
+            (c) => !legacyIds.has(c.id) && !legacyNames.has(String(c.name || '').toLowerCase().trim())
+          );
+        }
+      }
+      return [];
     } catch {
-      return INITIAL_CATEGORIES;
+      return [];
     }
   });
 
@@ -629,7 +654,7 @@ export function CatalogueProvider({ children }) {
         c.code === productData.categoryCode
     ) || categories[0];
 
-    const catCode = targetCat ? targetCat.code : (productData.categoryCode || 'CO');
+    const catCode = targetCat ? targetCat.code : (productData.categoryCode || 'GN');
     const generatedCode = getNextProductCode(catCode, products, sequenceHistory);
 
     // Update sequence history permanently
@@ -651,9 +676,9 @@ export function CatalogueProvider({ children }) {
       productName: productName, // backward compatibility
       code: generatedCode,
       productCode: generatedCode, // backward compatibility
-      categoryId: targetCat ? targetCat.id : 'cat-001',
-      categoryName: targetCat ? targetCat.name : 'Cookware',
-      category: targetCat ? targetCat.name : 'Cookware', // backward compatibility
+      categoryId: targetCat ? targetCat.id : null,
+      categoryName: targetCat ? targetCat.name : (productData.categoryName || productData.category || ''),
+      category: targetCat ? targetCat.name : (productData.category || productData.categoryName || ''), // backward compatibility
       categoryCode: catCode,
       subCategory: productData.subCategory || '',
       brand: productData.brand || '',

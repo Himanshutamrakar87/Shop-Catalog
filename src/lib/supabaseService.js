@@ -673,8 +673,8 @@ export async function createProductInSupabase(formPayload, imageFiles = {}) {
     throw new Error('Product name is required.');
   }
 
-  const categoryCode = formPayload.categoryCode?.trim() || 'CO';
-  const categoryName = formPayload.categoryName?.trim() || formPayload.category?.trim() || 'Cookware';
+  const categoryCode = formPayload.categoryCode?.trim() || 'GN';
+  const categoryName = formPayload.categoryName?.trim() || formPayload.category?.trim() || 'General';
 
   // 3. Resolve Category Foreign Key in Supabase
   const dbCategory = await ensureCategoryInDb({
