@@ -23,7 +23,11 @@ import {
   ensureBrandInDb,
   ensureMaterialInDb,
   ensureSubCategoryInDb,
-  ensureSizeInDb
+  ensureSizeInDb,
+  fetchPublicProducts,
+  fetchPublicCategories,
+  fetchPublicBrands,
+  fetchPublicMaterials
 } from '../lib/supabaseService';
 
 const CatalogueContext = createContext(null);
@@ -144,26 +148,15 @@ export function CatalogueProvider({ children }) {
     }
   });
 
-  // 8. Supabase Auth & Owner Status State
-  const [authStatus, setAuthStatus] = useState(() => {
-    const hasActiveSession = (() => {
-      try {
-        return localStorage.getItem('rbb_owner_session') === 'active';
-      } catch {
-        return false;
-      }
-    })();
-    return {
-      isConfigured: isSupabaseConfigured,
-      isAuthenticated: hasActiveSession,
-      isOwner: hasActiveSession,
-      isLoading: !hasActiveSession && isSupabaseConfigured,
-      user: hasActiveSession ? { id: 'rbb-owner', role: 'owner' } : null,
-      role: hasActiveSession ? 'owner' : null,
-      reason: hasActiveSession
-        ? 'Authenticated as RBB Owner'
-        : (isSupabaseConfigured ? 'Verifying Supabase authentication...' : 'Local offline mode')
-    };
+  // 8. Supabase Auth & Owner Status State (Real session verification, no localStorage flag)
+  const [authStatus, setAuthStatus] = useState({
+    isConfigured: isSupabaseConfigured,
+    isAuthenticated: false,
+    isOwner: false,
+    isLoading: isSupabaseConfigured,
+    user: null,
+    role: null,
+    reason: isSupabaseConfigured ? 'Verifying Supabase authentication...' : 'Local offline mode'
   });
 
   const refreshAuthStatus = async () => {
@@ -196,17 +189,48 @@ export function CatalogueProvider({ children }) {
   };
 
   useEffect(() => {
+    // 1. Authoritative Auth Check
     refreshAuthStatus();
 
-    if (!isSupabaseConfigured) return;
+    // 2. If Supabase is configured, fetch live public catalogue data for all visitors
+    if (isSupabaseConfigured) {
+      const loadPublicCatalogueData = async () => {
+        try {
+          const [dbProducts, dbCategories, dbBrands, dbMaterials] = await Promise.all([
+            fetchPublicProducts(),
+            fetchPublicCategories(),
+            fetchPublicBrands(),
+            fetchPublicMaterials()
+          ]);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      refreshAuthStatus();
-    });
+          if (Array.isArray(dbProducts) && dbProducts.length > 0) {
+            setProducts(dbProducts);
+          }
+          if (Array.isArray(dbCategories) && dbCategories.length > 0) {
+            setCategories(dbCategories);
+          }
+          if (Array.isArray(dbBrands) && dbBrands.length > 0) {
+            setBrands(dbBrands);
+          }
+          if (Array.isArray(dbMaterials) && dbMaterials.length > 0) {
+            setMaterials(dbMaterials);
+          }
+        } catch (err) {
+          console.warn('[Supabase Public Data Load]', err);
+        }
+      };
 
-    return () => {
-      subscription?.unsubscribe();
-    };
+      loadPublicCatalogueData();
+
+      // Listen for auth state transitions (sign-in, token refresh, sign-out)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+        refreshAuthStatus();
+      });
+
+      return () => {
+        subscription?.unsubscribe();
+      };
+    }
   }, []);
 
   // 9. Lightweight Global Toast State

@@ -1,225 +1,357 @@
-import { supabase, isSupabaseConfigured, ownerEmail } from './supabase';
+import { supabase, isSupabaseConfigured } from './supabase';
 
 /**
  * Supabase Service Layer for RBB Catalogue Management
  * Handles:
- * 1. Owner Authentication & RLS session status
+ * 1. Owner Authentication & RLS session status via Supabase Auth & PostgreSQL is_rbb_owner()
  * 2. Concurrency-safe atomic product code generation (RPC: get_next_product_code)
  * 3. Secure product image uploads (max 2) to 'product-images' bucket with automated rollback
  * 4. Entity resolution (categories, brands, materials, subcategories, sizes)
  * 5. Complete product insertion without dropping schema fields
  * 6. Explicit failure reporting without silent localStorage fallbacks
+ * 7. Public catalogue queries for unauthenticated visitors
  */
 
-export const OWNER_PASSCODE = 'himnew';
-export const OWNER_SESSION_STORAGE_KEY = 'rbb_owner_session';
+// Client-side rate limiting tracker for authentication attempts
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+let failedAttempts = 0;
+let lockoutUntil = 0;
 
 /**
- * Check current authentication state and owner status
+ * Check if the owner login endpoint is temporarily locked due to repeated failed attempts
+ */
+export function getAuthRateLimitStatus() {
+  const now = Date.now();
+  if (lockoutUntil > now) {
+    const remainingSeconds = Math.ceil((lockoutUntil - now) / 1000);
+    return { isLocked: true, remainingSeconds };
+  }
+  return { isLocked: false, remainingSeconds: 0 };
+}
+
+/**
+ * Check current authentication state and server-verified owner status
+ * Verifies directly against Supabase Auth session and PostgreSQL is_rbb_owner() function.
+ * Never relies on client-side localStorage flags.
  */
 export async function getOwnerAuthStatus() {
-  const hasLocalOwnerSession = (() => {
-    try {
-      return localStorage.getItem(OWNER_SESSION_STORAGE_KEY) === 'active';
-    } catch {
-      return false;
-    }
-  })();
-
   if (!isSupabaseConfigured) {
     return {
       isConfigured: false,
-      isAuthenticated: hasLocalOwnerSession,
-      isOwner: hasLocalOwnerSession,
-      user: hasLocalOwnerSession ? { id: 'rbb-owner', role: 'owner' } : null,
-      email: null,
-      role: hasLocalOwnerSession ? 'owner' : null,
-      reason: hasLocalOwnerSession ? 'Authenticated as RBB Owner' : 'Local offline mode'
+      isAuthenticated: false,
+      isOwner: false,
+      isLoading: false,
+      user: null,
+      role: null,
+      reason: 'Local offline preview mode'
     };
   }
 
   try {
     const { data: { user }, error } = await supabase.auth.getUser();
-    if (!error && user) {
-      const email = user.email || '';
-      const hasOwnerRole = user.app_metadata?.role === 'owner';
-      const emailMatches = ownerEmail && email.toLowerCase() === ownerEmail.trim().toLowerCase();
-      const isOwner = Boolean(hasOwnerRole || emailMatches || !ownerEmail);
-
+    if (error || !user) {
       return {
         isConfigured: true,
-        isAuthenticated: true,
-        isOwner,
-        user,
-        email: null, // Hide owner email from UI exposure
-        role: user.app_metadata?.role || 'authenticated',
-        reason: isOwner
-          ? 'Authenticated as RBB Owner'
-          : 'Authenticated account is not authorized as the RBB Owner.'
+        isAuthenticated: false,
+        isOwner: false,
+        isLoading: false,
+        user: null,
+        role: null,
+        reason: 'Public visitor'
       };
     }
 
-    // Fallback: If owner logged in with verified passcode, grant active owner status
-    if (hasLocalOwnerSession) {
-      return {
-        isConfigured: true,
-        isAuthenticated: true,
-        isOwner: true,
-        user: { id: 'rbb-owner', role: 'owner' },
-        email: null,
-        role: 'owner',
-        reason: 'Authenticated as RBB Owner'
-      };
+    // Server-side check:
+    // 1. Explicit 'owner' role in app_metadata
+    let isOwner = user.app_metadata?.role === 'owner';
+
+    // 2. Query PostgreSQL public.is_rbb_owner() RPC for authoritative check
+    if (!isOwner) {
+      try {
+        const { data: rpcIsOwner, error: rpcError } = await supabase.rpc('is_rbb_owner');
+        if (!rpcError && rpcIsOwner === true) {
+          isOwner = true;
+        }
+      } catch (e) {
+        console.warn('[Owner RPC Check]', e);
+      }
     }
 
     return {
       isConfigured: true,
-      isAuthenticated: false,
-      isOwner: false,
-      user: null,
-      email: null,
-      reason: 'No authenticated Supabase session found.'
+      isAuthenticated: true,
+      isOwner: Boolean(isOwner),
+      isLoading: false,
+      user,
+      role: isOwner ? 'owner' : (user.app_metadata?.role || 'authenticated'),
+      reason: isOwner
+        ? 'Authenticated as RBB Owner'
+        : 'Authenticated account is not authorized as the RBB Owner.'
     };
   } catch (err) {
-    if (hasLocalOwnerSession) {
-      return {
-        isConfigured: true,
-        isAuthenticated: true,
-        isOwner: true,
-        user: { id: 'rbb-owner', role: 'owner' },
-        email: null,
-        role: 'owner',
-        reason: 'Authenticated as RBB Owner'
-      };
-    }
     return {
       isConfigured: true,
       isAuthenticated: false,
       isOwner: false,
+      isLoading: false,
       user: null,
-      email: null,
+      role: null,
       reason: 'Error checking authentication status.'
     };
   }
 }
 
 /**
- * Sign in owner using password with the configured owner account
- * Directly unlocks on passcode 'himnew' or Supabase password authentication
+ * Authenticate owner using real Supabase Auth email and password credentials.
+ * Authorizes access ONLY if user is verified as owner by Supabase Auth and PostgreSQL RLS.
+ * Rejects and signs out any non-owner user immediately.
+ * Enforces progressive rate limiting against brute-force password guessing.
  */
 export async function signInOwnerWithPassword(arg1, arg2) {
-  let targetEmail = '';
-  let targetPassword = '';
-
-  if (typeof arg2 === 'string') {
-    if (arg1 && arg1.includes('@')) {
-      targetEmail = arg1;
-      targetPassword = arg2;
-    } else {
-      targetPassword = arg1;
-      targetEmail = arg2;
-    }
-  } else {
-    targetPassword = arg1;
-    targetEmail = ownerEmail;
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured. Please supply valid Supabase credentials.');
   }
 
-  targetPassword = (targetPassword || '').trim();
-  targetEmail = (targetEmail || ownerEmail || '').trim();
-
-  const isMasterMatch = targetPassword === OWNER_PASSCODE;
-
-  if (isMasterMatch) {
-    try {
-      localStorage.setItem(OWNER_SESSION_STORAGE_KEY, 'active');
-    } catch (e) {
-      console.warn('Storage warning', e);
-    }
-  }
-
-  // Also authenticate against Supabase Auth in background if available
-  let remoteAuthData = null;
-  if (isSupabaseConfigured && targetEmail) {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: targetEmail,
-        password: targetPassword
-      });
-      if (!error && data) {
-        remoteAuthData = data;
-        try {
-          localStorage.setItem(OWNER_SESSION_STORAGE_KEY, 'active');
-        } catch (e) {
-          console.warn('Storage warning', e);
-        }
-      }
-    } catch {
-      // Ignore background error if passcode matched
-    }
-  }
-
-  if (isMasterMatch || remoteAuthData) {
-    return (
-      remoteAuthData || {
-        user: { id: 'rbb-owner', role: 'owner' },
-        session: { access_token: 'rbb-owner-session' }
-      }
+  // Check rate limiting lockout
+  const rateLimit = getAuthRateLimitStatus();
+  if (rateLimit.isLocked) {
+    throw new Error(
+      `Too many failed login attempts. For security, please wait ${rateLimit.remainingSeconds} seconds before trying again.`
     );
   }
 
-  throw new Error('Invalid password. Please enter the correct owner password.');
+  let email = '';
+  let password = '';
+
+  if (typeof arg1 === 'object' && arg1 !== null) {
+    email = arg1.email || '';
+    password = arg1.password || '';
+  } else if (typeof arg2 === 'string') {
+    email = arg1;
+    password = arg2;
+  }
+
+  email = (email || '').trim();
+  password = (password || '').trim();
+
+  if (!email || !password) {
+    throw new Error('Please enter both your owner email and password.');
+  }
+
+  try {
+    // 1. Real Supabase Auth sign-in
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      failedAttempts += 1;
+      if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+        lockoutUntil = Date.now() + LOCKOUT_DURATION_MS;
+      }
+      throw new Error(error.message || 'Invalid email or password. Please verify your credentials and try again.');
+    }
+
+    if (!data?.user) {
+      throw new Error('Authentication failed. No user record returned.');
+    }
+
+    // 2. Authoritative Server/Database Check: Verify owner status
+    let isOwner = data.user.app_metadata?.role === 'owner';
+    if (!isOwner) {
+      try {
+        const { data: rpcIsOwner } = await supabase.rpc('is_rbb_owner');
+        if (rpcIsOwner === true) {
+          isOwner = true;
+        }
+      } catch {}
+    }
+
+    if (!isOwner) {
+      // Non-owner authenticated account detected: immediately sign out to prevent privilege leak
+      await supabase.auth.signOut();
+      throw new Error(
+        'Access Denied: Your account is authenticated, but is not authorized as the designated RBB Owner.'
+      );
+    }
+
+    // Success: reset rate limit tracking
+    failedAttempts = 0;
+    lockoutUntil = 0;
+
+    // Purge any legacy client flags
+    try {
+      localStorage.removeItem('rbb_owner_session');
+    } catch {}
+
+    return {
+      ...data,
+      isOwner: true
+    };
+  } catch (err) {
+    if (!rateLimit.isLocked && !err.message?.includes('Too many failed')) {
+      failedAttempts += 1;
+      if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+        lockoutUntil = Date.now() + LOCKOUT_DURATION_MS;
+      }
+    }
+    throw err;
+  }
 }
 
 /**
- * Request a password reset link for the configured owner account
+ * Request a password reset link for an owner account
  */
-export async function sendOwnerPasswordReset() {
+export async function sendOwnerPasswordReset(email) {
   if (!isSupabaseConfigured) {
     throw new Error('Supabase is not configured yet.');
   }
-  const targetEmail = ownerEmail.trim();
-  if (!targetEmail) {
-    throw new Error('Owner account is not configured in environment settings.');
+  const cleanEmail = (email || '').trim();
+  if (!cleanEmail) {
+    throw new Error('Please enter your email to receive a password reset link.');
   }
-  const { data, error } = await supabase.auth.resetPasswordForEmail(targetEmail);
+  const { data, error } = await supabase.auth.resetPasswordForEmail(cleanEmail);
   if (error) {
-    throw new Error('Unable to send password reset request. Please check Supabase Auth settings.');
+    throw new Error(error.message || 'Unable to send password reset request.');
   }
   return data;
 }
 
 /**
- * Sign in owner using Magic Link / OTP
- */
-export async function signInOwnerWithOtp(email) {
-  if (!isSupabaseConfigured) {
-    throw new Error('Supabase is not configured yet.');
-  }
-  const targetEmail = (email || ownerEmail || '').trim();
-  const { data, error } = await supabase.auth.signInWithOtp({
-    email: targetEmail
-  });
-  if (error) {
-    throw new Error('Failed to send login link.');
-  }
-  return data;
-}
-
-/**
- * Sign out current session
+ * Sign out current session and revoke tokens
  */
 export async function signOutOwner() {
   try {
-    localStorage.removeItem(OWNER_SESSION_STORAGE_KEY);
-  } catch (e) {
-    console.warn('Storage warning', e);
-  }
+    localStorage.removeItem('rbb_owner_session');
+  } catch {}
   if (isSupabaseConfigured) {
     try {
       await supabase.auth.signOut();
     } catch (e) {
       console.warn('Supabase sign out error', e);
     }
+  }
+}
+
+/**
+ * Public Catalogue Query: Fetch products from Supabase
+ * Accessible to everyone without login
+ */
+export async function fetchPublicProducts() {
+  if (!isSupabaseConfigured) return [];
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        category:categories(id, name, code),
+        brand:brands(id, name),
+        material:materials(id, name)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.warn('[Fetch Products Warning]', error.message);
+      return [];
+    }
+
+    return (data || []).map((p) => ({
+      ...p,
+      id: p.id,
+      name: p.name,
+      productName: p.name,
+      code: p.code,
+      productCode: p.code,
+      categoryId: p.category_id,
+      categoryName: p.category?.name || '',
+      category: p.category?.name || '',
+      categoryCode: p.category?.code || '',
+      brand: p.brand?.name || '',
+      material: p.material?.name || '',
+      subCategory: p.sub_category || '',
+      sizeCapacity: p.size_capacity || '',
+      sizeOrCapacity: p.size_capacity || '',
+      purchasePrice: Number(p.purchase_price) || 0,
+      purchaseUnit: p.purchase_unit || 'Piece',
+      specialDetails: p.special_details || '',
+      images: p.images || [p.image1, p.image2].filter(Boolean),
+      image1: p.image1 || (p.images && p.images[0]) || '',
+      image2: p.image2 || (p.images && p.images[1]) || '',
+      status: p.status || 'In Stock',
+      createdAt: p.created_at,
+      updatedAt: p.updated_at
+    }));
+  } catch (err) {
+    console.warn('[Fetch Products Error]', err);
+    return [];
+  }
+}
+
+/**
+ * Public Catalogue Query: Fetch categories from Supabase
+ * Accessible to everyone without login
+ */
+export async function fetchPublicCategories() {
+  if (!isSupabaseConfigured) return [];
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('id, name, code, description, created_at, updated_at')
+      .order('name');
+    if (error) {
+      console.warn('[Fetch Categories Warning]', error.message);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.warn('[Fetch Categories Error]', err);
+    return [];
+  }
+}
+
+/**
+ * Public Catalogue Query: Fetch brands from Supabase
+ * Accessible to everyone without login
+ */
+export async function fetchPublicBrands() {
+  if (!isSupabaseConfigured) return [];
+  try {
+    const { data, error } = await supabase
+      .from('brands')
+      .select('id, name, origin, created_at, updated_at')
+      .order('name');
+    if (error) {
+      console.warn('[Fetch Brands Warning]', error.message);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.warn('[Fetch Brands Error]', err);
+    return [];
+  }
+}
+
+/**
+ * Public Catalogue Query: Fetch materials from Supabase
+ * Accessible to everyone without login
+ */
+export async function fetchPublicMaterials() {
+  if (!isSupabaseConfigured) return [];
+  try {
+    const { data, error } = await supabase
+      .from('materials')
+      .select('id, name, description, created_at, updated_at')
+      .order('name');
+    if (error) {
+      console.warn('[Fetch Materials Warning]', error.message);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.warn('[Fetch Materials Error]', err);
+    return [];
   }
 }
 

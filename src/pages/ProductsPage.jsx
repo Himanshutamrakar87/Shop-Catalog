@@ -17,7 +17,8 @@ import ProductPreview from '../components/dashboard/ProductPreview';
  * - Empty state with "No products found", friendly message, and "Clear Search" button
  */
 export default function ProductsPage() {
-  const { products, categories } = useCatalogue();
+  const { products, categories, authStatus } = useCatalogue();
+  const isOwner = Boolean(authStatus?.isOwner);
   const [searchParams, setSearchParams] = useSearchParams();
 
   // 1. Search Query state
@@ -134,13 +135,15 @@ export default function ProductsPage() {
           </p>
         </div>
 
-        <Link
-          to="/products/new"
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm shadow-xs transition-all active:scale-[0.98] self-stretch sm:self-auto text-center"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>Add Product</span>
-        </Link>
+        {isOwner && (
+          <Link
+            to="/products/new"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm shadow-xs transition-all active:scale-[0.98] self-stretch sm:self-auto text-center"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Add Product</span>
+          </Link>
+        )}
       </div>
 
       {/* 2. Mobile-Friendly Search & Filter Panel */}

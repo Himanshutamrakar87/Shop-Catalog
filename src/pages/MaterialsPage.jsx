@@ -21,7 +21,10 @@ export default function MaterialsPage() {
     updateMaterial,
     deleteMaterial,
     showToast,
+    authStatus,
   } = useCatalogue();
+
+  const isOwner = Boolean(authStatus?.isOwner);
 
   // Modal states
   const [modalState, setModalState] = useState({
@@ -130,14 +133,16 @@ export default function MaterialsPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenAdd}
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm shadow-xs transition-all active:scale-[0.98] self-stretch sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>+ Add Material</span>
-        </button>
+        {isOwner && (
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm shadow-xs transition-all active:scale-[0.98] self-stretch sm:self-auto"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Add Material</span>
+          </button>
+        )}
       </div>
 
       {/* ========================================================================= */}
@@ -173,41 +178,43 @@ export default function MaterialsPage() {
                   </div>
                 </div>
 
-                {/* Overflow Menu Button (•••) */}
-                <div className="relative shrink-0">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveMenuId(isMenuOpen ? null : mat.id);
-                    }}
-                    aria-label={`Options for ${mat.name}`}
-                    className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors"
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
+                {/* Overflow Menu Button (•••) - Owner Only */}
+                {isOwner && (
+                  <div className="relative shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveMenuId(isMenuOpen ? null : mat.id);
+                      }}
+                      aria-label={`Options for ${mat.name}`}
+                      className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
 
-                  {isMenuOpen && (
-                    <div className="absolute right-0 top-10 w-36 bg-white rounded-xl shadow-xl border border-slate-150 py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEdit(mat)}
-                        className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors"
-                      >
-                        <Edit2 className="w-3.5 h-3.5 text-slate-500" />
-                        <span>Edit</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenDelete(mat)}
-                        className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                        <span>Delete</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
+                    {isMenuOpen && (
+                      <div className="absolute right-0 top-10 w-36 bg-white rounded-xl shadow-xl border border-slate-150 py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(mat)}
+                          className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors"
+                        >
+                          <Edit2 className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenDelete(mat)}
+                          className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -224,7 +231,7 @@ export default function MaterialsPage() {
               <th className="py-3.5 px-6">Material Name</th>
               <th className="py-3.5 px-6">Description / Notes</th>
               <th className="py-3.5 px-6 text-right w-36">Products</th>
-              <th className="py-3.5 px-6 text-center w-20">Actions</th>
+              {isOwner && <th className="py-3.5 px-6 text-center w-20">Actions</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-sm">
@@ -248,40 +255,42 @@ export default function MaterialsPage() {
                   <td className="py-4 px-6 text-right font-semibold text-slate-700">
                     {productCount}
                   </td>
-                  <td className="py-4 px-6 text-center relative">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveMenuId(isMenuOpen ? null : mat.id);
-                      }}
-                      aria-label={`Actions for ${mat.name}`}
-                      className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
+                  {isOwner && (
+                    <td className="py-4 px-6 text-center relative">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveMenuId(isMenuOpen ? null : mat.id);
+                        }}
+                        aria-label={`Actions for ${mat.name}`}
+                        className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
 
-                    {isMenuOpen && (
-                      <div className="absolute right-6 top-11 w-36 bg-white rounded-xl shadow-xl border border-slate-150 py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100 text-left">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(mat)}
-                          className="w-full px-3.5 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors"
-                        >
-                          <Edit2 className="w-3.5 h-3.5 text-slate-500" />
-                          <span>Edit</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenDelete(mat)}
-                          className="w-full px-3.5 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                          <span>Delete</span>
-                        </button>
-                      </div>
-                    )}
-                  </td>
+                      {isMenuOpen && (
+                        <div className="absolute right-6 top-11 w-36 bg-white rounded-xl shadow-xl border border-slate-150 py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100 text-left">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(mat)}
+                            className="w-full px-3.5 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors"
+                          >
+                            <Edit2 className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenDelete(mat)}
+                            className="w-full px-3.5 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  )}
                 </tr>
               );
             })}

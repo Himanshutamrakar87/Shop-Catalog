@@ -10,7 +10,8 @@ import { useCatalogue } from '../context/CatalogueContext';
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { products } = useCatalogue();
+  const { products, authStatus } = useCatalogue();
+  const isOwner = Boolean(authStatus?.isOwner);
 
   // Find product from catalogue store
   const product = products.find((p) => p.id === id);
@@ -54,13 +55,15 @@ export default function ProductDetailPage() {
           <span>Back</span>
         </button>
 
-        <Link
-          to={`/products/${product.id}/edit`}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold shadow-xs transition-colors"
-        >
-          <Edit className="w-4 h-4" />
-          <span>Edit Product</span>
-        </Link>
+        {isOwner && (
+          <Link
+            to={`/products/${product.id}/edit`}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold shadow-xs transition-colors"
+          >
+            <Edit className="w-4 h-4" />
+            <span>Edit Product</span>
+          </Link>
+        )}
       </div>
 
       {/* Main Product Card */}

@@ -272,47 +272,132 @@ CREATE POLICY "Owner full access on app_config" ON app_config
     USING (public.is_rbb_owner())
     WITH CHECK (public.is_rbb_owner());
 
+-- Public Catalogue: Anyone can view categories, but only owner can add/edit/delete
 DROP POLICY IF EXISTS "Owner full access on categories" ON categories;
-CREATE POLICY "Owner full access on categories" ON categories
-    FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Public read on categories" ON categories;
+CREATE POLICY "Public read on categories" ON categories
+    FOR SELECT TO public
+    USING (true);
+
+CREATE POLICY "Owner insert on categories" ON categories
+    FOR INSERT TO authenticated
+    WITH CHECK (public.is_rbb_owner());
+
+CREATE POLICY "Owner update on categories" ON categories
+    FOR UPDATE TO authenticated
     USING (public.is_rbb_owner())
     WITH CHECK (public.is_rbb_owner());
 
+CREATE POLICY "Owner delete on categories" ON categories
+    FOR DELETE TO authenticated
+    USING (public.is_rbb_owner());
+
+-- Public Catalogue: Anyone can view brands, but only owner can add/edit/delete
 DROP POLICY IF EXISTS "Owner full access on brands" ON brands;
-CREATE POLICY "Owner full access on brands" ON brands
-    FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Public read on brands" ON brands;
+CREATE POLICY "Public read on brands" ON brands
+    FOR SELECT TO public
+    USING (true);
+
+CREATE POLICY "Owner insert on brands" ON brands
+    FOR INSERT TO authenticated
+    WITH CHECK (public.is_rbb_owner());
+
+CREATE POLICY "Owner update on brands" ON brands
+    FOR UPDATE TO authenticated
     USING (public.is_rbb_owner())
     WITH CHECK (public.is_rbb_owner());
 
+CREATE POLICY "Owner delete on brands" ON brands
+    FOR DELETE TO authenticated
+    USING (public.is_rbb_owner());
+
+-- Public Catalogue: Anyone can view materials, but only owner can add/edit/delete
 DROP POLICY IF EXISTS "Owner full access on materials" ON materials;
-CREATE POLICY "Owner full access on materials" ON materials
-    FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Public read on materials" ON materials;
+CREATE POLICY "Public read on materials" ON materials
+    FOR SELECT TO public
+    USING (true);
+
+CREATE POLICY "Owner insert on materials" ON materials
+    FOR INSERT TO authenticated
+    WITH CHECK (public.is_rbb_owner());
+
+CREATE POLICY "Owner update on materials" ON materials
+    FOR UPDATE TO authenticated
     USING (public.is_rbb_owner())
     WITH CHECK (public.is_rbb_owner());
 
+CREATE POLICY "Owner delete on materials" ON materials
+    FOR DELETE TO authenticated
+    USING (public.is_rbb_owner());
+
+-- Public Catalogue: Anyone can view sub_categories, but only owner can add/edit/delete
 DROP POLICY IF EXISTS "Owner full access on sub_categories" ON sub_categories;
-CREATE POLICY "Owner full access on sub_categories" ON sub_categories
-    FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Public read on sub_categories" ON sub_categories;
+CREATE POLICY "Public read on sub_categories" ON sub_categories
+    FOR SELECT TO public
+    USING (true);
+
+CREATE POLICY "Owner insert on sub_categories" ON sub_categories
+    FOR INSERT TO authenticated
+    WITH CHECK (public.is_rbb_owner());
+
+CREATE POLICY "Owner update on sub_categories" ON sub_categories
+    FOR UPDATE TO authenticated
     USING (public.is_rbb_owner())
     WITH CHECK (public.is_rbb_owner());
 
+CREATE POLICY "Owner delete on sub_categories" ON sub_categories
+    FOR DELETE TO authenticated
+    USING (public.is_rbb_owner());
+
+-- Public Catalogue: Anyone can view sizes, but only owner can add/edit/delete
 DROP POLICY IF EXISTS "Owner full access on sizes" ON sizes;
-CREATE POLICY "Owner full access on sizes" ON sizes
-    FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Public read on sizes" ON sizes;
+CREATE POLICY "Public read on sizes" ON sizes
+    FOR SELECT TO public
+    USING (true);
+
+CREATE POLICY "Owner insert on sizes" ON sizes
+    FOR INSERT TO authenticated
+    WITH CHECK (public.is_rbb_owner());
+
+CREATE POLICY "Owner update on sizes" ON sizes
+    FOR UPDATE TO authenticated
     USING (public.is_rbb_owner())
     WITH CHECK (public.is_rbb_owner());
 
+CREATE POLICY "Owner delete on sizes" ON sizes
+    FOR DELETE TO authenticated
+    USING (public.is_rbb_owner());
+
+-- Sequences are strictly owner-only (no public read)
 DROP POLICY IF EXISTS "Owner full access on category_sequences" ON category_sequences;
 CREATE POLICY "Owner full access on category_sequences" ON category_sequences
     FOR ALL TO authenticated
     USING (public.is_rbb_owner())
     WITH CHECK (public.is_rbb_owner());
 
+-- Public Catalogue: Anyone can view products, but only owner can add/edit/delete
 DROP POLICY IF EXISTS "Owner full access on products" ON products;
-CREATE POLICY "Owner full access on products" ON products
-    FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Public read on products" ON products;
+CREATE POLICY "Public read on products" ON products
+    FOR SELECT TO public
+    USING (true);
+
+CREATE POLICY "Owner insert on products" ON products
+    FOR INSERT TO authenticated
+    WITH CHECK (public.is_rbb_owner());
+
+CREATE POLICY "Owner update on products" ON products
+    FOR UPDATE TO authenticated
     USING (public.is_rbb_owner())
     WITH CHECK (public.is_rbb_owner());
+
+CREATE POLICY "Owner delete on products" ON products
+    FOR DELETE TO authenticated
+    USING (public.is_rbb_owner());
 
 -- =============================================================================
 -- 8. Storage Configuration (Product Images)
@@ -356,7 +441,7 @@ CREATE POLICY "Owner delete on product-images" ON storage.objects
 -- =============================================================================
 -- 9. Post-Migration Owner Setup Instructions
 -- =============================================================================
--- After running this migration on your new Supabase project, designate your owner
+-- After running this migration on your Supabase project, designate your owner
 -- account so that is_rbb_owner() recognizes your session and permits catalogue
 -- writes. Run ONE of the following queries in the Supabase SQL Editor:
 --
@@ -369,9 +454,4 @@ CREATE POLICY "Owner delete on product-images" ON storage.objects
 --   UPDATE auth.users
 --   SET raw_app_meta_data = COALESCE(raw_app_meta_data, '{}'::jsonb) || '{"role": "owner"}'::jsonb
 --   WHERE email = 'your-owner-email@example.com';
---
--- Also set in your frontend environment (.env.local):
---   VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
---   VITE_SUPABASE_ANON_KEY=<your-anon-publishable-key>
---   VITE_OWNER_EMAIL=your-owner-email@example.com
 -- =============================================================================

@@ -3,6 +3,7 @@ import {
   ShieldCheck,
   ShieldAlert,
   KeyRound,
+  Mail,
   LogIn,
   LogOut,
   X,
@@ -14,11 +15,13 @@ import {
 } from 'lucide-react';
 import {
   signInOwnerWithPassword,
-  signOutOwner
+  signOutOwner,
+  getAuthRateLimitStatus
 } from '../../lib/supabaseService';
 import { isSupabaseConfigured } from '../../lib/supabase';
 
 export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChanged }) {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,20 +32,32 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
 
   const handlePasswordSignIn = async (e) => {
     e.preventDefault();
+    const rateLimit = getAuthRateLimitStatus();
+    if (rateLimit.isLocked) {
+      setErrorMsg(`Too many failed attempts. Please wait ${rateLimit.remainingSeconds}s before retrying.`);
+      return;
+    }
+
+    if (!email.trim() || !password.trim()) {
+      setErrorMsg('Please enter both your owner email and password.');
+      return;
+    }
+
     setErrorMsg('');
     setSuccessMsg('');
     setIsLoading(true);
 
     try {
-      await signInOwnerWithPassword(password);
+      await signInOwnerWithPassword(email.trim(), password.trim());
       setSuccessMsg('Successfully signed in as RBB Owner!');
+      setEmail('');
       setPassword('');
       if (onAuthChanged) await onAuthChanged();
       setTimeout(() => {
         onClose();
       }, 1000);
     } catch (err) {
-      setErrorMsg(err.message || 'Invalid password. Please check your credentials and try again.');
+      setErrorMsg(err.message || 'Invalid credentials. Please verify your owner email and password.');
     } finally {
       setIsLoading(false);
     }
@@ -118,7 +133,7 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
                     ? 'Authenticated with verified RBB Owner permissions.'
                     : authStatus?.isAuthenticated
                     ? 'Your signed-in account is not authorized as the RBB Owner.'
-                    : 'Enter the owner password to sign in and unlock full Supabase access.'}
+                    : 'Sign in with your designated owner credentials to manage the catalogue.'}
                 </p>
               </div>
             </div>
@@ -146,7 +161,7 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
                 type="button"
                 onClick={handleSignOut}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
@@ -160,6 +175,23 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
             /* Sign in form */
             <div className="space-y-4">
               <form onSubmit={handlePasswordSignIn} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Owner Email
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <input
+                      type="email"
+                      required
+                      placeholder="name@domain.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-900"
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
                     Owner Password
@@ -177,7 +209,7 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -186,8 +218,8 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
 
                 <button
                   type="submit"
-                  disabled={isLoading || !password.trim()}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition-colors disabled:opacity-50"
+                  disabled={isLoading || !email.trim() || !password.trim()}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -221,7 +253,7 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
           <button
             type="button"
             onClick={onClose}
-            className="font-semibold text-slate-700 hover:text-slate-900 text-xs"
+            className="font-semibold text-slate-700 hover:text-slate-900 text-xs cursor-pointer"
           >
             Close
           </button>

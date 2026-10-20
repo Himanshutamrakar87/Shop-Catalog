@@ -1,50 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Lock,
+  Mail,
   Eye,
   EyeOff,
   Loader2,
   AlertCircle,
   CheckCircle2,
   Shield,
-  ArrowRight
+  ArrowRight,
+  Package
 } from 'lucide-react';
 import BrandLogo from '../common/BrandLogo';
-import { signInOwnerWithPassword } from '../../lib/supabaseService';
+import { signInOwnerWithPassword, getAuthRateLimitStatus } from '../../lib/supabaseService';
 
 /**
- * Clean, direct Owner Login Screen for RBB Catalogue
- * - Direct password-based access for RBB Owner
- * - Unlocks immediately upon matching owner password
- * - Email sending and password reset flows removed per user preference
- * - Never displays the configured owner email in the UI
+ * Owner Login Screen for RBB Catalogue
+ * - Requires real, validated Supabase Auth owner credentials (email & password)
+ * - Server-side authorization verified through PostgreSQL is_rbb_owner()
+ * - Rate limiting against automated brute force
+ * - Clear escape hatch allowing visitors to browse public catalogue
  */
 export default function OwnerLoginScreen({ onLoginSuccess }) {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [lockoutTimer, setLockoutTimer] = useState(0);
+
+  // Periodic rate limit status check
+  useEffect(() => {
+    const checkRateLimit = () => {
+      const status = getAuthRateLimitStatus();
+      if (status.isLocked) {
+        setLockoutTimer(status.remainingSeconds);
+      } else {
+        setLockoutTimer(0);
+      }
+    };
+
+    checkRateLimit();
+    const interval = setInterval(checkRateLimit, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!password.trim() || isLoading) return;
+    if (!email.trim() || !password.trim() || isLoading || lockoutTimer > 0) return;
 
     setErrorMsg('');
     setSuccessMsg('');
     setIsLoading(true);
 
     try {
-      await signInOwnerWithPassword(password);
-      setSuccessMsg('Password verified! Opening catalogue...');
+      await signInOwnerWithPassword(email.trim(), password.trim());
+      setSuccessMsg('Owner authentication verified! Accessing management workspace...');
+      setEmail('');
       setPassword('');
+
       if (onLoginSuccess) {
         await onLoginSuccess();
       }
+
+      // Navigate to dashboard upon successful login
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 500);
     } catch (err) {
       setErrorMsg(
-        err.message || 'Invalid password. Please enter the correct owner password.'
+        err.message || 'Invalid credentials. Please verify your owner email and password.'
       );
+      const status = getAuthRateLimitStatus();
+      if (status.isLocked) {
+        setLockoutTimer(status.remainingSeconds);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -54,13 +87,13 @@ export default function OwnerLoginScreen({ onLoginSuccess }) {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col justify-center items-center p-4 sm:p-6 text-slate-100">
       <div className="w-full max-w-md">
         {/* Brand Header */}
-        <div className="flex flex-col items-center text-center mb-8">
+        <div className="flex flex-col items-center text-center mb-6">
           <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 shadow-lg mb-4">
             <BrandLogo />
           </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-xs font-semibold tracking-wide uppercase">
             <Shield className="w-3.5 h-3.5" />
-            <span>Private Catalogue Access</span>
+            <span>Owner Management Access</span>
           </div>
         </div>
 
@@ -68,15 +101,26 @@ export default function OwnerLoginScreen({ onLoginSuccess }) {
         <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100 text-slate-900">
           <div className="mb-6">
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-              Owner Login
+              Owner Sign In
             </h2>
             <p className="mt-1 text-xs sm:text-sm text-slate-500">
-              Enter the owner password to access and manage the RBB product catalogue.
+              Sign in with your authorized owner credentials to manage catalogue inventory.
             </p>
           </div>
 
+          {/* Rate Limit Lockout Notice */}
+          {lockoutTimer > 0 && (
+            <div className="mb-5 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+              <div>
+                <span className="font-bold">Login temporarily throttled:</span> Too many failed attempts. Please wait{' '}
+                <span className="font-mono font-bold text-amber-700">{lockoutTimer}s</span> before retrying.
+              </div>
+            </div>
+          )}
+
           {/* Error Message */}
-          {errorMsg && (
+          {errorMsg && lockoutTimer === 0 && (
             <div className="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
               <div className="leading-relaxed font-medium">{errorMsg}</div>
@@ -91,8 +135,35 @@ export default function OwnerLoginScreen({ onLoginSuccess }) {
             </div>
           )}
 
-          {/* Password Form */}
+          {/* Authentication Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="owner-email"
+                className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                Owner Email
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <input
+                  id="owner-email"
+                  name="email"
+                  type="email"
+                  required
+                  autoFocus
+                  autoComplete="email"
+                  placeholder="name@domain.com"
+                  value={email}
+                  disabled={lockoutTimer > 0}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all font-medium disabled:opacity-60"
+                />
+              </div>
+            </div>
+
             <div>
               <label
                 htmlFor="owner-password"
@@ -109,12 +180,12 @@ export default function OwnerLoginScreen({ onLoginSuccess }) {
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   required
-                  autoFocus
                   autoComplete="current-password"
-                  placeholder="Enter password..."
+                  placeholder="••••••••"
                   value={password}
+                  disabled={lockoutTimer > 0}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-11 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all font-medium"
+                  className="w-full pl-10 pr-11 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all font-medium disabled:opacity-60"
                 />
                 <button
                   type="button"
@@ -129,27 +200,39 @@ export default function OwnerLoginScreen({ onLoginSuccess }) {
 
             <button
               type="submit"
-              disabled={isLoading || !password.trim()}
+              disabled={isLoading || !email.trim() || !password.trim() || lockoutTimer > 0}
               className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-sm shadow-md shadow-blue-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Verifying...</span>
+                  <span>Verifying Authorization...</span>
                 </>
               ) : (
                 <>
-                  <span>Unlock Catalogue</span>
+                  <span>Sign In as Owner</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
+
+          {/* Visitor Escape Link: Browse Public Catalogue */}
+          <div className="mt-5 pt-4 border-t border-slate-100 flex flex-col items-center gap-2">
+            <span className="text-xs text-slate-500">Just visiting?</span>
+            <Link
+              to="/products"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+            >
+              <Package className="w-3.5 h-3.5" />
+              <span>Browse Public Catalogue without Login</span>
+            </Link>
+          </div>
         </div>
 
         {/* Security Notice Footer */}
         <div className="mt-6 text-center text-xs text-slate-500">
-          <p>RBB Private Inventory & Catalogue Management</p>
+          <p>RBB Single-Owner Protected Management</p>
         </div>
       </div>
     </div>
