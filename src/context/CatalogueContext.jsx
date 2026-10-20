@@ -13,6 +13,18 @@ import {
   getMaterialDistribution,
   getRecentlyAddedProducts
 } from '../data/mockData';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import {
+  getOwnerAuthStatus,
+  signOutOwner,
+  createProductInSupabase,
+  peekNextDbProductCode,
+  ensureCategoryInDb,
+  ensureBrandInDb,
+  ensureMaterialInDb,
+  ensureSubCategoryInDb,
+  ensureSizeInDb
+} from '../lib/supabaseService';
 
 const CatalogueContext = createContext(null);
 
@@ -26,23 +38,19 @@ const STORAGE_KEYS = {
   SIZES: 'rbb_catalogue_sizes_v1'
 };
 
-// Calculate initial sequence numbers from initial products
-function computeInitialSequences(products) {
-  const map = {};
-  for (const p of products) {
-    const codeStr = p.productCode || p.code;
-    if (codeStr) {
-      const match = codeStr.match(/^RBB-([A-Z0-9]+)-(\d+)$/);
-      if (match) {
-        const code = match[1];
-        const num = parseInt(match[2], 10);
-        if (!map[code] || num > map[code]) {
-          map[code] = num;
-        }
-      }
-    }
+// Helper to filter out legacy development dummy/test products
+function isLegacyTestProduct(p) {
+  if (!p) return true;
+  const testIds = ['prod-001', 'prod-002', 'prod-003', 'prod-004', 'prod-005', 'prod-006', 'prod-007', 'prod-008', 'prod-009'];
+  const testCodes = ['RBB-CO-001', 'RBB-CO-002', 'RBB-CO-003', 'RBB-CO-004', 'RBB-TW-001', 'RBB-TW-002', 'RBB-SE-001', 'RBB-KS-001', 'RBB-KS-002'];
+  if (typeof p.id === 'string' && (testIds.includes(p.id) || p.id.startsWith('prod-') || p.id.startsWith('test-') || p.id.startsWith('demo-'))) {
+    return true;
   }
-  return map;
+  const code = p.productCode || p.code;
+  if (code && testCodes.includes(code)) {
+    return true;
+  }
+  return false;
 }
 
 export function CatalogueProvider({ children }) {
@@ -56,29 +64,43 @@ export function CatalogueProvider({ children }) {
     }
   });
 
-  // 2. Products state with localStorage persistence and initial merge
+  // 2. Products state: Clean empty start for production, purging any legacy test data
   const [products, setProducts] = useState(() => {
     try {
+      // One-time cleanup of legacy development/test products from localStorage
+      const hasCleaned = localStorage.getItem('rbb_test_products_cleaned_v2');
+      if (!hasCleaned) {
+        localStorage.removeItem(STORAGE_KEYS.PRODUCTS);
+        localStorage.removeItem(STORAGE_KEYS.SEQUENCES);
+        localStorage.setItem('rbb_test_products_cleaned_v2', 'true');
+        return [];
+      }
+
       const saved = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
       if (saved) {
         const parsed = JSON.parse(saved);
-        const existingIds = new Set(parsed.map((p) => p.id));
-        const missing = INITIAL_PRODUCTS.filter((p) => !existingIds.has(p.id));
-        return missing.length > 0 ? [...parsed, ...missing] : parsed;
+        if (Array.isArray(parsed)) {
+          // Never merge mock products; only return genuine user-created products
+          return parsed.filter((p) => !isLegacyTestProduct(p));
+        }
       }
-      return INITIAL_PRODUCTS;
+      return [];
     } catch {
-      return INITIAL_PRODUCTS;
+      return [];
     }
   });
 
   // 3. Sequence history to ensure deleted product numbers are never reused (Rule 7)
   const [sequenceHistory, setSequenceHistory] = useState(() => {
     try {
+      const hasCleaned = localStorage.getItem('rbb_test_products_cleaned_v2');
+      if (!hasCleaned) {
+        return {};
+      }
       const saved = localStorage.getItem(STORAGE_KEYS.SEQUENCES);
-      return saved ? JSON.parse(saved) : computeInitialSequences(INITIAL_PRODUCTS);
+      return saved ? JSON.parse(saved) : {};
     } catch {
-      return computeInitialSequences(INITIAL_PRODUCTS);
+      return {};
     }
   });
 
@@ -122,7 +144,72 @@ export function CatalogueProvider({ children }) {
     }
   });
 
-  // 8. Lightweight Global Toast State
+  // 8. Supabase Auth & Owner Status State
+  const [authStatus, setAuthStatus] = useState(() => {
+    const hasActiveSession = (() => {
+      try {
+        return localStorage.getItem('rbb_owner_session') === 'active';
+      } catch {
+        return false;
+      }
+    })();
+    return {
+      isConfigured: isSupabaseConfigured,
+      isAuthenticated: hasActiveSession,
+      isOwner: hasActiveSession,
+      isLoading: !hasActiveSession && isSupabaseConfigured,
+      user: hasActiveSession ? { id: 'rbb-owner', role: 'owner' } : null,
+      role: hasActiveSession ? 'owner' : null,
+      reason: hasActiveSession
+        ? 'Authenticated as RBB Owner'
+        : (isSupabaseConfigured ? 'Verifying Supabase authentication...' : 'Local offline mode')
+    };
+  });
+
+  const refreshAuthStatus = async () => {
+    try {
+      const status = await getOwnerAuthStatus();
+      setAuthStatus({
+        ...status,
+        isLoading: false
+      });
+      return status;
+    } catch (err) {
+      console.warn('[Owner Auth Check]', err);
+      setAuthStatus((prev) => ({
+        ...prev,
+        isLoading: false,
+        reason: 'Error checking authentication status.'
+      }));
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await signOutOwner();
+      await refreshAuthStatus();
+      showToast('Signed out of owner session');
+    } catch (err) {
+      console.error('[Sign Out Error]', err);
+      showToast('Failed to sign out', 'error');
+    }
+  };
+
+  useEffect(() => {
+    refreshAuthStatus();
+
+    if (!isSupabaseConfigured) return;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      refreshAuthStatus();
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  // 9. Lightweight Global Toast State
   const [toast, setToast] = useState({
     isVisible: false,
     message: '',
@@ -488,10 +575,29 @@ export function CatalogueProvider({ children }) {
   };
 
   /**
-   * Add a new product
-   * Matches general product structure and maintains backward-compatible aliases
+   * Preview product code without incrementing counter
    */
-  const addProduct = (productData) => {
+  const peekProductCodeForCategory = async (categoryCode) => {
+    if (!categoryCode) return '';
+    if (isSupabaseConfigured) {
+      return await peekNextDbProductCode(categoryCode);
+    }
+    return getNextProductCode(categoryCode, products, sequenceHistory);
+  };
+
+  /**
+   * Add a new product
+   * When Supabase mode is active, delegates to Supabase service (RPC code gen, Storage upload, RLS owner insert)
+   * If an error occurs, it throws explicitly (DO NOT silently fallback to localStorage).
+   * When local offline mode is active, executes localStorage sequence generation and persistence.
+   */
+  const addProduct = async (productData, imageFiles = {}) => {
+    if (isSupabaseConfigured) {
+      const savedInDb = await createProductInSupabase(productData, imageFiles);
+      setProducts((prev) => [savedInDb, ...prev]);
+      return savedInDb;
+    }
+
     const targetCat = categories.find(
       (c) =>
         c.name === productData.categoryName ||
@@ -531,6 +637,7 @@ export function CatalogueProvider({ children }) {
       sizeCapacity: productData.sizeCapacity || productData.sizeOrCapacity || '',
       sizeOrCapacity: productData.sizeCapacity || productData.sizeOrCapacity || '', // backward compatibility
       purchasePrice: Number(productData.purchasePrice) || 0,
+      purchaseUnit: productData.purchaseUnit || productData.purchase_unit || 'Piece',
       specialDetails: productData.specialDetails || '',
       images: imagesList,
       image1: imagesList[0] || productData.image1 || '',
@@ -568,6 +675,7 @@ export function CatalogueProvider({ children }) {
           image1: imagesList[0] || productData.image1 || p.image1,
           image2: imagesList[1] || productData.image2 || p.image2,
           purchasePrice: productData.purchasePrice !== undefined ? Number(productData.purchasePrice) : p.purchasePrice,
+          purchaseUnit: productData.purchaseUnit !== undefined ? productData.purchaseUnit : (p.purchaseUnit || 'Piece'),
           updatedAt: new Date().toISOString(),
         };
       })
@@ -613,7 +721,11 @@ export function CatalogueProvider({ children }) {
         toast,
         showToast,
         hideToast,
-        suggestCategoryCode,
+        isSupabaseMode: isSupabaseConfigured,
+        authStatus,
+        refreshAuthStatus,
+        signOut,
+        peekProductCodeForCategory,
         generateProductCodeForCategory,
         getCategoryProductCount,
         getBrandProductCount,

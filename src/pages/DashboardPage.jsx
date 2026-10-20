@@ -9,7 +9,8 @@ import {
   ArrowRight,
   TrendingUp,
   FolderTree,
-  Box
+  Box,
+  PlusCircle
 } from 'lucide-react';
 import StatCard from '../components/dashboard/StatCard';
 import SectionCard from '../components/dashboard/SectionCard';
@@ -212,19 +213,44 @@ export default function DashboardPage() {
           viewAllText="View Full Catalogue"
         >
           <div className="space-y-3">
-            {recentProducts.map((product) => (
-              <ProductPreview key={product.id} product={product} />
-            ))}
+            {recentProducts.length > 0 ? (
+              recentProducts.map((product) => (
+                <ProductPreview key={product.id} product={product} />
+              ))
+            ) : (
+              <div className="py-8 px-4 text-center bg-slate-50/60 rounded-xl border border-dashed border-slate-200 space-y-2">
+                <Package className="w-8 h-8 text-slate-300 mx-auto" />
+                <p className="text-sm font-bold text-slate-800">No products added yet</p>
+                <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                  Your catalogue is clean and ready. Click below to add your first product.
+                </p>
+                <div className="pt-2">
+                  <Link
+                    to="/products/new"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-colors"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" />
+                    <span>Add First Product</span>
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-5 pt-4 border-t border-slate-100 text-center">
-            <Link
-              to="/products"
-              className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 active:text-blue-800 py-1"
-            >
-              <span>Explore all {stats.totalProducts} catalogue products</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            {stats.totalProducts > 0 ? (
+              <Link
+                to="/products"
+                className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 active:text-blue-800 py-1"
+              >
+                <span>Explore all {stats.totalProducts} catalogue products</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <span className="text-xs text-slate-400">
+                0 total products in catalogue
+              </span>
+            )}
           </div>
         </SectionCard>
       </section>

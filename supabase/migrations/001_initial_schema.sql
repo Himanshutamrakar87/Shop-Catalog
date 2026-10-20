@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS products (
     sub_category TEXT DEFAULT '',
     size_capacity TEXT DEFAULT '',
     purchase_price NUMERIC(10, 2) DEFAULT 0 CHECK (purchase_price >= 0),
+    purchase_unit TEXT DEFAULT 'Piece',
     special_details TEXT DEFAULT '',
     images TEXT[] DEFAULT ARRAY[]::TEXT[],
     image1 TEXT DEFAULT '',
@@ -164,6 +165,11 @@ DECLARE
     v_upper_code VARCHAR(4);
     v_next_num INT;
 BEGIN
+    -- Enforce owner-only execution: prevent unauthorized sequence tampering
+    IF NOT public.is_rbb_owner() THEN
+        RAISE EXCEPTION 'Access denied: Only RBB owner can generate product codes';
+    END IF;
+
     IF p_category_code IS NULL OR TRIM(p_category_code) = '' THEN
         RAISE EXCEPTION 'Category code cannot be null or empty';
     END IF;
@@ -171,18 +177,22 @@ BEGIN
     v_upper_code := UPPER(TRIM(p_category_code));
 
     -- Atomically insert or increment counter for this category code
-    INSERT INTO category_sequences (category_code, last_number, updated_at)
+    INSERT INTO public.category_sequences (category_code, last_number, updated_at)
     VALUES (v_upper_code, 1, NOW())
     ON CONFLICT (category_code)
     DO UPDATE SET 
-        last_number = category_sequences.last_number + 1,
+        last_number = public.category_sequences.last_number + 1,
         updated_at = NOW()
     RETURNING last_number INTO v_next_num;
 
     -- Return formatted code: RBB-[CODE]-[3 DIGIT PADDED NUMBER]
     RETURN 'RBB-' || v_upper_code || '-' || LPAD(v_next_num::TEXT, 3, '0');
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+
+-- Revoke default public execution; grant only to authenticated roles
+REVOKE ALL ON FUNCTION get_next_product_code(VARCHAR) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_next_product_code(VARCHAR) TO authenticated;
 
 -- Table: app_config
 -- Stores application parameters including the designated owner email
@@ -216,7 +226,7 @@ BEGIN
     END IF;
 
     -- 2. Check if user email matches the email configured in app_config
-    SELECT value INTO v_owner_email FROM app_config WHERE key = 'owner_email' LIMIT 1;
+    SELECT value INTO v_owner_email FROM public.app_config WHERE key = 'owner_email' LIMIT 1;
     IF v_owner_email IS NOT NULL AND TRIM(v_owner_email) <> '' THEN
         IF LOWER(auth.jwt() ->> 'email') = LOWER(TRIM(v_owner_email)) THEN
             RETURN true;
@@ -239,7 +249,11 @@ BEGIN
     -- Fail-closed: Deny any other authenticated user who is not the configured owner
     RETURN false;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public, pg_temp;
+
+-- Revoke default public execution; grant only to authenticated roles
+REVOKE ALL ON FUNCTION is_rbb_owner() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION is_rbb_owner() TO authenticated;
 
 -- Enable RLS on all tables
 ALTER TABLE app_config ENABLE ROW LEVEL SECURITY;
@@ -255,51 +269,50 @@ ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Owner full access on app_config" ON app_config;
 CREATE POLICY "Owner full access on app_config" ON app_config
     FOR ALL TO authenticated
-    USING (is_rbb_owner())
-    WITH CHECK (is_rbb_owner());
+    USING (public.is_rbb_owner())
+    WITH CHECK (public.is_rbb_owner());
 
--- Idempotent RLS Policies: Drop existing before recreating
 DROP POLICY IF EXISTS "Owner full access on categories" ON categories;
 CREATE POLICY "Owner full access on categories" ON categories
     FOR ALL TO authenticated
-    USING (is_rbb_owner())
-    WITH CHECK (is_rbb_owner());
+    USING (public.is_rbb_owner())
+    WITH CHECK (public.is_rbb_owner());
 
 DROP POLICY IF EXISTS "Owner full access on brands" ON brands;
 CREATE POLICY "Owner full access on brands" ON brands
     FOR ALL TO authenticated
-    USING (is_rbb_owner())
-    WITH CHECK (is_rbb_owner());
+    USING (public.is_rbb_owner())
+    WITH CHECK (public.is_rbb_owner());
 
 DROP POLICY IF EXISTS "Owner full access on materials" ON materials;
 CREATE POLICY "Owner full access on materials" ON materials
     FOR ALL TO authenticated
-    USING (is_rbb_owner())
-    WITH CHECK (is_rbb_owner());
+    USING (public.is_rbb_owner())
+    WITH CHECK (public.is_rbb_owner());
 
 DROP POLICY IF EXISTS "Owner full access on sub_categories" ON sub_categories;
 CREATE POLICY "Owner full access on sub_categories" ON sub_categories
     FOR ALL TO authenticated
-    USING (is_rbb_owner())
-    WITH CHECK (is_rbb_owner());
+    USING (public.is_rbb_owner())
+    WITH CHECK (public.is_rbb_owner());
 
 DROP POLICY IF EXISTS "Owner full access on sizes" ON sizes;
 CREATE POLICY "Owner full access on sizes" ON sizes
     FOR ALL TO authenticated
-    USING (is_rbb_owner())
-    WITH CHECK (is_rbb_owner());
+    USING (public.is_rbb_owner())
+    WITH CHECK (public.is_rbb_owner());
 
 DROP POLICY IF EXISTS "Owner full access on category_sequences" ON category_sequences;
 CREATE POLICY "Owner full access on category_sequences" ON category_sequences
     FOR ALL TO authenticated
-    USING (is_rbb_owner())
-    WITH CHECK (is_rbb_owner());
+    USING (public.is_rbb_owner())
+    WITH CHECK (public.is_rbb_owner());
 
 DROP POLICY IF EXISTS "Owner full access on products" ON products;
 CREATE POLICY "Owner full access on products" ON products
     FOR ALL TO authenticated
-    USING (is_rbb_owner())
-    WITH CHECK (is_rbb_owner());
+    USING (public.is_rbb_owner())
+    WITH CHECK (public.is_rbb_owner());
 
 -- =============================================================================
 -- 8. Storage Configuration (Product Images)
@@ -327,15 +340,38 @@ CREATE POLICY "Public read on product-images" ON storage.objects
 DROP POLICY IF EXISTS "Owner write on product-images" ON storage.objects;
 CREATE POLICY "Owner write on product-images" ON storage.objects
     FOR INSERT TO authenticated
-    WITH CHECK (bucket_id = 'product-images' AND is_rbb_owner());
+    WITH CHECK (bucket_id = 'product-images' AND public.is_rbb_owner());
 
 DROP POLICY IF EXISTS "Owner update on product-images" ON storage.objects;
 CREATE POLICY "Owner update on product-images" ON storage.objects
     FOR UPDATE TO authenticated
-    USING (bucket_id = 'product-images' AND is_rbb_owner())
-    WITH CHECK (bucket_id = 'product-images' AND is_rbb_owner());
+    USING (bucket_id = 'product-images' AND public.is_rbb_owner())
+    WITH CHECK (bucket_id = 'product-images' AND public.is_rbb_owner());
 
 DROP POLICY IF EXISTS "Owner delete on product-images" ON storage.objects;
 CREATE POLICY "Owner delete on product-images" ON storage.objects
     FOR DELETE TO authenticated
-    USING (bucket_id = 'product-images' AND is_rbb_owner());
+    USING (bucket_id = 'product-images' AND public.is_rbb_owner());
+
+-- =============================================================================
+-- 9. Post-Migration Owner Setup Instructions
+-- =============================================================================
+-- After running this migration on your new Supabase project, designate your owner
+-- account so that is_rbb_owner() recognizes your session and permits catalogue
+-- writes. Run ONE of the following queries in the Supabase SQL Editor:
+--
+-- METHOD 1 (Recommended - via app_config table):
+--   INSERT INTO public.app_config (key, value)
+--   VALUES ('owner_email', 'your-owner-email@example.com')
+--   ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
+--
+-- METHOD 2 (Via Supabase Auth app_metadata):
+--   UPDATE auth.users
+--   SET raw_app_meta_data = COALESCE(raw_app_meta_data, '{}'::jsonb) || '{"role": "owner"}'::jsonb
+--   WHERE email = 'your-owner-email@example.com';
+--
+-- Also set in your frontend environment (.env.local):
+--   VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
+--   VITE_SUPABASE_ANON_KEY=<your-anon-publishable-key>
+--   VITE_OWNER_EMAIL=your-owner-email@example.com
+-- =============================================================================

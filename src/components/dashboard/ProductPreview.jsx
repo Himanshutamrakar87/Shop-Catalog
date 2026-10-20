@@ -108,6 +108,15 @@ export default function ProductPreview({ product }) {
               <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <span>{formattedDate}</span>
             </span>
+
+            {Boolean(product.purchasePrice) && (
+              <span className="font-semibold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded text-[11px]">
+                ₹{Number(product.purchasePrice).toLocaleString()}
+                <span className="text-[10px] font-normal text-slate-500 ml-0.5">
+                  /{product.purchaseUnit || product.purchase_unit || 'pc'}
+                </span>
+              </span>
+            )}
           </div>
         </div>
 

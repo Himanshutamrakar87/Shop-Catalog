@@ -12,8 +12,35 @@ export default function ProductDetailPage() {
   const navigate = useNavigate();
   const { products } = useCatalogue();
 
-  // Find product from catalogue store or default to first
-  const product = products.find((p) => p.id === id) || products[0];
+  // Find product from catalogue store
+  const product = products.find((p) => p.id === id);
+
+  if (!product) {
+    return (
+      <div className="p-8 sm:p-14 text-center bg-white rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
+          <Tag className="w-7 h-7" />
+        </div>
+        <div>
+          <h2 className="text-base sm:text-lg font-bold text-slate-900">
+            Product Not Found
+          </h2>
+          <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">
+            The requested product does not exist in the catalogue or has been removed.
+          </p>
+        </div>
+        <div>
+          <button
+            onClick={() => navigate('/products')}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-xs transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Products</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -124,8 +151,13 @@ export default function ProductDetailPage() {
 
           <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-100">
             <span className="text-xs font-semibold text-slate-500 block mb-1">Purchase Price</span>
-            <span className="text-sm font-bold text-slate-900 flex items-center">
-              ₹ {Number(product.purchasePrice || 0).toLocaleString()}
+            <span className="text-sm font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
+              <span>₹ {Number(product.purchasePrice || 0).toLocaleString()}</span>
+              {(product.purchaseUnit || product.purchase_unit) && (
+                <span className="text-xs font-semibold text-slate-500 bg-slate-200/60 px-1.5 py-0.5 rounded">
+                  / {product.purchaseUnit || product.purchase_unit}
+                </span>
+              )}
             </span>
           </div>
 

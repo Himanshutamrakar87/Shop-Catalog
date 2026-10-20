@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Plus, Bell, Search, X } from 'lucide-react';
+import { Menu, Plus, Bell, Search, X, LogOut } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import BrandLogo from '../common/BrandLogo';
 
@@ -8,7 +8,7 @@ import BrandLogo from '../common/BrandLogo';
  * - On Mobile: Compact header with hamburger button, compact RBB mark, and "+ Add" action button
  * - On Desktop: Clean bar showing active section title, quick global catalogue search, and quick "Add Product" button
  */
-export default function Header({ onOpenMobileMenu, alertCount = 12 }) {
+export default function Header({ onOpenMobileMenu, alertCount = 12, onSignOut }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [headerSearch, setHeaderSearch] = useState('');
@@ -114,6 +114,19 @@ export default function Header({ onOpenMobileMenu, alertCount = 12 }) {
               <span className="hidden sm:inline">Add Product</span>
               <span className="sm:hidden">Add</span>
             </Link>
+
+            {/* Owner Logout Action */}
+            {onSignOut && (
+              <button
+                type="button"
+                onClick={onSignOut}
+                title="Sign out of owner session"
+                aria-label="Sign out"
+                className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>

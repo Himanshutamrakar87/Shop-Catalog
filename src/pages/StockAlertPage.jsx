@@ -48,18 +48,31 @@ export default function StockAlertPage() {
       <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-3">
         <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
         <div className="text-xs sm:text-sm">
-          <p className="font-bold">12 products flagged for stock alert across catalogue</p>
+          <p className="font-bold">
+            {alertProducts.length === 0
+              ? 'No stock alerts currently active'
+              : `${alertProducts.length} product${alertProducts.length === 1 ? '' : 's'} flagged for stock alert across catalogue`}
+          </p>
           <p className="text-amber-700 mt-0.5">
-            Review these items to contact suppliers or mark updated inventory statuses.
+            {alertProducts.length === 0
+              ? 'All inventory levels are healthy. Products marked with low stock will appear here.'
+              : 'Review these items to contact suppliers or mark updated inventory statuses.'}
           </p>
         </div>
       </div>
 
       {/* List */}
       <div className="space-y-3">
-        {alertProducts.map((product) => (
-          <ProductPreview key={product.id} product={product} />
-        ))}
+        {alertProducts.length > 0 ? (
+          alertProducts.map((product) => (
+            <ProductPreview key={product.id} product={product} />
+          ))
+        ) : (
+          <div className="p-8 sm:p-12 text-center bg-white rounded-2xl border border-slate-200 text-slate-500 text-sm space-y-2">
+            <p className="font-semibold text-slate-700">No products needing stock attention</p>
+            <p className="text-xs text-slate-400">Items marked as 'Stock Alert' or 'Out of Stock' will be shown in this list.</p>
+          </div>
+        )}
       </div>
     </div>
   );

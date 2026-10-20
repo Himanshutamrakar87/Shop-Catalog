@@ -15,11 +15,16 @@ import {
   Sparkles,
   Lock,
   Tag,
-  Box
+  Box,
+  ShieldCheck,
+  ShieldAlert,
+  Cloud,
+  Database
 } from 'lucide-react';
 import { useCatalogue } from '../context/CatalogueContext';
 import CategoryModal from '../components/categories/CategoryModal';
 import QuickAddModal from '../components/common/QuickAddModal';
+import OwnerAuthModal from '../components/common/OwnerAuthModal';
 
 /**
  * Product Form Page
@@ -45,6 +50,10 @@ export default function ProductFormPage() {
     materials,
     subCategories,
     sizes,
+    isSupabaseMode,
+    authStatus,
+    refreshAuthStatus,
+    peekProductCodeForCategory,
     generateProductCodeForCategory,
     addCategory,
     addBrand,
@@ -68,6 +77,9 @@ export default function ProductFormPage() {
   const [selectedMaterial, setSelectedMaterial] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [purchasePrice, setPurchasePrice] = useState('');
+  const [purchaseUnit, setPurchaseUnit] = useState('Piece');
+  const [isCustomUnit, setIsCustomUnit] = useState(false);
+  const [customUnit, setCustomUnit] = useState('');
   const [specialDetails, setSpecialDetails] = useState('');
   const [status, setStatus] = useState('In Stock');
 
@@ -82,6 +94,8 @@ export default function ProductFormPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [touched, setTouched] = useState({ name: false, category: false, image1: false });
   const [formErrors, setFormErrors] = useState({});
+  const [submitError, setSubmitError] = useState(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   // Dynamic "+ Add New" Modals States
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -95,12 +109,22 @@ export default function ProductFormPage() {
 
   // Initialize Category and default selections
   useEffect(() => {
+    let isMounted = true;
     if (!isEditing && categories.length > 0 && !selectedCategoryName) {
       const firstCat = categories[0];
       setSelectedCategoryName(firstCat.name);
-      setProductCode(generateProductCodeForCategory(firstCat.code));
+      if (isSupabaseMode) {
+        peekProductCodeForCategory(firstCat.code).then((code) => {
+          if (isMounted && code) setProductCode(code);
+        });
+      } else {
+        setProductCode(generateProductCodeForCategory(firstCat.code));
+      }
     }
-  }, [categories, isEditing, selectedCategoryName, generateProductCodeForCategory]);
+    return () => {
+      isMounted = false;
+    };
+  }, [categories, isEditing, selectedCategoryName, isSupabaseMode, peekProductCodeForCategory, generateProductCodeForCategory]);
 
   // Set default Brand & Material if empty in creation mode
   useEffect(() => {
@@ -124,6 +148,18 @@ export default function ProductFormPage() {
         setSelectedMaterial(existing.material || '');
         setSelectedSize(existing.sizeCapacity || existing.sizeOrCapacity || '');
         setPurchasePrice(existing.purchasePrice !== undefined && existing.purchasePrice !== null ? String(existing.purchasePrice) : '');
+        const existingUnit = existing.purchaseUnit || existing.purchase_unit || 'Piece';
+        const standardUnits = ['Piece', 'kg', 'Dozen', 'Gram', 'Set', 'Box', 'Meter', 'Quintal'];
+        const isStandard = standardUnits.some((u) => u.toLowerCase() === existingUnit.toLowerCase());
+        if (isStandard) {
+          setPurchaseUnit(existingUnit);
+          setIsCustomUnit(false);
+          setCustomUnit('');
+        } else {
+          setPurchaseUnit('custom');
+          setIsCustomUnit(true);
+          setCustomUnit(existingUnit);
+        }
         setSpecialDetails(existing.specialDetails || '');
 
         // Normalize status
@@ -147,12 +183,17 @@ export default function ProductFormPage() {
   }, [isEditing, id, products, categories]);
 
   // Update product code preview when category changes in Add mode
-  const handleCategoryChange = (catName) => {
+  const handleCategoryChange = async (catName) => {
     setSelectedCategoryName(catName);
     if (!isEditing) {
       const targetCat = categories.find((c) => c.name === catName);
       if (targetCat) {
-        setProductCode(generateProductCodeForCategory(targetCat.code));
+        if (isSupabaseMode) {
+          const preview = await peekProductCodeForCategory(targetCat.code);
+          setProductCode(preview || `RBB-${targetCat.code}-...`);
+        } else {
+          setProductCode(generateProductCodeForCategory(targetCat.code));
+        }
       }
     }
   };
@@ -217,10 +258,15 @@ export default function ProductFormPage() {
   };
 
   // Inline "+ Add New" Category callback
-  const handleCategoryCreated = (newCategory) => {
+  const handleCategoryCreated = async (newCategory) => {
     setSelectedCategoryName(newCategory.name);
-    const newCode = generateProductCodeForCategory(newCategory.code);
-    setProductCode(newCode);
+    if (isSupabaseMode) {
+      const newCode = await peekProductCodeForCategory(newCategory.code);
+      setProductCode(newCode || `RBB-${newCategory.code}-001`);
+    } else {
+      const newCode = generateProductCodeForCategory(newCategory.code);
+      setProductCode(newCode);
+    }
     showToast(`Category "${newCategory.name}" created and selected!`);
   };
 
@@ -310,10 +356,13 @@ export default function ProductFormPage() {
     return errors;
   };
 
-  // Form submit handler
-  const handleSubmit = (e) => {
+  // Form submit handler with complete Supabase integration & duplicate submission prevention
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return; // Prevent duplicate submissions
+
     setTouched({ name: true, category: true, image1: true });
+    setSubmitError(null);
 
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
@@ -326,50 +375,78 @@ export default function ProductFormPage() {
       return;
     }
 
+    // Check Supabase authentication and owner RLS requirements if in Supabase mode
+    if (isSupabaseMode && (!authStatus?.isAuthenticated || !authStatus?.isOwner)) {
+      setAuthModalOpen(true);
+      setSubmitError(
+        'Supabase RLS requires Owner Authentication to save products to the database. Please sign in as the designated owner.'
+      );
+      return;
+    }
+
     setFormErrors({});
     setIsSubmitting(true);
 
-    const targetCat = categories.find((c) => c.name === selectedCategoryName) || categories[0];
-    const catCode = targetCat ? targetCat.code : 'CO';
+    try {
+      const targetCat = categories.find((c) => c.name === selectedCategoryName) || categories[0];
+      const catCode = targetCat ? targetCat.code : 'CO';
 
-    const imagesList = [image1.preview, image2.preview].filter(Boolean);
+      const imagesList = [image1.preview, image2.preview].filter(Boolean);
 
-    const productPayload = {
-      name: name.trim(),
-      productName: name.trim(),
-      categoryId: targetCat.id,
-      categoryName: targetCat.name,
-      category: targetCat.name,
-      categoryCode: catCode,
-      subCategory: selectedSubCategory.trim(),
-      brand: selectedBrand.trim(),
-      material: selectedMaterial.trim(),
-      sizeCapacity: selectedSize.trim(),
-      sizeOrCapacity: selectedSize.trim(),
-      purchasePrice: purchasePrice ? Number(purchasePrice) : 0,
-      specialDetails: specialDetails.trim(),
-      images: imagesList,
-      image1: imagesList[0] || '',
-      image2: imagesList[1] || '',
-      status: status,
-    };
+      const productPayload = {
+        name: name.trim(),
+        productName: name.trim(),
+        categoryId: targetCat.id,
+        categoryName: targetCat.name,
+        category: targetCat.name,
+        categoryCode: catCode,
+        categoryDescription: targetCat.description || '',
+        subCategory: selectedSubCategory.trim(),
+        brand: selectedBrand.trim(),
+        material: selectedMaterial.trim(),
+        sizeCapacity: selectedSize.trim(),
+        sizeOrCapacity: selectedSize.trim(),
+        purchasePrice: purchasePrice ? Number(purchasePrice) : 0,
+        purchaseUnit: (isCustomUnit ? customUnit : purchaseUnit).trim() || 'Piece',
+        specialDetails: specialDetails.trim(),
+        images: imagesList,
+        image1: imagesList[0] || '',
+        image2: imagesList[1] || '',
+        status: status,
+      };
 
-    // Smooth UI transition
-    setTimeout(() => {
       let savedProduct;
       if (isEditing) {
         updateProduct(id, productPayload);
         savedProduct = { id, ...productPayload };
         showToast('Product updated successfully!');
       } else {
-        savedProduct = addProduct(productPayload);
-        showToast('Product created successfully!');
+        // In Add Product mode: pass image files for Supabase Storage bucket upload ('product-images')
+        // and database-side atomic code generation (get_next_product_code)
+        savedProduct = await addProduct(productPayload, {
+          file1: image1.file,
+          file2: image2.file,
+        });
+
+        if (isSupabaseMode) {
+          showToast(`Product "${savedProduct.code}" saved to Supabase catalogue!`, 'success');
+        } else {
+          showToast(`Product "${savedProduct.code}" created successfully!`, 'success');
+        }
       }
 
       setIsSubmitting(false);
       // Navigate to product details page on success
       navigate(`/products/${savedProduct.id}`);
-    }, 350);
+    } catch (err) {
+      console.error('[Product Save Error]', err);
+      setIsSubmitting(false);
+      const errorMsg = err.message || 'Failed to save product to database.';
+      setSubmitError(errorMsg);
+      showToast(errorMsg, 'error');
+      // Scroll to error banner so user immediately sees what went wrong
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const isFormValid = name.trim().length > 0 && selectedCategoryName && Boolean(image1.preview);
@@ -387,10 +464,82 @@ export default function ProductFormPage() {
           <span>Back to Products</span>
         </button>
 
-        <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-          {isEditing ? 'Editing Product' : 'New Product Entry'}
-        </span>
+        <div className="flex items-center gap-2">
+          {/* Active Mode Pill */}
+          {isSupabaseMode ? (
+            <button
+              type="button"
+              onClick={() => setAuthModalOpen(true)}
+              className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border transition-colors ${
+                authStatus?.isAuthenticated && authStatus?.isOwner
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                  : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+              }`}
+            >
+              <Cloud className="w-3.5 h-3.5" />
+              <span>
+                {authStatus?.isAuthenticated && authStatus?.isOwner
+                  ? 'Supabase Mode (Owner)'
+                  : 'Supabase Mode (Sign In)'}
+              </span>
+            </button>
+          ) : (
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1">
+              <Database className="w-3.5 h-3.5 text-slate-400" />
+              <span>Offline Mode</span>
+            </span>
+          )}
+
+          <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-900 text-white border border-slate-900">
+            {isEditing ? 'Edit' : 'Add New'}
+          </span>
+        </div>
       </div>
+
+      {/* Supabase Authentication Alert Banner if not authenticated as Owner */}
+      {isSupabaseMode && (!authStatus?.isAuthenticated || !authStatus?.isOwner) && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-2.5">
+            <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="text-xs">
+              <p className="font-bold text-amber-950">Owner Authentication Required</p>
+              <p className="text-amber-800 mt-0.5">
+                Supabase Row Level Security restricts catalogue modifications to the verified owner.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAuthModalOpen(true)}
+            className="shrink-0 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-colors"
+          >
+            Sign In as Owner
+          </button>
+        </div>
+      )}
+
+      {/* Explicit Failure / Error Alert Banner */}
+      {submitError && (
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 shadow-xs flex items-start justify-between gap-3 animate-in fade-in">
+          <div className="flex items-start gap-2.5">
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="text-xs">
+              <p className="font-bold text-rose-950">Product Save Failed</p>
+              <p className="text-rose-800 mt-0.5 leading-relaxed">{submitError}</p>
+              <p className="text-[11px] text-rose-600 mt-1">
+                Notice: The application will not silently fall back to local storage. Your entered form details are preserved below for retry.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSubmitError(null)}
+            className="text-rose-400 hover:text-rose-700 text-xs font-bold px-2 py-1"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Main Form Card Container */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
@@ -615,7 +764,7 @@ export default function ProductFormPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Size / Capacity */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 sm:col-span-2">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold text-slate-800">
                     Size / Capacity
@@ -658,12 +807,87 @@ export default function ProductFormPage() {
                   <input
                     type="number"
                     min="0"
-                    step="1"
+                    step="any"
                     placeholder="e.g. 1450"
                     value={purchasePrice}
                     onChange={(e) => setPurchasePrice(e.target.value)}
                     className="w-full pl-8 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all font-medium text-slate-900 placeholder:text-slate-400"
                   />
+                </div>
+              </div>
+
+              {/* Price Unit / दर प्रति इकाई */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-800">
+                    Price Unit (दर इकाई)
+                  </label>
+                  <span className="text-[11px] font-semibold text-blue-600">
+                    Per {isCustomUnit ? (customUnit || '...') : purchaseUnit}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <select
+                    value={isCustomUnit ? 'custom' : purchaseUnit}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === 'custom') {
+                        setIsCustomUnit(true);
+                      } else {
+                        setIsCustomUnit(false);
+                        setPurchaseUnit(val);
+                      }
+                    }}
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 bg-white font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer"
+                  >
+                    <option value="Piece">Piece (प्रति पीस / pc)</option>
+                    <option value="kg">kg (प्रति किलो / Kilogram)</option>
+                    <option value="Dozen">Dozen (प्रति दर्जन / doz)</option>
+                    <option value="Gram">Gram (प्रति ग्राम / g)</option>
+                    <option value="Set">Set (प्रति सेट)</option>
+                    <option value="Box">Box (प्रति बॉक्स / डिब्बा)</option>
+                    <option value="Meter">Meter (प्रति मीटर / m)</option>
+                    <option value="Quintal">Quintal (प्रति क्विंटल)</option>
+                    <option value="custom">+ Other / Custom (खुद टाइप करें)...</option>
+                  </select>
+
+                  {/* Custom Unit Input if selected */}
+                  {isCustomUnit && (
+                    <input
+                      type="text"
+                      autoFocus
+                      placeholder="Type custom unit (e.g. packet, bundle, pair)..."
+                      value={customUnit}
+                      onChange={(e) => setCustomUnit(e.target.value)}
+                      className="w-full px-3.5 py-2 text-xs rounded-xl border border-blue-300 bg-blue-50/50 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all font-medium placeholder:text-slate-400"
+                    />
+                  )}
+
+                  {/* Quick-select chips */}
+                  <div className="flex items-center gap-1.5 pt-0.5">
+                    <span className="text-[10px] text-slate-400 font-medium">Quick:</span>
+                    {['Piece', 'kg', 'Dozen', 'Set'].map((chip) => {
+                      const isSelected = !isCustomUnit && purchaseUnit.toLowerCase() === chip.toLowerCase();
+                      return (
+                        <button
+                          key={chip}
+                          type="button"
+                          onClick={() => {
+                            setIsCustomUnit(false);
+                            setPurchaseUnit(chip);
+                          }}
+                          className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors cursor-pointer ${
+                            isSelected
+                              ? 'bg-blue-600 text-white shadow-2xs'
+                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          }`}
+                        >
+                          {chip}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -961,6 +1185,14 @@ export default function ProductFormPage() {
         placeholder={quickAddModal.placeholder}
         onClose={() => setQuickAddModal((p) => ({ ...p, isOpen: false }))}
         onSubmit={handleQuickAddSubmit}
+      />
+
+      {/* Supabase Owner Authentication Modal */}
+      <OwnerAuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        authStatus={authStatus}
+        onAuthChanged={refreshAuthStatus}
       />
     </div>
   );

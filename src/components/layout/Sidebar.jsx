@@ -9,7 +9,8 @@ import {
   AlertTriangle,
   PlusCircle,
   Archive,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from 'lucide-react';
 import BrandLogo from '../common/BrandLogo';
 
@@ -25,7 +26,7 @@ import BrandLogo from '../common/BrandLogo';
  * - Discontinued
  * (Sizes / Capacities is NOT in the sidebar)
  */
-export default function Sidebar({ alertCount = 12, discontinuedCount = 7 }) {
+export default function Sidebar({ alertCount = 12, discontinuedCount = 7, onSignOut }) {
   const getNavLinkClass = ({ isActive }) =>
     `group flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all ${
       isActive
@@ -146,16 +147,28 @@ export default function Sidebar({ alertCount = 12, discontinuedCount = 7 }) {
         </div>
       </div>
 
-      {/* Owner System Footer Note */}
+      {/* Owner System Footer Note with Sign Out */}
       <div className="p-4 border-t border-slate-100 bg-slate-50/50">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs">
-            O
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
+              O
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-slate-800 truncate">Owner Workspace</p>
+              <p className="text-[11px] text-emerald-600 font-medium truncate">Active Session</p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-slate-800 truncate">Owner Workspace</p>
-            <p className="text-[11px] text-slate-500 truncate">Private Catalogue</p>
-          </div>
+          {onSignOut && (
+            <button
+              type="button"
+              onClick={onSignOut}
+              title="Sign out of owner session"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </aside>

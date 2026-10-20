@@ -10,7 +10,8 @@ import {
   AlertTriangle,
   PlusCircle,
   Archive,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from 'lucide-react';
 import BrandLogo from '../common/BrandLogo';
 
@@ -19,7 +20,7 @@ import BrandLogo from '../common/BrandLogo';
  * Opens smoothly from the left as an overlay drawer for smartphone viewports.
  * Closes automatically on route navigation or clicking outside.
  */
-export default function MobileNav({ isOpen, onClose, alertCount = 12, discontinuedCount = 7 }) {
+export default function MobileNav({ isOpen, onClose, alertCount = 12, discontinuedCount = 7, onSignOut }) {
   const location = useLocation();
 
   // Close drawer whenever the route changes
@@ -189,12 +190,25 @@ export default function MobileNav({ isOpen, onClose, alertCount = 12, discontinu
           </div>
         </div>
 
-        {/* Drawer Footer */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50">
+        {/* Drawer Footer with Sign Out */}
+        <div className="p-4 border-t border-slate-100 bg-slate-50 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-700">RBB Product Catalogue</span>
-            <span className="text-[11px] px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-medium">Single Owner</span>
+            <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-medium">Owner Active</span>
           </div>
+          {onSignOut && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onSignOut();
+              }}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold text-xs transition-colors"
+            >
+              <LogOut className="w-4 h-4 text-slate-400" />
+              <span>Sign Out of Owner Account</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

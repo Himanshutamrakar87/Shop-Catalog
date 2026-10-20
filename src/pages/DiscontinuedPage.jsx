@@ -48,18 +48,31 @@ export default function DiscontinuedPage() {
       <div className="p-4 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 flex items-start gap-3">
         <Archive className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
         <div className="text-xs sm:text-sm">
-          <p className="font-bold">7 archived models in storage history</p>
+          <p className="font-bold">
+            {discontinuedProducts.length === 0
+              ? 'No discontinued models in archive'
+              : `${discontinuedProducts.length} archived model${discontinuedProducts.length === 1 ? '' : 's'} in storage history`}
+          </p>
           <p className="text-slate-600 mt-0.5">
-            Discontinued items are hidden from active buyer orders but remain fully searchable by product code.
+            {discontinuedProducts.length === 0
+              ? 'Products retired from production will be safely archived and listed here.'
+              : 'Discontinued items are hidden from active buyer orders but remain fully searchable by product code.'}
           </p>
         </div>
       </div>
 
       {/* List */}
       <div className="space-y-3">
-        {discontinuedProducts.map((product) => (
-          <ProductPreview key={product.id} product={product} />
-        ))}
+        {discontinuedProducts.length > 0 ? (
+          discontinuedProducts.map((product) => (
+            <ProductPreview key={product.id} product={product} />
+          ))
+        ) : (
+          <div className="p-8 sm:p-12 text-center bg-white rounded-2xl border border-slate-200 text-slate-500 text-sm space-y-2">
+            <p className="font-semibold text-slate-700">No archived products found</p>
+            <p className="text-xs text-slate-400">Products marked as 'Discontinued' will be archived here for historical reference.</p>
+          </div>
+        )}
       </div>
     </div>
   );

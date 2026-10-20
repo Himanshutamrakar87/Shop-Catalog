@@ -227,8 +227,34 @@ export default function ProductsPage() {
           filteredProducts.map((product) => (
             <ProductPreview key={product.id} product={product} />
           ))
+        ) : products.length === 0 ? (
+          /* Empty Catalogue Initial State */
+          <div className="p-8 sm:p-14 text-center bg-white rounded-2xl border border-slate-200 shadow-xs space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto text-blue-600">
+              <Package className="w-7 h-7" />
+            </div>
+
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                No products in catalogue yet
+              </h2>
+              <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">
+                Your inventory is ready for fresh production items. Add your first product to get started.
+              </p>
+            </div>
+
+            <div>
+              <Link
+                to="/products/new"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-bold shadow-xs transition-all active:scale-[0.98]"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Add First Product</span>
+              </Link>
+            </div>
+          </div>
         ) : (
-          /* Empty Search / No Results State */
+          /* Empty Search / Filter Results State */
           <div className="p-8 sm:p-14 text-center bg-white rounded-2xl border border-slate-200 shadow-xs space-y-4">
             <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
               <Package className="w-7 h-7" />
