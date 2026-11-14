@@ -41,7 +41,7 @@ export default function BrandLogo({
       aria-label="Product Catalogue"
     >
       {/* Official Brand Logo Mark */}
-      <div className={`relative flex items-center justify-center shrink-0 overflow-hidden bg-white border border-slate-200/90 shadow-xs transition-transform group-hover:scale-[1.02] ${currentSizeClass}`}>
+      <div className={`relative flex items-center justify-center shrink-0 overflow-hidden bg-white border border-[#D4A64A]/60 ring-1 ring-[#D4A64A]/25 shadow-sm transition-transform duration-200 group-hover:scale-[1.03] group-hover:border-[#D4A64A] ${currentSizeClass}`}>
         <img
           src={RBB_LOGO_SRC}
           alt="Catalogue Logo"
@@ -54,15 +54,21 @@ export default function BrandLogo({
       {!collapsed && !imageOnly && (
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className={`text-base sm:text-lg font-extrabold tracking-tight ${inverted ? 'text-white' : 'text-slate-900'}`}>
+            <span className={`text-base sm:text-lg font-extrabold tracking-tight ${inverted ? 'text-[#F7F3EA]' : 'text-[#292D2B]'}`}>
               Catalogue
             </span>
-            <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
+            <span
+              className={`text-[11px] font-bold px-2 py-0.5 rounded-md border shrink-0 ${
+                inverted
+                  ? 'bg-[#D4A64A]/20 text-[#F4D58D] border-[#D4A64A]/40'
+                  : 'bg-[#FBF5E6] text-[#8E6518] border-[#D4A64A]/50'
+              }`}
+            >
               Manager
             </span>
           </div>
           {showTagline && (
-            <span className={`text-[11px] font-medium tracking-tight truncate ${inverted ? 'text-slate-400' : 'text-slate-500'}`}>
+            <span className={`text-[11px] font-medium tracking-tight truncate ${inverted ? 'text-[#B8CBC3]' : 'text-[#555B58]'}`}>
               Commercial &amp; Domestic Utensils
             </span>
           )}

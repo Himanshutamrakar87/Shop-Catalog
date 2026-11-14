@@ -78,12 +78,12 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F2D25]/65 backdrop-blur-xs">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-[#E6DFCE] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/60">
+        <div className="flex items-center justify-between p-5 border-b border-[#EFE9DA] bg-gradient-to-r from-[#FBF8F1] via-white to-[#F7F3EA]/70">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-slate-200/90 shadow-2xs overflow-hidden shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-[#D4A64A]/50 shadow-2xs overflow-hidden shrink-0">
               <img
                 src="/assets/aistudio/rbblogo_5ff1833f.png"
                 alt="RBB Logo"
@@ -91,14 +91,14 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
               />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">Owner Authentication</h3>
-              <p className="text-xs text-slate-500">Supabase RLS Access Control</p>
+              <h3 className="text-base font-bold text-[#292D2B]">Owner Authentication</h3>
+              <p className="text-xs text-[#555B58]">Supabase RLS Access Control</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="p-1.5 rounded-lg text-[#6F7571] hover:text-[#292D2B] hover:bg-[#FBF5E6] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -110,19 +110,19 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
           <div
             className={`p-3.5 rounded-xl border text-xs leading-relaxed ${
               authStatus?.isAuthenticated && authStatus?.isOwner
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                ? 'bg-[#EDF5F1] border-[#173F35]/25 text-[#173F35]'
                 : authStatus?.isAuthenticated
-                ? 'bg-amber-50 border-amber-200 text-amber-800'
-                : 'bg-slate-50 border-slate-200 text-slate-700'
+                ? 'bg-[#FBF5E6] border-[#D4A64A]/60 text-[#292D2B]'
+                : 'bg-[#FAF7F0] border-[#E6DFCE] text-[#292D2B]'
             }`}
           >
             <div className="flex items-start gap-2.5">
               {authStatus?.isAuthenticated && authStatus?.isOwner ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 text-[#173F35] shrink-0 mt-0.5" />
               ) : authStatus?.isAuthenticated ? (
-                <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <ShieldAlert className="w-4 h-4 text-[#9A7120] shrink-0 mt-0.5" />
               ) : (
-                <AlertCircle className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+                <AlertCircle className="w-4 h-4 text-[#6F7571] shrink-0 mt-0.5" />
               )}
               <div>
                 <p className="font-bold">
@@ -146,18 +146,18 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
           {/* If already authenticated as owner */}
           {authStatus?.isAuthenticated && authStatus?.isOwner ? (
             <div className="space-y-4 pt-1">
-              <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-600 space-y-1.5 border border-slate-100">
+              <div className="p-3 bg-[#FAF7F0] rounded-xl text-xs text-[#555B58] space-y-1.5 border border-[#E6DFCE]">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Account Role:</span>
-                  <span className="font-semibold text-slate-800">Designated Owner</span>
+                  <span className="text-[#6F7571]">Account Role:</span>
+                  <span className="font-semibold text-[#292D2B]">Designated Owner</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Database Access:</span>
-                  <span className="font-semibold text-emerald-600">Full Access Granted</span>
+                  <span className="text-[#6F7571]">Database Access:</span>
+                  <span className="font-semibold text-[#173F35]">Full Access Granted</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Storage Bucket:</span>
-                  <span className="font-semibold text-blue-600">product-images</span>
+                  <span className="text-[#6F7571]">Storage Bucket:</span>
+                  <span className="font-semibold text-[#9A7120]">product-images</span>
                 </div>
               </div>
 
@@ -165,12 +165,12 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
                 type="button"
                 onClick={handleSignOut}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-[#E6DFCE] hover:border-[#D4A64A] hover:bg-[#FCF9F2] text-[#292D2B] font-semibold text-xs transition-colors cursor-pointer"
               >
                 {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+                  <Loader2 className="w-4 h-4 animate-spin text-[#6F7571]" />
                 ) : (
-                  <LogOut className="w-4 h-4 text-slate-400" />
+                  <LogOut className="w-4 h-4 text-[#6F7571]" />
                 )}
                 <span>Sign Out of Owner Account</span>
               </button>
@@ -180,40 +180,40 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
             <div className="space-y-4">
               <form onSubmit={handlePasswordSignIn} className="space-y-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-[#292D2B] mb-1">
                     Owner Email
                   </label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6F7571] pointer-events-none" />
                     <input
                       type="email"
                       required
                       placeholder="name@domain.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-900"
+                      className="w-full pl-9 pr-4 py-2.5 text-xs rounded-xl border border-[#E6DFCE] bg-[#FAF7F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/30 focus:border-[#D4A64A] font-medium text-[#292D2B]"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-[#292D2B] mb-1">
                     Owner Password
                   </label>
                   <div className="relative">
-                    <KeyRound className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <KeyRound className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6F7571] pointer-events-none" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-9 pr-10 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-900"
+                      className="w-full pl-9 pr-10 py-2.5 text-xs rounded-xl border border-[#E6DFCE] bg-[#FAF7F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/30 focus:border-[#D4A64A] font-medium text-[#292D2B]"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6F7571] hover:text-[#292D2B] cursor-pointer"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -223,7 +223,7 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
                 <button
                   type="submit"
                   disabled={isLoading || !email.trim() || !password.trim()}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] font-bold text-xs shadow-sm transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -252,12 +252,12 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-          <span>RLS checks: <code className="font-mono text-[10px] bg-slate-200 px-1 py-0.5 rounded">public.is_rbb_owner()</code></span>
+        <div className="p-4 bg-[#FAF7F0] border-t border-[#EFE9DA] flex items-center justify-between text-[11px] text-[#555B58]">
+          <span>RLS checks: <code className="font-mono text-[10px] bg-[#EFE9DA] text-[#173F35] px-1.5 py-0.5 rounded">public.is_rbb_owner()</code></span>
           <button
             type="button"
             onClick={onClose}
-            className="font-semibold text-slate-700 hover:text-slate-900 text-xs cursor-pointer"
+            className="font-semibold text-[#173F35] hover:text-[#9A7120] text-xs cursor-pointer transition-colors"
           >
             Close
           </button>

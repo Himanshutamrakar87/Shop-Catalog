@@ -123,7 +123,7 @@ export default function CategoryModal({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-200"
+        className="fixed inset-0 bg-[#0F2D25]/65 backdrop-blur-xs transition-opacity duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -133,18 +133,18 @@ export default function CategoryModal({
         role="dialog"
         aria-modal="true"
         aria-label={mode === 'add' ? 'Add Category' : 'Edit Category'}
-        className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden z-10 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
+        className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-[#E6DFCE] overflow-hidden z-10 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
       >
         {/* Mobile handle indicator */}
-        <div className="sm:hidden w-12 h-1.5 bg-slate-200 rounded-full mx-auto mt-3" />
+        <div className="sm:hidden w-12 h-1.5 bg-[#E6DFCE] rounded-full mx-auto mt-3" />
 
         {/* Header */}
-        <div className="px-6 pt-4 pb-3 sm:py-5 flex items-center justify-between border-b border-slate-100">
+        <div className="px-6 pt-4 pb-3 sm:py-5 flex items-center justify-between border-b border-[#EFE9DA] bg-gradient-to-r from-[#FBF8F1] via-white to-[#F7F3EA]/70">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+            <h2 className="text-lg font-bold text-[#292D2B] tracking-tight">
               {mode === 'add' ? 'Add Category' : 'Edit Category'}
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-[#555B58] mt-0.5">
               {mode === 'add' ? 'Create a category to group your products' : 'Update category name'}
             </p>
           </div>
@@ -153,7 +153,7 @@ export default function CategoryModal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-[#6F7571] hover:text-[#292D2B] hover:bg-[#FBF5E6] transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -169,7 +169,7 @@ export default function CategoryModal({
 
           {/* Category Name Input */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-slate-700">
+            <label className="block text-xs font-bold text-[#292D2B]">
               Category Name
             </label>
             <input
@@ -182,29 +182,29 @@ export default function CategoryModal({
                 setName(e.target.value);
                 if (error) setError('');
               }}
-              className="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all font-medium text-slate-900 placeholder:text-slate-400"
+              className="w-full px-4 py-3 text-sm rounded-xl border border-[#E6DFCE] bg-[#FAF7F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/30 focus:border-[#D4A64A] transition-all font-medium text-[#292D2B] placeholder:text-[#7D827E]"
             />
           </div>
 
           {/* Category Code Preview (Visually Secondary, Section 2 & 3) */}
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-150">
-            <span className="block text-[11px] font-semibold text-slate-500 mb-1">
+          <div className="p-3.5 rounded-xl bg-[#FAF7F0] border border-[#E6DFCE]">
+            <span className="block text-[11px] font-semibold text-[#555B58] mb-1">
               Category code
             </span>
 
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-sm font-extrabold px-2.5 py-1 rounded bg-white text-slate-900 border border-slate-200 shadow-2xs tracking-wider">
+                <span className="font-mono text-sm font-extrabold px-2.5 py-1 rounded bg-white text-[#173F35] border border-[#D4A64A]/50 shadow-2xs tracking-wider">
                   {code || '—'}
                 </span>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-[#555B58]">
                   {mode === 'add' ? 'Automatically generated' : 'Automatically assigned'}
                 </span>
               </div>
 
               {code && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#173F35]">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#173F35]" />
                   Ready
                 </span>
               )}
@@ -212,7 +212,7 @@ export default function CategoryModal({
 
             {/* Subtle adjustment notification (Section 4) */}
             {adjustedCodeNotice && (
-              <p className="text-[11px] text-amber-700 mt-2 font-medium">
+              <p className="text-[11px] text-[#9A7120] mt-2 font-medium">
                 {adjustedCodeNotice}
               </p>
             )}
@@ -224,7 +224,7 @@ export default function CategoryModal({
               type="button"
               disabled={isSubmitting}
               onClick={onClose}
-              className="w-full sm:w-auto py-3 sm:py-2.5 px-5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-50 font-semibold text-sm transition-colors text-center"
+              className="w-full sm:w-auto py-3 sm:py-2.5 px-5 rounded-xl border border-[#E6DFCE] text-[#292D2B] hover:border-[#D4A64A] hover:bg-[#FCF9F2] disabled:opacity-50 font-semibold text-sm transition-colors text-center cursor-pointer"
             >
               Cancel
             </button>
@@ -232,7 +232,7 @@ export default function CategoryModal({
             <button
               type="submit"
               disabled={!name.trim() || !code || isSubmitting}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 sm:py-2.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 text-white font-bold text-sm shadow-xs transition-all text-center"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 sm:py-2.5 px-6 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] disabled:opacity-50 text-[#173F35] font-bold text-sm shadow-md shadow-[#173F35]/15 transition-all text-center whitespace-nowrap shrink-0 cursor-pointer"
             >
               {isSubmitting ? (
                 <>

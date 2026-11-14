@@ -15,27 +15,27 @@ export default function ProductPreview({ product }) {
     year: 'numeric'
   });
 
-  // Status badge styling
+  // Status styling
   const getStatusBadge = (status) => {
     switch (status) {
       case 'stock_alert':
       case 'Out of Stock':
         return {
           label: 'Out of Stock',
-          classes: 'bg-amber-100 text-amber-800 border-amber-200'
+          classes: 'text-amber-700 font-semibold'
         };
       case 'discontinued':
       case 'Discontinued':
         return {
           label: 'Discontinued',
-          classes: 'bg-slate-100 text-slate-700 border-slate-200'
+          classes: 'text-slate-500 font-semibold'
         };
       case 'active':
       case 'In Stock':
       default:
         return {
           label: 'In Stock',
-          classes: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+          classes: 'text-emerald-700 font-semibold'
         };
     }
   };
@@ -50,11 +50,11 @@ export default function ProductPreview({ product }) {
   return (
     <Link
       to={`/products/${product.id}`}
-      className="group block p-3.5 sm:p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs transition-all active:bg-slate-50/80"
+      className="group block p-3.5 sm:p-4 rounded-2xl border border-[#E6DFCE] bg-white hover:bg-[#FCF9F2] hover:border-[#D4A64A] hover:shadow-md hover:shadow-[#D4A64A]/15 hover:-translate-y-0.5 transition-all duration-200 active:bg-[#F7F3EA]"
     >
       <div className="flex items-center gap-3.5 sm:gap-4">
         {/* Product Image Thumbnail */}
-        <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+        <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-xl overflow-hidden bg-[#F7F3EA] border border-[#E6DFCE] group-hover:border-[#D4A64A]/60 shrink-0 shadow-2xs transition-colors">
           {displayImage1 ? (
             <img
               src={displayImage1}
@@ -66,53 +66,55 @@ export default function ProductPreview({ product }) {
               }}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-400">
+            <div className="w-full h-full flex items-center justify-center text-[#8B8E8B]">
               <ImageIcon className="w-6 h-6" />
             </div>
           )}
 
-          {/* 2-Image Indicator Badge */}
+          {/* 2-Image Indicator */}
           {hasMultipleImages && (
-            <span 
+            <span
               title="2 product images attached"
-              className="absolute bottom-1 right-1 bg-slate-900/80 text-white text-[9px] font-bold px-1 rounded backdrop-blur-xs"
+              className="absolute bottom-1 right-1 bg-[#173F35]/90 text-[#F4D58D] text-[9px] font-bold px-1.5 py-0.5 rounded-md backdrop-blur-xs"
             >
-              2📷
+              2
             </span>
           )}
         </div>
 
         {/* Product Details */}
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+          <div className="flex flex-wrap items-center gap-2 mb-0.5 text-xs">
+            <span className="font-mono font-bold text-[#173F35]">
               {displayCode}
             </span>
-            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${statusBadge.classes}`}>
+            <span className="text-[#D4A64A]/70" aria-hidden="true">·</span>
+            <span className={statusBadge.classes}>
               {statusBadge.label}
             </span>
           </div>
 
-          <h3 className="text-sm font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
+          <h3 className="text-sm sm:text-base font-bold text-[#292D2B] truncate group-hover:text-[#9A7120] transition-colors">
             {displayName}
           </h3>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-[#555B58]">
             <span className="flex items-center gap-1 truncate">
-              <Tag className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <Tag className="w-3.5 h-3.5 text-[#9A7120]/75 shrink-0" />
               <span>{displayCategory}</span>
-              {product.material && <span className="text-slate-400">• {product.material}</span>}
+              {product.material && <span className="text-[#6E7470]">· {product.material}</span>}
+              {product.brand && <span className="text-[#6E7470] hidden sm:inline">· {product.brand}</span>}
             </span>
 
-            <span className="flex items-center gap-1 shrink-0 text-slate-400">
-              <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <span className="flex items-center gap-1 shrink-0 text-[#6E7470]">
+              <Calendar className="w-3.5 h-3.5 text-[#8B8E8B] shrink-0" />
               <span>{formattedDate}</span>
             </span>
 
             {Boolean(product.purchasePrice) && (
-              <span className="font-semibold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded text-[11px]">
+              <span className="font-bold text-[#292D2B] tabular-nums">
                 ₹{Number(product.purchasePrice).toLocaleString()}
-                <span className="text-[10px] font-normal text-slate-500 ml-0.5">
+                <span className="text-[11px] font-medium text-[#555B58] ml-0.5">
                   /{product.purchaseUnit || product.purchase_unit || 'pc'}
                 </span>
               </span>
@@ -121,7 +123,7 @@ export default function ProductPreview({ product }) {
         </div>
 
         {/* Arrow Action Indicator */}
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors shrink-0">
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-[#8B8E8B] group-hover:text-[#173F35] group-hover:bg-[#D4A64A] transition-colors shrink-0">
           <ChevronRight className="w-4 h-4" />
         </div>
       </div>

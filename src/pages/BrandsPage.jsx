@@ -155,25 +155,25 @@ export default function BrandsPage() {
                 return (
                   <div
                     key={br.id}
-                    className="p-4 bg-white rounded-xl border border-slate-200 shadow-xs relative transition-all"
+                    className="p-4 bg-white rounded-xl border border-[#E6DFCE] hover:border-[#D4A64A] hover:bg-[#FCF9F2] shadow-xs relative transition-all"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <h2 className="text-base font-bold text-slate-900 truncate">
+                          <h2 className="text-base font-bold text-[#292D2B] truncate">
                             {br.name}
                           </h2>
                         </div>
 
-                        <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500 font-medium">
+                        <div className="flex items-center gap-3 mt-1.5 text-xs text-[#555B58] font-medium">
                           {br.origin && (
-                            <span className="flex items-center gap-1 text-slate-500 truncate">
-                              <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className="flex items-center gap-1 text-[#555B58] truncate">
+                              <MapPin className="w-3.5 h-3.5 text-[#6F7571] shrink-0" />
                               <span>{br.origin}</span>
                             </span>
                           )}
-                          <span className="inline-flex items-center gap-1 font-semibold text-blue-600">
-                            <Package className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center gap-1 font-semibold text-[#173F35] tabular-nums">
+                            <Package className="w-3.5 h-3.5 text-[#9A7120]" />
                             <span>{productCount} {productCount === 1 ? 'product' : 'products'}</span>
                           </span>
                         </div>
@@ -188,25 +188,25 @@ export default function BrandsPage() {
                               setActiveMenuId(isMenuOpen ? null : br.id);
                             }}
                             aria-label={`Options for ${br.name}`}
-                            className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+                            className="w-9 h-9 rounded-lg flex items-center justify-center text-[#6F7571] hover:text-[#173F35] hover:bg-[#FBF5E6] transition-colors cursor-pointer"
                           >
                             <MoreVertical className="w-4 h-4" />
                           </button>
 
                           {isMenuOpen && (
-                            <div className="absolute right-0 top-10 w-36 bg-white rounded-xl shadow-xl border border-slate-150 py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100">
+                            <div className="absolute right-0 top-10 w-36 bg-white rounded-xl shadow-xl border border-[#E6DFCE] py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100">
                               <button
                                 type="button"
                                 onClick={() => handleOpenEdit(br)}
-                                className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors"
+                                className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-[#292D2B] hover:bg-[#FCF9F2] hover:text-[#9A7120] flex items-center gap-2.5 transition-colors cursor-pointer"
                               >
-                                <Edit2 className="w-3.5 h-3.5 text-slate-500" />
+                                <Edit2 className="w-3.5 h-3.5 text-[#555B58]" />
                                 <span>Edit</span>
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleOpenDelete(br)}
-                                className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition-colors"
+                                className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition-colors cursor-pointer"
                               >
                                 <Trash2 className="w-3.5 h-3.5 text-rose-500" />
                                 <span>Delete</span>
@@ -222,35 +222,35 @@ export default function BrandsPage() {
             </div>
 
             {/* Desktop Clean Table (Screens >= 768px) */}
-            <div className="hidden md:block bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            <div className="hidden md:block bg-white rounded-xl border border-[#E6DFCE] shadow-xs overflow-hidden">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-150 bg-slate-50/70 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <tr className="border-b border-[#EFE9DA] bg-gradient-to-r from-[#FBF8F1] via-[#FAF7F0] to-[#F7F3EA] text-xs font-bold text-[#6F7571] uppercase tracking-wider">
                     <th className="py-3.5 px-6">Brand Name</th>
                     <th className="py-3.5 px-6">Origin / Location</th>
                     <th className="py-3.5 px-6 text-right w-36">Products</th>
                     {isOwner && <th className="py-3.5 px-6 text-center w-20">Actions</th>}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-sm">
+                <tbody className="divide-y divide-[#EFE9DA] text-sm">
                   {brands.map((br) => {
                     const productCount = getBrandProductCount(br);
                     const isMenuOpen = activeMenuId === br.id;
 
                     return (
-                      <tr key={br.id} className="hover:bg-slate-50/60 transition-colors group">
-                        <td className="py-4 px-6 font-semibold text-slate-900">
+                      <tr key={br.id} className="hover:bg-[#FCF9F2] transition-colors group">
+                        <td className="py-4 px-6 font-semibold text-[#292D2B] group-hover:text-[#9A7120] transition-colors">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                            <div className="w-7 h-7 rounded-lg bg-[#FBF5E6] border border-[#D4A64A]/40 text-[#9A7120] flex items-center justify-center shrink-0">
                               <Award className="w-4 h-4" />
                             </div>
                             <span>{br.name}</span>
                           </div>
                         </td>
-                        <td className="py-4 px-6 text-slate-600 text-xs font-medium">
+                        <td className="py-4 px-6 text-[#555B58] text-xs font-medium">
                           {br.origin || '—'}
                         </td>
-                        <td className="py-4 px-6 text-right font-semibold text-slate-700">
+                        <td className="py-4 px-6 text-right font-semibold text-[#292D2B] tabular-nums">
                           {productCount}
                         </td>
                         {isOwner && (
@@ -262,25 +262,25 @@ export default function BrandsPage() {
                                 setActiveMenuId(isMenuOpen ? null : br.id);
                               }}
                               aria-label={`Actions for ${br.name}`}
-                              className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                              className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-[#6F7571] hover:text-[#173F35] hover:bg-[#FBF5E6] transition-colors cursor-pointer"
                             >
                               <MoreVertical className="w-4 h-4" />
                             </button>
 
                             {isMenuOpen && (
-                              <div className="absolute right-6 top-11 w-36 bg-white rounded-xl shadow-xl border border-slate-150 py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100 text-left">
+                              <div className="absolute right-6 top-11 w-36 bg-white rounded-xl shadow-xl border border-[#E6DFCE] py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100 text-left">
                                 <button
                                   type="button"
                                   onClick={() => handleOpenEdit(br)}
-                                  className="w-full px-3.5 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors"
+                                  className="w-full px-3.5 py-2 text-left text-xs font-semibold text-[#292D2B] hover:bg-[#FCF9F2] hover:text-[#9A7120] flex items-center gap-2 transition-colors cursor-pointer"
                                 >
-                                  <Edit2 className="w-3.5 h-3.5 text-slate-500" />
+                                  <Edit2 className="w-3.5 h-3.5 text-[#555B58]" />
                                   <span>Edit</span>
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleOpenDelete(br)}
-                                  className="w-full px-3.5 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors"
+                                  className="w-full px-3.5 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors cursor-pointer"
                                 >
                                   <Trash2 className="w-3.5 h-3.5 text-rose-500" />
                                   <span>Delete</span>
@@ -305,7 +305,7 @@ export default function BrandsPage() {
       {modalState.isOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-200"
+            className="fixed inset-0 bg-[#0F2D25]/65 backdrop-blur-xs transition-opacity duration-200"
             onClick={() => setModalState({ isOpen: false, mode: 'add', brand: null })}
             aria-hidden="true"
           />
@@ -314,16 +314,16 @@ export default function BrandsPage() {
             role="dialog"
             aria-modal="true"
             aria-label={modalState.mode === 'add' ? 'Add Brand' : 'Edit Brand'}
-            className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden z-10 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
+            className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-[#E6DFCE] overflow-hidden z-10 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
           >
-            <div className="sm:hidden w-12 h-1.5 bg-slate-200 rounded-full mx-auto mt-3" />
+            <div className="sm:hidden w-12 h-1.5 bg-[#E6DFCE] rounded-full mx-auto mt-3" />
 
-            <div className="px-6 pt-4 pb-3 sm:py-5 flex items-center justify-between border-b border-slate-100">
+            <div className="px-6 pt-4 pb-3 sm:py-5 flex items-center justify-between border-b border-[#EFE9DA] bg-gradient-to-r from-[#FBF8F1] via-white to-[#F7F3EA]/70">
               <div>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                <h2 className="text-lg font-bold text-[#292D2B] tracking-tight">
                   {modalState.mode === 'add' ? 'Add Brand' : 'Edit Brand'}
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-[#555B58] mt-0.5">
                   {modalState.mode === 'add' ? 'Register a manufacturer or supplier' : 'Update brand information'}
                 </p>
               </div>
@@ -332,7 +332,7 @@ export default function BrandsPage() {
                 type="button"
                 onClick={() => setModalState({ isOpen: false, mode: 'add', brand: null })}
                 aria-label="Close"
-                className="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                className="w-9 h-9 rounded-full flex items-center justify-center text-[#6F7571] hover:text-[#292D2B] hover:bg-[#FBF5E6] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -346,7 +346,7 @@ export default function BrandsPage() {
               )}
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700">
+                <label className="block text-xs font-bold text-[#292D2B]">
                   Brand Name *
                 </label>
                 <input
@@ -359,20 +359,20 @@ export default function BrandsPage() {
                     setName(e.target.value);
                     if (formError) setFormError('');
                   }}
-                  className="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all font-medium text-slate-900 placeholder:text-slate-400"
+                  className="w-full px-4 py-3 text-sm rounded-xl border border-[#E6DFCE] bg-[#FAF7F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/30 focus:border-[#D4A64A] transition-all font-medium text-[#292D2B] placeholder:text-[#7D827E]"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700">
-                  Origin / Manufacturing Hub <span className="font-normal text-slate-400">(Optional)</span>
+                <label className="block text-xs font-bold text-[#292D2B]">
+                  Origin / Manufacturing Hub <span className="font-normal text-[#6F7571]">(Optional)</span>
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. Mumbai, India"
                   value={origin}
                   onChange={(e) => setOrigin(e.target.value)}
-                  className="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all font-medium text-slate-900 placeholder:text-slate-400"
+                  className="w-full px-4 py-3 text-sm rounded-xl border border-[#E6DFCE] bg-[#FAF7F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/30 focus:border-[#D4A64A] transition-all font-medium text-[#292D2B] placeholder:text-[#7D827E]"
                 />
               </div>
 
@@ -380,14 +380,14 @@ export default function BrandsPage() {
                 <button
                   type="button"
                   onClick={() => setModalState({ isOpen: false, mode: 'add', brand: null })}
-                  className="w-full sm:w-auto py-3 sm:py-2.5 px-5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-colors text-center"
+                  className="w-full sm:w-auto py-3 sm:py-2.5 px-5 rounded-xl border border-[#E6DFCE] text-[#292D2B] hover:border-[#D4A64A] hover:bg-[#FCF9F2] font-semibold text-sm transition-colors text-center cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!name.trim()}
-                  className="w-full sm:w-auto py-3 sm:py-2.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 text-white font-bold text-sm shadow-xs transition-all text-center"
+                  className="w-full sm:w-auto py-3 sm:py-2.5 px-6 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] disabled:opacity-50 text-[#173F35] font-bold text-sm shadow-md shadow-[#173F35]/15 transition-all text-center whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   {modalState.mode === 'add' ? 'Save Brand' : 'Save Changes'}
                 </button>
@@ -403,7 +403,7 @@ export default function BrandsPage() {
       {deleteDialog.isOpen && deleteDialog.brand && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-[#0F2D25]/65 backdrop-blur-xs transition-opacity"
             onClick={() => setDeleteDialog({ isOpen: false, brand: null, productCount: 0 })}
             aria-hidden="true"
           />
@@ -412,22 +412,22 @@ export default function BrandsPage() {
             role="dialog"
             aria-modal="true"
             aria-label={deleteDialog.productCount > 0 ? "Can't delete this brand" : `Delete "${deleteDialog.brand.name}"`}
-            className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden z-10 p-6 space-y-4 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
+            className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-[#E6DFCE] overflow-hidden z-10 p-6 space-y-4 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
           >
-            <div className="sm:hidden w-12 h-1 bg-slate-200 rounded-full mx-auto -mt-2 mb-2" />
+            <div className="sm:hidden w-12 h-1 bg-[#E6DFCE] rounded-full mx-auto -mt-2 mb-2" />
 
             {deleteDialog.productCount > 0 ? (
               <>
                 <div className="flex items-start gap-3.5">
-                  <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-[#FBF5E6] text-[#9A7120] border border-[#D4A64A]/40 flex items-center justify-center shrink-0">
                     <AlertCircle className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-base font-bold text-slate-900">
+                    <h3 className="text-base font-bold text-[#292D2B]">
                       Can't delete this brand
                     </h3>
-                    <p className="text-sm text-slate-600 mt-2 leading-relaxed">
-                      <strong className="text-slate-900">{deleteDialog.productCount} {deleteDialog.productCount === 1 ? 'product is' : 'products are'}</strong> currently associated with this brand. Reassign those products before deleting the brand.
+                    <p className="text-sm text-[#555B58] mt-2 leading-relaxed">
+                      <strong className="text-[#292D2B]">{deleteDialog.productCount} {deleteDialog.productCount === 1 ? 'product is' : 'products are'}</strong> currently associated with this brand. Reassign those products before deleting the brand.
                     </p>
                   </div>
                 </div>
@@ -436,7 +436,7 @@ export default function BrandsPage() {
                   <button
                     type="button"
                     onClick={() => setDeleteDialog({ isOpen: false, brand: null, productCount: 0 })}
-                    className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm transition-colors text-center"
+                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] font-bold text-sm transition-all text-center cursor-pointer"
                   >
                     Got it
                   </button>
@@ -449,10 +449,10 @@ export default function BrandsPage() {
                     <Trash2 className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-base font-bold text-slate-900">
+                    <h3 className="text-base font-bold text-[#292D2B]">
                       Delete "{deleteDialog.brand.name}"?
                     </h3>
-                    <p className="text-sm text-slate-600 mt-1">
+                    <p className="text-sm text-[#555B58] mt-1">
                       This brand will be removed from your catalogue options.
                     </p>
                   </div>
@@ -462,14 +462,14 @@ export default function BrandsPage() {
                   <button
                     type="button"
                     onClick={() => setDeleteDialog({ isOpen: false, brand: null, productCount: 0 })}
-                    className="py-3 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-colors text-center"
+                    className="py-3 px-4 rounded-xl border border-[#E6DFCE] text-[#292D2B] hover:border-[#D4A64A] hover:bg-[#FCF9F2] font-semibold text-sm transition-colors text-center cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={handleConfirmDelete}
-                    className="py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold text-sm shadow-xs transition-all text-center"
+                    className="py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold text-sm shadow-xs transition-all text-center cursor-pointer"
                   >
                     Delete
                   </button>

@@ -24,12 +24,12 @@ export default function Toast() {
 
   return (
     <div className="fixed bottom-5 inset-x-4 sm:inset-x-auto sm:right-6 z-50 flex justify-center pointer-events-none animate-in slide-in-from-bottom-5 fade-in duration-200">
-      <div className="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900 text-white shadow-2xl border border-slate-800 max-w-md w-full sm:w-auto">
-        {isSuccess && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}
+      <div className="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#173F35] text-[#F7F3EA] shadow-2xl border border-[#D4A64A]/40 max-w-md w-full sm:w-auto">
+        {isSuccess && <CheckCircle2 className="w-5 h-5 text-[#D4A64A] shrink-0" />}
         {isError && <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />}
-        {!isSuccess && !isError && <Info className="w-5 h-5 text-blue-400 shrink-0" />}
+        {!isSuccess && !isError && <Info className="w-5 h-5 text-[#D4A64A] shrink-0" />}
 
-        <p className="text-sm font-semibold text-white min-w-0 pr-2">
+        <p className="text-sm font-semibold text-[#F7F3EA] min-w-0 pr-2">
           {toast.message}
         </p>
 
@@ -37,7 +37,7 @@ export default function Toast() {
           type="button"
           onClick={hideToast}
           aria-label="Dismiss toast"
-          className="ml-auto p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          className="ml-auto p-1 rounded-lg text-[#C5D4CE] hover:text-[#D4A64A] hover:bg-[#1E4F43] transition-colors"
         >
           <X className="w-4 h-4" />
         </button>

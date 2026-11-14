@@ -61,24 +61,24 @@ export default function MobileNav({
   if (!isOpen) return null;
 
   const getNavLinkClass = ({ isActive }) =>
-    `flex items-center justify-between px-4 py-3.5 rounded-xl text-base font-medium transition-colors ${
+    `flex items-center justify-between px-4 py-3.5 rounded-xl text-base font-semibold transition-all ${
       isActive
-        ? 'bg-slate-900 text-white font-semibold shadow-sm'
-        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200'
+        ? 'bg-gradient-to-r from-[#D4A64A] to-[#C29236] text-[#173F35] font-bold shadow-md shadow-black/20'
+        : 'text-[#DCE6E2] hover:text-[#F4D58D] hover:bg-[#1E4F43] active:bg-[#113129]'
     }`;
 
   const getSubLinkClass = ({ isActive }) =>
-    `flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+    `flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
       isActive
-        ? 'bg-blue-50 text-blue-700 font-semibold border-l-4 border-blue-600'
-        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200'
+        ? 'bg-[#D4A64A]/18 text-[#F4D58D] font-semibold ring-1 ring-[#D4A64A]/45'
+        : 'text-[#C9D8D2] hover:text-[#F4D58D] hover:bg-[#1E4F43] active:bg-[#113129]'
     }`;
 
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
       {/* Dimmed backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-200 animate-in fade-in"
+        className="fixed inset-0 bg-[#0D211C]/70 backdrop-blur-xs transition-opacity duration-200 animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -88,16 +88,16 @@ export default function MobileNav({
         role="dialog"
         aria-modal="true"
         aria-label="Mobile Navigation Menu"
-        className="fixed inset-y-0 left-0 w-[84%] max-w-sm bg-white shadow-2xl flex flex-col z-10 transition-transform duration-200 ease-out"
+        className="fixed inset-y-0 left-0 w-[84%] max-w-sm bg-gradient-to-b from-[#173F35] via-[#153930] to-[#0F2D25] shadow-2xl flex flex-col z-10 transition-transform duration-200 ease-out border-r border-[#D4A64A]/25 text-[#F7F3EA]"
       >
         {/* Header with Logo and Close button */}
-        <div className="h-16 px-4 flex items-center justify-between border-b border-slate-100 bg-slate-50/50">
-          <BrandLogo />
+        <div className="h-16 px-4 flex items-center justify-between border-b border-[#D4A64A]/20 bg-[#12332B]/70">
+          <BrandLogo inverted />
           <button
             type="button"
             onClick={onClose}
             aria-label="Close navigation menu"
-            className="w-10 h-10 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200/70 active:scale-95 transition-all cursor-pointer"
+            className="w-10 h-10 flex items-center justify-center rounded-xl text-[#DCE6E2] hover:text-[#D4A64A] hover:bg-[#1E4F43] active:scale-95 transition-all cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -116,12 +116,12 @@ export default function MobileNav({
                   </>
                 ) : (
                   <>
-                    <Package className="w-5 h-5 text-blue-600" />
+                    <Package className="w-5 h-5" />
                     <span>All Products</span>
                   </>
                 )}
               </div>
-              <ChevronRight className="w-4 h-4 opacity-50" />
+              <ChevronRight className="w-4 h-4 opacity-60" />
             </NavLink>
           </div>
 
@@ -129,7 +129,7 @@ export default function MobileNav({
           {isOwner ? (
             <NavLink
               to="/products/new"
-              className="flex items-center justify-center gap-2.5 w-full py-3.5 px-4 rounded-xl bg-blue-600 active:bg-blue-700 text-white font-semibold text-sm shadow-sm transition-all"
+              className="flex items-center justify-center gap-2.5 w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] active:from-[#DFB359] active:to-[#CE9D3E] text-[#173F35] font-bold text-sm shadow-md shadow-black/25 transition-all"
             >
               <PlusCircle className="w-5 h-5" />
               <span>Add New Product</span>
@@ -137,7 +137,7 @@ export default function MobileNav({
           ) : (
             <Link
               to="/login"
-              className="flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-xl bg-slate-900 active:bg-slate-800 text-white font-semibold text-sm shadow-sm transition-all"
+              className="flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] active:from-[#DFB359] active:to-[#CE9D3E] text-[#173F35] font-bold text-sm shadow-md transition-all"
             >
               <Lock className="w-4 h-4" />
               <span>Owner Management Sign In</span>
@@ -146,7 +146,7 @@ export default function MobileNav({
 
           {/* Catalogue */}
           <div>
-            <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+            <p className="px-3 text-[11px] font-bold text-[#D4A64A]/80 uppercase tracking-wider mb-2">
               Catalogue
             </p>
             <div className="space-y-1">
@@ -154,12 +154,12 @@ export default function MobileNav({
                 {({ isActive }) => (
                   <>
                     <div className="flex items-center gap-3">
-                      <Package className="w-5 h-5 text-slate-500" />
+                      <Package className={`w-5 h-5 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB]'}`} />
                       <span>All Products</span>
                     </div>
                     <span
-                      className={`px-2 py-0.5 text-xs font-bold rounded-full tabular-nums ${
-                        isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                      className={`px-2 py-0.5 text-xs font-bold rounded-md tabular-nums ${
+                        isActive ? 'bg-[#D4A64A] text-[#173F35]' : 'bg-[#0F2D25] text-[#C9D8D2]'
                       }`}
                     >
                       {productsCount}
@@ -172,7 +172,7 @@ export default function MobileNav({
 
           {/* Classification Section */}
           <div>
-            <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+            <p className="px-3 text-[11px] font-bold text-[#D4A64A]/80 uppercase tracking-wider mb-2">
               Classification
             </p>
             <div className="space-y-1">
@@ -180,12 +180,12 @@ export default function MobileNav({
                 {({ isActive }) => (
                   <>
                     <div className="flex items-center gap-3">
-                      <Layers className="w-5 h-5 text-slate-500" />
+                      <Layers className={`w-5 h-5 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB]'}`} />
                       <span>Categories</span>
                     </div>
                     <span
-                      className={`px-2 py-0.5 text-xs font-bold rounded-full tabular-nums ${
-                        isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                      className={`px-2 py-0.5 text-xs font-bold rounded-md tabular-nums ${
+                        isActive ? 'bg-[#D4A64A] text-[#173F35]' : 'bg-[#0F2D25] text-[#C9D8D2]'
                       }`}
                     >
                       {categoriesCount}
@@ -198,12 +198,12 @@ export default function MobileNav({
                 {({ isActive }) => (
                   <>
                     <div className="flex items-center gap-3">
-                      <FolderTree className="w-5 h-5 text-slate-500" />
+                      <FolderTree className={`w-5 h-5 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB]'}`} />
                       <span>Sub-Categories</span>
                     </div>
                     <span
-                      className={`px-2 py-0.5 text-xs font-bold rounded-full tabular-nums ${
-                        isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                      className={`px-2 py-0.5 text-xs font-bold rounded-md tabular-nums ${
+                        isActive ? 'bg-[#D4A64A] text-[#173F35]' : 'bg-[#0F2D25] text-[#C9D8D2]'
                       }`}
                     >
                       {subCategoriesCount}
@@ -216,12 +216,12 @@ export default function MobileNav({
                 {({ isActive }) => (
                   <>
                     <div className="flex items-center gap-3">
-                      <Award className="w-5 h-5 text-slate-500" />
+                      <Award className={`w-5 h-5 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB]'}`} />
                       <span>Brands</span>
                     </div>
                     <span
-                      className={`px-2 py-0.5 text-xs font-bold rounded-full tabular-nums ${
-                        isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                      className={`px-2 py-0.5 text-xs font-bold rounded-md tabular-nums ${
+                        isActive ? 'bg-[#D4A64A] text-[#173F35]' : 'bg-[#0F2D25] text-[#C9D8D2]'
                       }`}
                     >
                       {brandsCount}
@@ -234,12 +234,12 @@ export default function MobileNav({
                 {({ isActive }) => (
                   <>
                     <div className="flex items-center gap-3">
-                      <Box className="w-5 h-5 text-slate-500" />
+                      <Box className={`w-5 h-5 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB]'}`} />
                       <span>Materials</span>
                     </div>
                     <span
-                      className={`px-2 py-0.5 text-xs font-bold rounded-full tabular-nums ${
-                        isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                      className={`px-2 py-0.5 text-xs font-bold rounded-md tabular-nums ${
+                        isActive ? 'bg-[#D4A64A] text-[#173F35]' : 'bg-[#0F2D25] text-[#C9D8D2]'
                       }`}
                     >
                       {materialsCount}
@@ -253,26 +253,26 @@ export default function MobileNav({
           {/* Owner-Only Status Alerts */}
           {isOwner && (
             <div>
-              <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+              <p className="px-3 text-[11px] font-bold text-[#D4A64A]/80 uppercase tracking-wider mb-2">
                 Inventory Alerts &amp; Archive
               </p>
               <div className="space-y-1">
                 <NavLink to="/stock-alert" className={getSubLinkClass}>
                   <div className="flex items-center gap-3">
-                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                    <AlertTriangle className="w-5 h-5 text-[#D4A64A]" />
                     <span>Stock Alert</span>
                   </div>
-                  <span className="px-2 py-0.5 text-xs font-bold rounded-full tabular-nums bg-amber-100 text-amber-800">
+                  <span className="px-2 py-0.5 text-xs font-bold rounded-md tabular-nums bg-[#D4A64A] text-[#173F35]">
                     {alertCount}
                   </span>
                 </NavLink>
 
                 <NavLink to="/discontinued" className={getSubLinkClass}>
                   <div className="flex items-center gap-3">
-                    <Archive className="w-5 h-5 text-slate-500" />
+                    <Archive className="w-5 h-5 text-[#9AB5AB]" />
                     <span>Discontinued</span>
                   </div>
-                  <span className="px-2 py-0.5 text-xs font-bold rounded-full tabular-nums bg-slate-100 text-slate-600">
+                  <span className="px-2 py-0.5 text-xs font-bold rounded-md tabular-nums bg-[#0F2D25] text-[#C9D8D2]">
                     {discontinuedCount}
                   </span>
                 </NavLink>
@@ -282,16 +282,16 @@ export default function MobileNav({
         </div>
 
         {/* Footer Area */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+        <div className="p-4 border-t border-[#D4A64A]/20 bg-[#0F2D25]/90">
           {isOwner ? (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#D4A64A] to-[#B5862B] text-[#173F35] flex items-center justify-center font-extrabold text-sm shrink-0 shadow-sm">
                   O
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-800 truncate">Owner Workspace</p>
-                  <p className="text-[11px] text-emerald-600 font-medium truncate">Active Session</p>
+                  <p className="text-xs font-semibold text-[#F7F3EA] truncate">Owner Workspace</p>
+                  <p className="text-[11px] text-[#D4A64A] font-medium truncate">Active Session</p>
                 </div>
               </div>
               {onSignOut && (
@@ -299,7 +299,7 @@ export default function MobileNav({
                   type="button"
                   onClick={onSignOut}
                   title="Sign out of owner session"
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-slate-600 hover:text-rose-600 hover:bg-rose-50 text-xs font-semibold transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[#DCE6E2] hover:text-[#F4D58D] hover:bg-[#1E4F43] text-xs font-semibold transition-colors cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Sign Out</span>
@@ -308,13 +308,13 @@ export default function MobileNav({
             </div>
           ) : (
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-600">
-                <Shield className="w-4 h-4 text-blue-600" />
+              <div className="flex items-center gap-2 text-[#DCE6E2]">
+                <Shield className="w-4 h-4 text-[#D4A64A]" />
                 <span className="text-xs font-medium">Public Catalogue</span>
               </div>
               <Link
                 to="/login"
-                className="text-xs font-bold text-blue-600 hover:text-blue-700"
+                className="text-xs font-bold text-[#D4A64A] hover:text-[#F4D58D]"
               >
                 Owner Sign In
               </Link>

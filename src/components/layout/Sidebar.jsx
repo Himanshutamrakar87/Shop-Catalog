@@ -38,24 +38,24 @@ export default function Sidebar({
   const materialsCount = counts.materials ?? 0;
 
   const getNavLinkClass = ({ isActive }) =>
-    `group flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+    `group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
       isActive
-        ? 'bg-slate-900 text-white shadow-sm font-semibold'
-        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+        ? 'bg-gradient-to-r from-[#D4A64A] to-[#C29236] text-[#173F35] shadow-md shadow-black/20 font-bold'
+        : 'text-[#DCE6E2] hover:text-[#F4D58D] hover:bg-[#1E4F43]'
     }`;
 
   const getSubLinkClass = ({ isActive }) =>
-    `group flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-all ${
+    `group flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
       isActive
-        ? 'bg-blue-50 text-blue-700 font-semibold border-l-2 border-blue-600'
-        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+        ? 'bg-[#D4A64A]/18 text-[#F4D58D] font-semibold ring-1 ring-[#D4A64A]/45 shadow-2xs'
+        : 'text-[#C9D8D2] hover:text-[#F4D58D] hover:bg-[#1E4F43]/90'
     }`;
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 h-screen sticky top-0 shrink-0 select-none">
+    <aside className="hidden lg:flex flex-col w-64 bg-gradient-to-b from-[#173F35] via-[#153930] to-[#0F2D25] border-r border-[#D4A64A]/25 h-screen sticky top-0 shrink-0 select-none text-[#F7F3EA]">
       {/* Brand Header */}
-      <div className="h-16 shrink-0 flex items-center px-6 border-b border-slate-100">
-        <BrandLogo />
+      <div className="h-16 shrink-0 flex items-center px-6 border-b border-[#D4A64A]/20 bg-[#12332B]/70">
+        <BrandLogo inverted />
       </div>
 
       {/* Navigation Links (scrolls only when cursor hovers over sidebar) */}
@@ -71,18 +71,18 @@ export default function Sidebar({
                 </>
               ) : (
                 <>
-                  <Package className="w-4 h-4 shrink-0 transition-colors text-blue-600" />
+                  <Package className="w-4 h-4 shrink-0 transition-colors" />
                   <span>Public Catalogue</span>
                 </>
               )}
             </div>
-            <ChevronRight className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 transition-opacity" />
+            <ChevronRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
           </NavLink>
         </div>
 
         {/* Catalogue Section (Public for everyone) */}
         <div>
-          <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+          <p className="px-3 text-[11px] font-bold text-[#D4A64A]/80 uppercase tracking-wider mb-2">
             Catalogue
           </p>
           <div className="space-y-1">
@@ -90,12 +90,12 @@ export default function Sidebar({
               {({ isActive }) => (
                 <>
                   <div className="flex items-center gap-3">
-                    <Package className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-blue-600" />
+                    <Package className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB] group-hover:text-[#D4A64A]'}`} />
                     <span>All Products</span>
                   </div>
                   <span
-                    className={`px-2 py-0.5 text-xs font-semibold rounded-full tabular-nums ${
-                      isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                    className={`px-2 py-0.5 text-xs font-semibold rounded-md tabular-nums ${
+                      isActive ? 'bg-[#D4A64A] text-[#173F35]' : 'bg-[#0F2D25] text-[#C9D8D2] border border-[#D4A64A]/15'
                     }`}
                   >
                     {productsCount}
@@ -108,7 +108,7 @@ export default function Sidebar({
 
         {/* Classification Section (Publicly browsable) */}
         <div>
-          <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+          <p className="px-3 text-[11px] font-bold text-[#D4A64A]/80 uppercase tracking-wider mb-2">
             Classification
           </p>
           <div className="space-y-1">
@@ -116,12 +116,12 @@ export default function Sidebar({
               {({ isActive }) => (
                 <>
                   <div className="flex items-center gap-3">
-                    <Layers className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-blue-600" />
+                    <Layers className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB] group-hover:text-[#D4A64A]'}`} />
                     <span>Categories</span>
                   </div>
                   <span
-                    className={`px-2 py-0.5 text-xs font-semibold rounded-full tabular-nums ${
-                      isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                    className={`px-2 py-0.5 text-xs font-semibold rounded-md tabular-nums ${
+                      isActive ? 'bg-[#D4A64A] text-[#173F35]' : 'bg-[#0F2D25] text-[#C9D8D2] border border-[#D4A64A]/15'
                     }`}
                   >
                     {categoriesCount}
@@ -133,12 +133,12 @@ export default function Sidebar({
               {({ isActive }) => (
                 <>
                   <div className="flex items-center gap-3">
-                    <FolderTree className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-blue-600" />
+                    <FolderTree className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB] group-hover:text-[#D4A64A]'}`} />
                     <span>Sub-Categories</span>
                   </div>
                   <span
-                    className={`px-2 py-0.5 text-xs font-semibold rounded-full tabular-nums ${
-                      isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                    className={`px-2 py-0.5 text-xs font-semibold rounded-md tabular-nums ${
+                      isActive ? 'bg-[#D4A64A] text-[#173F35]' : 'bg-[#0F2D25] text-[#C9D8D2] border border-[#D4A64A]/15'
                     }`}
                   >
                     {subCategoriesCount}
@@ -150,12 +150,12 @@ export default function Sidebar({
               {({ isActive }) => (
                 <>
                   <div className="flex items-center gap-3">
-                    <Award className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-blue-600" />
+                    <Award className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB] group-hover:text-[#D4A64A]'}`} />
                     <span>Brands</span>
                   </div>
                   <span
-                    className={`px-2 py-0.5 text-xs font-semibold rounded-full tabular-nums ${
-                      isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                    className={`px-2 py-0.5 text-xs font-semibold rounded-md tabular-nums ${
+                      isActive ? 'bg-[#D4A64A] text-[#173F35]' : 'bg-[#0F2D25] text-[#C9D8D2] border border-[#D4A64A]/15'
                     }`}
                   >
                     {brandsCount}
@@ -167,12 +167,12 @@ export default function Sidebar({
               {({ isActive }) => (
                 <>
                   <div className="flex items-center gap-3">
-                    <Box className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-blue-600" />
+                    <Box className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB] group-hover:text-[#D4A64A]'}`} />
                     <span>Materials</span>
                   </div>
                   <span
-                    className={`px-2 py-0.5 text-xs font-semibold rounded-full tabular-nums ${
-                      isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                    className={`px-2 py-0.5 text-xs font-semibold rounded-md tabular-nums ${
+                      isActive ? 'bg-[#D4A64A] text-[#173F35]' : 'bg-[#0F2D25] text-[#C9D8D2] border border-[#D4A64A]/15'
                     }`}
                   >
                     {materialsCount}
@@ -186,26 +186,26 @@ export default function Sidebar({
         {/* Owner-Only Status & Inventory Section */}
         {isOwner ? (
           <div>
-            <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+            <p className="px-3 text-[11px] font-bold text-[#D4A64A]/80 uppercase tracking-wider mb-2">
               Inventory Status
             </p>
             <div className="space-y-1">
               <NavLink to="/stock-alert" className={getSubLinkClass}>
                 <div className="flex items-center gap-3">
-                  <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-[#D4A64A]" />
                   <span>Stock Alert</span>
                 </div>
-                <span className="px-2 py-0.5 text-xs font-semibold rounded-full tabular-nums bg-amber-100 text-amber-800">
+                <span className="px-2 py-0.5 text-xs font-bold rounded-md tabular-nums bg-[#D4A64A] text-[#173F35]">
                   {alertCount}
                 </span>
               </NavLink>
 
               <NavLink to="/discontinued" className={getSubLinkClass}>
                 <div className="flex items-center gap-3">
-                  <Archive className="w-4 h-4 shrink-0 text-slate-500" />
+                  <Archive className="w-4 h-4 shrink-0 text-[#9AB5AB] group-hover:text-[#D4A64A]" />
                   <span>Discontinued</span>
                 </div>
-                <span className="px-2 py-0.5 text-xs font-semibold rounded-full tabular-nums bg-slate-100 text-slate-600">
+                <span className="px-2 py-0.5 text-xs font-semibold rounded-md tabular-nums bg-[#0F2D25] text-[#C9D8D2] border border-[#D4A64A]/15">
                   {discontinuedCount}
                 </span>
               </NavLink>
@@ -218,7 +218,7 @@ export default function Sidebar({
           {isOwner ? (
             <NavLink
               to="/products/new"
-              className="flex items-center justify-center gap-2.5 w-full py-2.5 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm shadow-sm transition-colors active:scale-[0.98]"
+              className="flex items-center justify-center gap-2.5 w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] font-bold text-sm shadow-md shadow-black/25 hover:shadow-lg hover:shadow-[#D4A64A]/20 transition-all active:scale-[0.98]"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Add Product</span>
@@ -226,7 +226,7 @@ export default function Sidebar({
           ) : (
             <Link
               to="/login"
-              className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs shadow-sm transition-colors"
+              className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] font-bold text-xs shadow-md shadow-black/25 transition-all"
             >
               <Lock className="w-3.5 h-3.5" />
               <span>Owner Management Login</span>
@@ -236,16 +236,16 @@ export default function Sidebar({
       </div>
 
       {/* Footer Section */}
-      <div className="shrink-0 p-4 border-t border-slate-100 bg-slate-50/50">
+      <div className="shrink-0 p-4 border-t border-[#D4A64A]/20 bg-[#0F2D25]/90">
         {isOwner ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#D4A64A] to-[#B5862B] text-[#173F35] flex items-center justify-center font-extrabold text-xs shrink-0 shadow-sm">
                 O
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-slate-800 truncate">Owner Workspace</p>
-                <p className="text-[11px] text-emerald-600 font-medium truncate">Active Session</p>
+                <p className="text-xs font-semibold text-[#F7F3EA] truncate">Owner Workspace</p>
+                <p className="text-[11px] text-[#D4A64A] font-medium truncate">Active Session</p>
               </div>
             </div>
             {onSignOut && (
@@ -253,7 +253,7 @@ export default function Sidebar({
                 type="button"
                 onClick={onSignOut}
                 title="Sign out of owner session"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-[#B8CBC3] hover:text-[#F4D58D] hover:bg-[#1E4F43] transition-colors cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -261,16 +261,16 @@ export default function Sidebar({
           </div>
         ) : (
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-slate-500 min-w-0">
-              <Shield className="w-4 h-4 text-blue-600 shrink-0" />
+            <div className="flex items-center gap-2 text-[#DCE6E2] min-w-0">
+              <Shield className="w-4 h-4 text-[#D4A64A] shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-700 truncate">Public Catalogue</p>
-                <p className="text-[11px] text-slate-400 truncate">Browse Mode</p>
+                <p className="text-xs font-medium text-[#F7F3EA] truncate">Public Catalogue</p>
+                <p className="text-[11px] text-[#9AB5AB] truncate">Browse Mode</p>
               </div>
             </div>
             <Link
               to="/login"
-              className="text-xs font-bold text-blue-600 hover:text-blue-700"
+              className="text-xs font-bold text-[#D4A64A] hover:text-[#F4D58D]"
             >
               Sign In
             </Link>

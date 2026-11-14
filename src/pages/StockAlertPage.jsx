@@ -20,25 +20,25 @@ export default function StockAlertPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="p-1 rounded bg-amber-100 text-amber-700">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="p-1.5 rounded-lg bg-[#D4A64A] text-[#173F35] shadow-2xs">
               <AlertTriangle className="w-4 h-4" />
             </span>
-            <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">
+            <span className="text-xs font-bold text-[#8E6518] uppercase tracking-wider">
               Inventory Attention Required
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#292D2B] tracking-tight">
             Stock Alert
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-[#555B58] mt-1">
             Products approaching depletion threshold or requiring re-order verification
           </p>
         </div>
 
         <Link
           to="/products/new"
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-xs transition-colors self-start sm:self-auto"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] font-bold text-sm shadow-md shadow-[#173F35]/15 transition-all self-start sm:self-auto whitespace-nowrap shrink-0"
         >
           <PlusCircle className="w-4 h-4" />
           <span>Add Product</span>
@@ -46,15 +46,17 @@ export default function StockAlertPage() {
       </div>
 
       {/* Alert Banner */}
-      <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-3">
-        <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#FBF5E6] via-[#FAF3DF] to-[#F7EED4] border border-[#D4A64A]/60 text-[#292D2B] flex items-start gap-3 shadow-xs">
+        <div className="w-9 h-9 rounded-xl bg-[#D4A64A] text-[#173F35] flex items-center justify-center shrink-0 shadow-xs">
+          <AlertTriangle className="w-4.5 h-4.5" />
+        </div>
         <div className="text-xs sm:text-sm">
-          <p className="font-bold">
+          <p className="font-bold text-[#292D2B]">
             {alertProducts.length === 0
               ? 'No stock alerts currently active'
               : `${alertProducts.length} product${alertProducts.length === 1 ? '' : 's'} flagged for stock alert across catalogue`}
           </p>
-          <p className="text-amber-700 mt-0.5">
+          <p className="text-[#555B58] mt-0.5">
             {alertProducts.length === 0
               ? 'All inventory levels are healthy. Products marked with low stock will appear here.'
               : 'Review these items to contact suppliers or mark updated inventory statuses.'}
@@ -69,9 +71,9 @@ export default function StockAlertPage() {
             <ProductPreview key={product.id} product={product} />
           ))
         ) : (
-          <div className="p-8 sm:p-12 text-center bg-white rounded-2xl border border-slate-200 text-slate-500 text-sm space-y-2">
-            <p className="font-semibold text-slate-700">No products needing stock attention</p>
-            <p className="text-xs text-slate-400">Items marked as 'Stock Alert' or 'Out of Stock' will be shown in this list.</p>
+          <div className="p-8 sm:p-12 text-center bg-white rounded-2xl border border-[#E6DFCE] text-[#555B58] text-sm space-y-2">
+            <p className="font-semibold text-[#292D2B]">No products needing stock attention</p>
+            <p className="text-xs text-[#6F7571]">Items marked as 'Stock Alert' or 'Out of Stock' will be shown in this list.</p>
           </div>
         )}
       </div>

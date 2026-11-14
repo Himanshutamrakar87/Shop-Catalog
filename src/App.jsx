@@ -63,10 +63,10 @@ class AppErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 shadow-lg p-6 text-center space-y-4">
-            <h2 className="text-lg font-bold text-slate-900">Something went wrong</h2>
-            <p className="text-xs text-slate-600 leading-relaxed">
+        <div className="min-h-screen bg-[#F7F3EA] flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white rounded-2xl border border-[#E6DFCE] shadow-lg p-6 text-center space-y-4">
+            <h2 className="text-lg font-bold text-[#292D2B]">Something went wrong</h2>
+            <p className="text-xs text-[#555B58] leading-relaxed">
               {this.state.errorMessage}
             </p>
             <button
@@ -75,7 +75,7 @@ class AppErrorBoundary extends React.Component {
                 this.setState({ hasError: false, errorMessage: '' });
                 window.location.reload();
               }}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-colors"
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] font-bold text-sm transition-all cursor-pointer"
             >
               Reload Page
             </button>

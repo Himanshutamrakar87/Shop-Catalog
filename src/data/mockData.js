@@ -215,14 +215,14 @@ export function getCatalogueStats(products = INITIAL_PRODUCTS, categories = INIT
 export function getCategoryDistribution(products = INITIAL_PRODUCTS, categories = INITIAL_CATEGORIES) {
   const total = products.length || 1;
   const colors = [
-    'bg-blue-600',
-    'bg-sky-500',
-    'bg-indigo-500',
-    'bg-teal-500',
-    'bg-amber-500',
-    'bg-purple-500',
-    'bg-emerald-500',
-    'bg-rose-500',
+    'bg-gradient-to-r from-[#173F35] to-[#245C4E]',
+    'bg-gradient-to-r from-[#D4A64A] to-[#B5862B]',
+    'bg-gradient-to-r from-[#292D2B] to-[#4A504D]',
+    'bg-gradient-to-r from-[#9C6B21] to-[#C9963B]',
+    'bg-gradient-to-r from-[#1E5245] to-[#2F7362]',
+    'bg-gradient-to-r from-[#8C5832] to-[#B67A4B]',
+    'bg-gradient-to-r from-[#12332B] to-[#1D4E42]',
+    'bg-gradient-to-r from-[#B8862D] to-[#D4A64A]',
   ];
 
   return categories.map((cat, idx) => {
@@ -246,14 +246,14 @@ export function getCategoryDistribution(products = INITIAL_PRODUCTS, categories 
 export function getMaterialDistribution(products = INITIAL_PRODUCTS, materials = INITIAL_MATERIALS) {
   const total = products.length || 1;
   const palette = [
-    'bg-blue-600',
-    'bg-slate-500',
-    'bg-amber-500',
-    'bg-orange-500',
-    'bg-stone-600',
-    'bg-teal-500',
-    'bg-indigo-500',
-    'bg-emerald-500',
+    'bg-gradient-to-r from-[#173F35] to-[#245C4E]',
+    'bg-gradient-to-r from-[#D4A64A] to-[#B5862B]',
+    'bg-gradient-to-r from-[#292D2B] to-[#4A504D]',
+    'bg-gradient-to-r from-[#8C5832] to-[#B67A4B]',
+    'bg-gradient-to-r from-[#1E5245] to-[#2F7362]',
+    'bg-gradient-to-r from-[#9C6B21] to-[#C9963B]',
+    'bg-gradient-to-r from-[#12332B] to-[#1D4E42]',
+    'bg-gradient-to-r from-[#B8862D] to-[#D4A64A]',
   ];
 
   const materialNames = [];

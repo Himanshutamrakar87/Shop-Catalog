@@ -81,10 +81,10 @@ export default function ClassificationCatalogueView({
       {/* 1. Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#292D2B] tracking-tight">
             {title}
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-[#555B58] mt-1">
             {isManageMode
               ? `Edit or remove ${itemLabelPlural} (${items.length} ${items.length === 1 ? itemLabelSingular : itemLabelPlural})`
               : subtitle || `Select a ${itemLabelSingular} above to filter products`}
@@ -97,10 +97,10 @@ export default function ClassificationCatalogueView({
               <button
                 type="button"
                 onClick={() => setIsManageMode((prev) => !prev)}
-                className={`inline-flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 rounded-xl border text-sm font-semibold transition-all cursor-pointer ${
+                className={`inline-flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 rounded-xl border text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   isManageMode
-                    ? 'bg-slate-900 text-white border-slate-900'
-                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    ? 'bg-[#173F35] text-[#F7F3EA] border-[#173F35] shadow-md shadow-[#173F35]/15'
+                    : 'bg-white text-[#292D2B] border-[#E6DFCE] hover:bg-[#FBF5E6] hover:border-[#D4A64A] hover:text-[#173F35]'
                 }`}
               >
                 {isManageMode ? (
@@ -120,7 +120,7 @@ export default function ClassificationCatalogueView({
             <button
               type="button"
               onClick={onAdd}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] font-bold text-sm shadow-md shadow-[#173F35]/15 hover:shadow-lg hover:shadow-[#D4A64A]/25 transition-all active:scale-[0.98] cursor-pointer whitespace-nowrap shrink-0"
             >
               <Plus className="w-4 h-4" />
               <span>{addLabel}</span>
@@ -137,11 +137,15 @@ export default function ClassificationCatalogueView({
       ) : (
         <>
           {/* 3. Top Selectable Options Bar + Quick Search */}
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#E6DFCE] shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                {Icon && <Icon className="w-4 h-4 text-blue-600 shrink-0" />}
-                <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                {Icon && (
+                  <span className="w-6 h-6 rounded-lg bg-[#173F35] text-[#F4D58D] flex items-center justify-center shrink-0 shadow-2xs">
+                    <Icon className="w-3.5 h-3.5" />
+                  </span>
+                )}
+                <span className="text-xs font-bold text-[#292D2B] uppercase tracking-wider">
                   Select {itemLabelSingular}
                 </span>
               </div>
@@ -150,7 +154,7 @@ export default function ClassificationCatalogueView({
                 <button
                   type="button"
                   onClick={() => setSelectedId('all')}
-                  className="self-start sm:self-auto text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+                  className="self-start sm:self-auto text-xs font-bold text-[#173F35] hover:text-[#9A7120] cursor-pointer transition-colors"
                 >
                   Show all products ({products.length})
                 </button>
@@ -162,18 +166,18 @@ export default function ClassificationCatalogueView({
               <button
                 type="button"
                 onClick={() => setSelectedId('all')}
-                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition-all cursor-pointer ${
+                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   selectedId === 'all'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    ? 'bg-[#173F35] text-[#F7F3EA] border-[#173F35] shadow-md shadow-[#173F35]/15'
+                    : 'bg-[#FAF7F0] text-[#292D2B] border-[#E6DFCE] hover:bg-[#FBF5E6] hover:border-[#D4A64A] hover:text-[#173F35]'
                 }`}
               >
                 <span>All</span>
                 <span
                   className={`px-1.5 py-0.5 text-[11px] font-bold rounded-md tabular-nums ${
                     selectedId === 'all'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-slate-200/80 text-slate-700'
+                      ? 'bg-[#D4A64A] text-[#173F35]'
+                      : 'bg-[#EDE6D4] text-[#292D2B]'
                   }`}
                 >
                   {products.length}
@@ -187,10 +191,10 @@ export default function ClassificationCatalogueView({
                     key={item.id}
                     type="button"
                     onClick={() => setSelectedId(item.id)}
-                    className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition-all cursor-pointer ${
+                    className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                       isSelected
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-gradient-to-r from-[#D4A64A] to-[#C29236] text-[#173F35] border-[#B98B32] font-bold shadow-md shadow-[#D4A64A]/25'
+                        : 'bg-[#FAF7F0] text-[#292D2B] border-[#E6DFCE] hover:bg-[#FBF5E6] hover:border-[#D4A64A] hover:text-[#173F35]'
                     }`}
                   >
                     <span>{item.name}</span>
@@ -198,8 +202,8 @@ export default function ClassificationCatalogueView({
                       <span
                         className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded ${
                           isSelected
-                            ? 'bg-white/20 text-white'
-                            : 'bg-slate-200/70 text-slate-600'
+                            ? 'bg-[#173F35]/15 text-[#173F35]'
+                            : 'bg-[#EDE6D4] text-[#555B58]'
                         }`}
                       >
                         {item.code}
@@ -208,8 +212,8 @@ export default function ClassificationCatalogueView({
                     <span
                       className={`px-1.5 py-0.5 text-[11px] font-bold rounded-md tabular-nums ${
                         isSelected
-                          ? 'bg-white/20 text-white'
-                          : 'bg-slate-200/80 text-slate-700'
+                          ? 'bg-[#173F35] text-[#F4D58D]'
+                          : 'bg-[#EDE6D4] text-[#292D2B]'
                       }`}
                     >
                       {item.count}
@@ -219,7 +223,7 @@ export default function ClassificationCatalogueView({
               })}
 
               {items.length === 0 && (
-                <span className="text-xs text-slate-400 italic px-1">
+                <span className="text-xs text-[#787E7A] italic px-1">
                   No {itemLabelPlural} added yet
                 </span>
               )}
@@ -228,7 +232,7 @@ export default function ClassificationCatalogueView({
             {/* Search within selected option */}
             {products.length > 0 && (
               <div className="relative pt-1">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9A7120] pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
@@ -238,14 +242,14 @@ export default function ClassificationCatalogueView({
                       ? `Search inside ${selectedItem.name}...`
                       : `Search all products...`
                   }
-                  className="w-full h-10 pl-10 pr-9 text-sm rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-colors font-medium text-slate-900 placeholder:text-slate-400"
+                  className="w-full h-10 pl-10 pr-9 text-sm rounded-xl border border-[#E6DFCE] bg-[#FAF7F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/30 focus:border-[#D4A64A] transition-all font-medium text-[#292D2B] placeholder:text-[#787E7A]"
                 />
                 {searchQuery && (
                   <button
                     type="button"
                     onClick={() => setSearchQuery('')}
                     aria-label="Clear search"
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/60"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-[#6E7470] hover:text-[#173F35] hover:bg-[#F7F3EA] cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -256,7 +260,7 @@ export default function ClassificationCatalogueView({
 
           {/* 4. Products Summary Label */}
           <div className="flex items-center justify-between px-1">
-            <p className="text-xs sm:text-sm font-semibold text-slate-600">
+            <p className="text-xs sm:text-sm font-semibold text-[#555B58]">
               {selectedItem
                 ? `Showing ${filteredProducts.length} ${filteredProducts.length === 1 ? 'product' : 'products'} in "${selectedItem.name}"`
                 : `Showing ${filteredProducts.length} of ${products.length} products`}
@@ -270,20 +274,20 @@ export default function ClassificationCatalogueView({
                 <ProductPreview key={product.id} product={product} />
               ))
             ) : (
-              <div className="p-8 sm:p-14 text-center bg-white rounded-2xl border border-slate-200 shadow-xs space-y-4">
-                <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
+              <div className="p-8 sm:p-14 text-center bg-white rounded-2xl border border-[#E6DFCE] shadow-xs space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-[#FBF5E6] border border-[#D4A64A]/40 flex items-center justify-center mx-auto text-[#9A7120]">
                   <Package className="w-7 h-7" />
                 </div>
 
                 <div>
-                  <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                  <h2 className="text-base sm:text-lg font-bold text-[#292D2B]">
                     {selectedItem
                       ? `No products in "${selectedItem.name}"`
                       : searchQuery.trim()
                       ? 'No matching products found'
                       : 'No products in catalogue yet'}
                   </h2>
-                  <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">
+                  <p className="text-sm text-[#555B58] mt-1 max-w-sm mx-auto leading-relaxed">
                     {selectedItem
                       ? `There are currently no products assigned to this ${itemLabelSingular}.`
                       : searchQuery.trim()
@@ -300,7 +304,7 @@ export default function ClassificationCatalogueView({
                         setSelectedId('all');
                         setSearchQuery('');
                       }}
-                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold shadow-xs transition-all cursor-pointer"
+                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#173F35] hover:bg-[#1E5245] text-[#F7F3EA] text-xs sm:text-sm font-bold shadow-md transition-all cursor-pointer"
                     >
                       <span>Show All Products</span>
                     </button>
@@ -309,7 +313,7 @@ export default function ClassificationCatalogueView({
                   {isOwner && products.length === 0 && (
                     <Link
                       to="/products/new"
-                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-xs transition-all"
+                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] text-xs sm:text-sm font-bold shadow-md shadow-[#173F35]/15 transition-all"
                     >
                       <PlusCircle className="w-4 h-4" />
                       <span>Add Product</span>

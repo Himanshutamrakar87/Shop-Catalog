@@ -16,25 +16,25 @@ export default function SectionCard({
   className = ''
 }) {
   return (
-    <div className={`bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden ${className}`}>
+    <div className={`bg-white rounded-2xl border border-[#E6DFCE] shadow-xs overflow-hidden ${className}`}>
       {/* Header */}
-      <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
+      <div className="px-5 py-4 border-b border-[#EFE9DA] bg-gradient-to-r from-[#FBF8F1] via-white to-[#F7F3EA]/70 flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+          <h2 className="text-base sm:text-lg font-bold text-[#292D2B] tracking-tight">
             {title}
           </h2>
           {subtitle && (
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-[#555B58] mt-0.5">
               {subtitle}
             </p>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {viewAllLink && (
             <Link
               to={viewAllLink}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline px-2 py-1 rounded"
+              className="inline-flex items-center gap-1 text-xs font-bold text-[#173F35] hover:text-[#9A7120] hover:underline px-2 py-1 rounded-lg whitespace-nowrap shrink-0 transition-colors"
             >
               <span>{viewAllText}</span>
               <ChevronRight className="w-3.5 h-3.5" />

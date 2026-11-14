@@ -150,24 +150,24 @@ export default function CameraCaptureModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F2D25]/80 backdrop-blur-xs">
       <div
         role="dialog"
         aria-modal="true"
         aria-label={`Take Photo for Image ${slot}`}
-        className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-[#E6DFCE] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/80">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#EFE9DA] bg-gradient-to-r from-[#FBF8F1] via-white to-[#F7F3EA]/70">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
+            <div className="w-9 h-9 rounded-xl bg-[#173F35] text-[#D4A64A] flex items-center justify-center border border-[#D4A64A]/40">
               <Camera className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-900">
+              <h3 className="text-sm font-bold text-[#292D2B]">
                 Take Product Photo (Image {slot})
               </h3>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-[#555B58]">
                 Capture directly from camera
               </p>
             </div>
@@ -176,7 +176,7 @@ export default function CameraCaptureModal({
             type="button"
             onClick={handleClose}
             aria-label="Close camera"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="p-1.5 rounded-lg text-[#6F7571] hover:text-[#292D2B] hover:bg-[#FBF5E6] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -184,7 +184,7 @@ export default function CameraCaptureModal({
 
         {/* Camera Viewport */}
         <div className="p-4 space-y-4">
-          <div className="relative rounded-xl overflow-hidden bg-slate-900 aspect-4/3 flex items-center justify-center border border-slate-200">
+          <div className="relative rounded-xl overflow-hidden bg-[#0F2D25] aspect-4/3 flex items-center justify-center border border-[#E6DFCE]">
             <video
               ref={videoRef}
               autoPlay
@@ -194,18 +194,18 @@ export default function CameraCaptureModal({
             />
 
             {isStarting && !error && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-2">
-                <Loader2 className="w-7 h-7 animate-spin text-blue-400" />
-                <span className="text-xs font-medium text-slate-300">Opening camera...</span>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-[#F7F3EA] gap-2">
+                <Loader2 className="w-7 h-7 animate-spin text-[#D4A64A]" />
+                <span className="text-xs font-medium text-[#B8CBC3]">Opening camera...</span>
               </div>
             )}
 
             {error && (
-              <div className="absolute inset-0 p-6 flex flex-col items-center justify-center text-center bg-slate-900 text-white gap-3">
+              <div className="absolute inset-0 p-6 flex flex-col items-center justify-center text-center bg-[#0F2D25] text-[#F7F3EA] gap-3">
                 <div className="w-11 h-11 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center">
                   <AlertCircle className="w-6 h-6" />
                 </div>
-                <p className="text-xs sm:text-sm text-slate-200 leading-relaxed max-w-xs">
+                <p className="text-xs sm:text-sm text-[#E6DFCE] leading-relaxed max-w-xs">
                   {error}
                 </p>
                 {onFallbackToGallery && (
@@ -215,7 +215,7 @@ export default function CameraCaptureModal({
                       handleClose();
                       onFallbackToGallery();
                     }}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-slate-900 text-xs font-bold hover:bg-slate-100 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] text-[#173F35] text-xs font-bold hover:from-[#DFB359] hover:to-[#CE9D3E] transition-all cursor-pointer"
                   >
                     <Upload className="w-3.5 h-3.5" />
                     <span>Upload from Gallery</span>
@@ -231,7 +231,7 @@ export default function CameraCaptureModal({
               type="button"
               onClick={handleSwitchCamera}
               disabled={isStarting || Boolean(error)}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 text-xs font-semibold transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-[#E6DFCE] text-[#292D2B] hover:border-[#D4A64A] hover:bg-[#FCF9F2] disabled:opacity-40 text-xs font-semibold transition-colors cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Switch</span>
@@ -241,7 +241,7 @@ export default function CameraCaptureModal({
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors"
+                className="px-4 py-2.5 rounded-xl border border-[#E6DFCE] text-[#292D2B] hover:border-[#D4A64A] hover:bg-[#FCF9F2] text-xs font-semibold transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -249,7 +249,7 @@ export default function CameraCaptureModal({
                 type="button"
                 onClick={handleCapture}
                 disabled={isStarting || isCapturing || Boolean(error)}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-40 text-white text-xs font-bold shadow-xs transition-all"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] disabled:opacity-40 text-[#173F35] text-xs font-bold shadow-sm transition-all cursor-pointer"
               >
                 {isCapturing ? (
                   <>

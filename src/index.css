@@ -1,5 +1,37 @@
 @import "tailwindcss";
 
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: #F7F3EA;
+    color: #292D2B;
+  }
+
+  h1, h2 {
+    text-wrap: balance;
+  }
+}
+
 .font-devanagari {
   font-family: 'Noto Sans Devanagari', 'Tiro Devanagari Sanskrit', 'Kokila', 'Mangal', 'Segoe UI', system-ui, sans-serif;
 }
+
+/* Subtle custom scrollbar for hover-scrollable sidebar & lists */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 166, 74, 0.35);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 166, 74, 0.65);
+}
+

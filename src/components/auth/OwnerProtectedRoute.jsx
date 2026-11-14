@@ -15,11 +15,11 @@ export default function OwnerProtectedRoute({ children }) {
     return (
       <div className="py-24 flex flex-col items-center justify-center p-4">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 flex items-center justify-center">
-            <ShieldCheck className="w-6 h-6 animate-pulse" />
+          <div className="w-12 h-12 rounded-2xl bg-[#FBF5E6] border border-[#D4A64A]/50 text-[#173F35] flex items-center justify-center">
+            <ShieldCheck className="w-6 h-6 animate-pulse text-[#9A7120]" />
           </div>
-          <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
-          <p className="text-xs font-semibold text-slate-600">Verifying owner credentials...</p>
+          <Loader2 className="w-5 h-5 text-[#173F35] animate-spin" />
+          <p className="text-xs font-semibold text-[#555B58]">Verifying owner credentials...</p>
         </div>
       </div>
     );
