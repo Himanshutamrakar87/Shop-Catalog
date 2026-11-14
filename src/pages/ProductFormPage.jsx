@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -116,6 +116,67 @@ export default function ProductFormPage() {
     label: '',
     placeholder: ''
   });
+
+  // Sort dropdown options by product count descending (highest first)
+  const sortedCategories = useMemo(() => {
+    return [...categories].sort((a, b) => {
+      const countA = products.filter(
+        (p) => p.categoryId === a.id || p.categoryCode === a.code || p.category === a.name
+      ).length;
+      const countB = products.filter(
+        (p) => p.categoryId === b.id || p.categoryCode === b.code || p.category === b.name
+      ).length;
+      return countB - countA || String(a.name || '').localeCompare(String(b.name || ''));
+    });
+  }, [categories, products]);
+
+  const sortedSubCategories = useMemo(() => {
+    return [...subCategories].sort((a, b) => {
+      const countA = products.filter(
+        (p) => String(p.subCategory || '').trim().toLowerCase() === String(a || '').trim().toLowerCase()
+      ).length;
+      const countB = products.filter(
+        (p) => String(p.subCategory || '').trim().toLowerCase() === String(b || '').trim().toLowerCase()
+      ).length;
+      return countB - countA || String(a || '').localeCompare(String(b || ''));
+    });
+  }, [subCategories, products]);
+
+  const sortedBrands = useMemo(() => {
+    return [...brands].sort((a, b) => {
+      const countA = products.filter(
+        (p) => String(p.brand || '').trim().toLowerCase() === String(a.name || '').trim().toLowerCase()
+      ).length;
+      const countB = products.filter(
+        (p) => String(p.brand || '').trim().toLowerCase() === String(b.name || '').trim().toLowerCase()
+      ).length;
+      return countB - countA || String(a.name || '').localeCompare(String(b.name || ''));
+    });
+  }, [brands, products]);
+
+  const sortedMaterials = useMemo(() => {
+    return [...materials].sort((a, b) => {
+      const countA = products.filter(
+        (p) => String(p.material || '').trim().toLowerCase() === String(a.name || '').trim().toLowerCase()
+      ).length;
+      const countB = products.filter(
+        (p) => String(p.material || '').trim().toLowerCase() === String(b.name || '').trim().toLowerCase()
+      ).length;
+      return countB - countA || String(a.name || '').localeCompare(String(b.name || ''));
+    });
+  }, [materials, products]);
+
+  const sortedSizes = useMemo(() => {
+    return [...sizes].sort((a, b) => {
+      const countA = products.filter(
+        (p) => String(p.sizeCapacity || p.sizeOrCapacity || '').trim().toLowerCase() === String(a || '').trim().toLowerCase()
+      ).length;
+      const countB = products.filter(
+        (p) => String(p.sizeCapacity || p.sizeOrCapacity || '').trim().toLowerCase() === String(b || '').trim().toLowerCase()
+      ).length;
+      return countB - countA || String(a || '').localeCompare(String(b || ''));
+    });
+  }, [sizes, products]);
 
   // Initialize Category and default selections
   useEffect(() => {
@@ -837,7 +898,7 @@ export default function ProductFormPage() {
                           Select a category
                         </option>
                       )}
-                      {categories.map((cat) => (
+                      {sortedCategories.map((cat) => (
                         <option key={cat.id} value={cat.name}>
                           {cat.name} ({cat.code})
                         </option>
@@ -875,7 +936,7 @@ export default function ProductFormPage() {
                   className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#E5DFD2] dark:border-[#34433A] bg-[#F7F3EA] dark:bg-[#141C19] font-medium text-[#292D2B] dark:text-[#F7F3EA] focus:bg-[#FFFFFF] dark:focus:bg-[#202A25] focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/25 focus:border-[#D4A64A] transition-all cursor-pointer"
                 >
                   <option value="">Select Sub-category...</option>
-                  {subCategories.map((sub) => (
+                  {sortedSubCategories.map((sub) => (
                     <option key={sub} value={sub}>
                       {sub}
                     </option>
@@ -905,7 +966,7 @@ export default function ProductFormPage() {
                   className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#E5DFD2] dark:border-[#34433A] bg-[#F7F3EA] dark:bg-[#141C19] font-medium text-[#292D2B] dark:text-[#F7F3EA] focus:bg-[#FFFFFF] dark:focus:bg-[#202A25] focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/25 focus:border-[#D4A64A] transition-all cursor-pointer"
                 >
                   <option value="">Select Brand...</option>
-                  {brands.map((br) => (
+                  {sortedBrands.map((br) => (
                     <option key={br.id} value={br.name}>
                       {br.name}
                     </option>
@@ -935,7 +996,7 @@ export default function ProductFormPage() {
                   className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#E5DFD2] dark:border-[#34433A] bg-[#F7F3EA] dark:bg-[#141C19] font-medium text-[#292D2B] dark:text-[#F7F3EA] focus:bg-[#FFFFFF] dark:focus:bg-[#202A25] focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/25 focus:border-[#D4A64A] transition-all cursor-pointer"
                 >
                   <option value="">Select Material...</option>
-                  {materials.map((mat) => (
+                  {sortedMaterials.map((mat) => (
                     <option key={mat.id} value={mat.name}>
                       {mat.name}
                     </option>
@@ -979,7 +1040,7 @@ export default function ProductFormPage() {
                     className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#E5DFD2] dark:border-[#34433A] bg-[#F7F3EA] dark:bg-[#141C19] font-medium text-[#292D2B] dark:text-[#F7F3EA] focus:bg-[#FFFFFF] dark:focus:bg-[#202A25] focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/25 focus:border-[#D4A64A] transition-all cursor-pointer"
                   >
                     <option value="">Select or create size / capacity...</option>
-                    {sizes.map((sz) => (
+                    {sortedSizes.map((sz) => (
                       <option key={sz} value={sz}>
                         {sz}
                       </option>

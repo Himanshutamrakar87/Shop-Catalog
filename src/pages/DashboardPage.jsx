@@ -11,12 +11,14 @@ import {
   FolderTree,
   Box,
   PlusCircle,
-  Loader2
+  Loader2,
+  Download
 } from 'lucide-react';
 import StatCard from '../components/dashboard/StatCard';
 import SectionCard from '../components/dashboard/SectionCard';
-import ProductPreview from '../components/dashboard/ProductPreview';
+import ProductCard from '../components/products/ProductCard';
 import { useCatalogue } from '../context/CatalogueContext';
+import { exportProductsToCsv } from '../utils/csvExport';
 
 /**
  * Dashboard Page
@@ -31,12 +33,23 @@ import { useCatalogue } from '../context/CatalogueContext';
 export default function DashboardPage() {
   // Dynamically compute catalogue metrics from the live CatalogueContext
   const {
+    products,
     stats,
     categoryDistribution: categoryBreakdown,
     materialDistribution: materialBreakdown,
     recentProducts,
-    isCatalogueLoading
+    isCatalogueLoading,
+    showToast
   } = useCatalogue();
+
+  const handleExportCsv = () => {
+    if (!products || products.length === 0) {
+      showToast('No products available to export yet.', 'error');
+      return;
+    }
+    const { count, filename } = exportProductsToCsv(products, { scope: 'all' });
+    showToast(`Exported ${count} ${count === 1 ? 'product' : 'products'} to ${filename}`);
+  };
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -51,13 +64,26 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <Link
-          to="/products/new"
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#D4A64A] hover:bg-[#E9D5A5] dark:hover:bg-[#E7C477] text-[#173F35] dark:text-[#141C19] font-bold text-xs sm:text-sm shadow-sm transition-all active:scale-[0.98] self-start sm:self-auto whitespace-nowrap shrink-0"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>Add New Product</span>
-        </Link>
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            disabled={products.length === 0}
+            title={products.length === 0 ? 'No products to export' : 'Download full catalogue backup as CSV'}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#12332B]/75 dark:bg-[#141C19]/75 hover:bg-[#1E4F43] dark:hover:bg-[#2A4E40] text-[#F7F3EA] border border-[#D4A64A]/40 hover:border-[#E9D5A5] dark:hover:border-[#E7C477] disabled:opacity-45 disabled:cursor-not-allowed font-bold text-xs sm:text-sm transition-all active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer"
+          >
+            <Download className="w-4 h-4 text-[#D4A64A]" />
+            <span>Export CSV</span>
+          </button>
+
+          <Link
+            to="/products/new"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#D4A64A] hover:bg-[#E9D5A5] dark:hover:bg-[#E7C477] text-[#173F35] dark:text-[#141C19] font-bold text-xs sm:text-sm shadow-sm transition-all active:scale-[0.98] whitespace-nowrap shrink-0"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Add New Product</span>
+          </Link>
+        </div>
       </div>
 
       {/* 2. Summary Metric Cards (2x2 grid on mobile, 4 columns on desktop) */}
@@ -230,11 +256,13 @@ export default function DashboardPage() {
           viewAllLink="/products"
           viewAllText="View Full Catalogue"
         >
-          <div className="space-y-3">
+          <div>
             {recentProducts.length > 0 ? (
-              recentProducts.map((product) => (
-                <ProductPreview key={product.id} product={product} />
-              ))
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                {recentProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
             ) : isCatalogueLoading ? (
               <div className="py-8 px-4 text-center bg-[#FAF7F0] dark:bg-[#1A2420] rounded-2xl border border-[#E5DFD2] dark:border-[#34433A] space-y-2">
                 <Loader2 className="w-7 h-7 text-[#D4A64A] mx-auto animate-spin" />

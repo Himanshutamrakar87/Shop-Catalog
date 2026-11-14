@@ -1,28 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { Menu, Plus, Bell, Search, X, LogOut, Lock } from 'lucide-react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Menu, Plus, Bell, LogOut, Lock } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import BrandLogo from '../common/BrandLogo';
 import DevotionalBanner from '../common/DevotionalBanner';
 import ThemeSwitcher from '../common/ThemeSwitcher';
 
 /**
  * Responsive Header
- * - On Mobile: Compact header with hamburger button, compact brand mark, contextual action, and mobile search bar
- * - On Desktop: Clean bar showing active section title, quick global catalogue search, and contextual buttons
+ * - On Mobile: Compact header with hamburger button, compact brand mark, theme toggle, and contextual action
+ * - On Desktop: Clean bar showing active section title, workspace badge, theme toggle, and contextual buttons
  * - Adapts cleanly between Public Catalogue Visitor Mode and Verified Owner Mode
  */
 export default function Header({ onOpenMobileMenu, alertCount = 0, onSignOut, authStatus }) {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [headerSearch, setHeaderSearch] = useState('');
   const isOwner = Boolean(authStatus?.isOwner);
-
-  // Keep header search synced with URL ?search= parameter
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const param = params.get('search') || params.get('q') || '';
-    setHeaderSearch((prev) => (prev !== param ? param : prev));
-  }, [location.search]);
 
   // Page title mapping based on current pathname
   const getPageTitle = (path) => {
@@ -41,23 +32,6 @@ export default function Header({ onOpenMobileMenu, alertCount = 0, onSignOut, au
   };
 
   const currentTitle = getPageTitle(location.pathname);
-
-  const handleHeaderSearch = (e) => {
-    const val = e.target.value;
-    setHeaderSearch(val);
-    if (val) {
-      navigate(`/products?search=${encodeURIComponent(val)}`, {
-        replace: location.pathname === '/products',
-      });
-    } else {
-      navigate('/products', { replace: location.pathname === '/products' });
-    }
-  };
-
-  const handleClearHeaderSearch = () => {
-    setHeaderSearch('');
-    navigate('/products', { replace: location.pathname === '/products' });
-  };
 
   return (
     <header className="sticky top-0 z-30 bg-[#173F35] dark:bg-[#203D32] border-b border-[#E5DFD2]/20 dark:border-[#34433A] shadow-[0_4px_20px_-6px_rgba(23,63,53,0.35)] dark:shadow-[0_4px_16px_-6px_rgba(8,14,11,0.45)] transition-colors duration-200">
@@ -95,32 +69,9 @@ export default function Header({ onOpenMobileMenu, alertCount = 0, onSignOut, au
             )}
           </div>
 
-          {/* Center / Search bar (Desktop) */}
-          <div className="hidden md:flex flex-1 max-w-xs mx-4">
-            <div className="relative w-full">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#D4A64A]/85 pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={headerSearch}
-                onChange={handleHeaderSearch}
-                className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-[#D4A64A]/30 dark:border-[#34433A] bg-[#0F2D25]/85 dark:bg-[#141C19]/85 text-[#F7F3EA] placeholder:text-[#9BB3AA] dark:placeholder:text-[#B6C0B8]/70 focus:bg-[#0F2D25] dark:focus:bg-[#141C19] focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/35 focus:border-[#D4A64A] transition-all"
-              />
-              {headerSearch && (
-                <button
-                  type="button"
-                  onClick={handleClearHeaderSearch}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-[#C5D4CE] hover:text-[#E9D5A5] dark:hover:text-[#E7C477] cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-          </div>
-
           {/* Right Header Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2.5">
-            {/* Appearance / Theme Switcher */}
+            {/* Appearance / Theme Switcher (Direct Light/Dark toggle on click) */}
             <ThemeSwitcher variant="compact" />
 
             {isOwner ? (
@@ -169,31 +120,6 @@ export default function Header({ onOpenMobileMenu, alertCount = 0, onSignOut, au
                 <Lock className="w-3.5 h-3.5" />
                 <span>Owner Login</span>
               </Link>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile Search Bar (Visible below md breakpoint) */}
-        <div className="md:hidden pb-3 pt-0.5">
-          <div className="relative w-full">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#D4A64A]/85 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={headerSearch}
-              onChange={handleHeaderSearch}
-              aria-label="Search products"
-              className="w-full pl-9 pr-9 py-2 text-base sm:text-sm rounded-xl border border-[#D4A64A]/30 dark:border-[#34433A] bg-[#0F2D25]/90 dark:bg-[#141C19]/90 text-[#F7F3EA] placeholder:text-[#9BB3AA] dark:placeholder:text-[#B6C0B8]/70 focus:bg-[#0F2D25] dark:focus:bg-[#141C19] focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/35 focus:border-[#D4A64A] transition-all"
-            />
-            {headerSearch && (
-              <button
-                type="button"
-                onClick={handleClearHeaderSearch}
-                aria-label="Clear search"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-[#C5D4CE] hover:text-[#E9D5A5] dark:hover:text-[#E7C477] hover:bg-[#1E4F43] dark:hover:bg-[#2A4E40]"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
             )}
           </div>
         </div>

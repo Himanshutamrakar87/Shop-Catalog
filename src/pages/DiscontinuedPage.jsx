@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Archive, PlusCircle } from 'lucide-react';
 import { useCatalogue } from '../context/CatalogueContext';
 import { isDiscontinuedStatus } from '../data/mockData';
-import ProductPreview from '../components/dashboard/ProductPreview';
+import ProductCard from '../components/products/ProductCard';
 
 /**
  * Discontinued Products Page
@@ -64,12 +64,14 @@ export default function DiscontinuedPage() {
         </div>
       </div>
 
-      {/* List */}
-      <div className="space-y-3">
+      {/* Card Grid */}
+      <div>
         {discontinuedProducts.length > 0 ? (
-          discontinuedProducts.map((product) => (
-            <ProductPreview key={product.id} product={product} />
-          ))
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {discontinuedProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
         ) : (
           <div className="p-8 sm:p-12 text-center bg-[#FFFFFF] dark:bg-[#202A25] rounded-2xl border border-[#E5DFD2] dark:border-[#34433A] text-[#73776F] dark:text-[#B6C0B8] text-sm space-y-2">
             <p className="font-semibold text-[#292D2B] dark:text-[#F7F3EA]">No archived products found</p>

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Package, SlidersHorizontal, ArrowLeft, Search, X, PlusCircle } from 'lucide-react';
-import ProductPreview from '../dashboard/ProductPreview';
+import ProductCard from '../products/ProductCard';
 
 /**
  * ClassificationCatalogueView Component
@@ -41,9 +41,19 @@ export default function ClassificationCatalogueView({
     }
   }, [items, selectedId, isManageMode]);
 
+  const sortedItems = useMemo(
+    () =>
+      [...items].sort(
+        (a, b) =>
+          (b.count ?? 0) - (a.count ?? 0) ||
+          String(a.name || '').localeCompare(String(b.name || ''))
+      ),
+    [items]
+  );
+
   const selectedItem = useMemo(
-    () => (selectedId === 'all' ? null : items.find((i) => i.id === selectedId) || null),
-    [items, selectedId]
+    () => (selectedId === 'all' ? null : sortedItems.find((i) => i.id === selectedId) || null),
+    [sortedItems, selectedId]
   );
 
   const filteredProducts = useMemo(() => {
@@ -184,7 +194,7 @@ export default function ClassificationCatalogueView({
                 </span>
               </button>
 
-              {items.map((item) => {
+              {sortedItems.map((item) => {
                 const isSelected = selectedId === item.id;
                 return (
                   <button
@@ -267,12 +277,14 @@ export default function ClassificationCatalogueView({
             </p>
           </div>
 
-          {/* 5. Filtered Products List */}
-          <div className="space-y-3">
+          {/* 5. Filtered Products Card Grid */}
+          <div>
             {filteredProducts.length > 0 ? (
-              filteredProducts.map((product) => (
-                <ProductPreview key={product.id} product={product} />
-              ))
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                {filteredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
             ) : (
               <div className="p-8 sm:p-14 text-center bg-[#FFFFFF] dark:bg-[#202A25] rounded-2xl border border-[#E5DFD2] dark:border-[#34433A] shadow-xs dark:shadow-none space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-[#F7F3EA] dark:bg-[#141C19] border border-[#E5DFD2] dark:border-[#34433A] flex items-center justify-center mx-auto text-[#D4A64A]">

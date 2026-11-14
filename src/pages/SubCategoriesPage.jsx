@@ -23,15 +23,25 @@ export default function SubCategoriesPage() {
 
   const isOwner = Boolean(authStatus?.isOwner);
 
+  const sortedSubCategories = useMemo(
+    () =>
+      [...subCategories].sort(
+        (a, b) =>
+          getSubCategoryProductCount(b) - getSubCategoryProductCount(a) ||
+          String(a || '').localeCompare(String(b || ''))
+      ),
+    [subCategories, products, getSubCategoryProductCount]
+  );
+
   const classificationItems = useMemo(
     () =>
-      subCategories.map((subCat) => ({
+      sortedSubCategories.map((subCat) => ({
         id: subCat,
         name: subCat,
         count: getSubCategoryProductCount(subCat),
         raw: subCat,
       })),
-    [subCategories, products]
+    [sortedSubCategories, getSubCategoryProductCount]
   );
 
   // Modal states
@@ -153,7 +163,7 @@ export default function SubCategoriesPage() {
           <>
             {/* Mobile Sub-Category Cards (Screens < 768px) */}
             <div className="md:hidden space-y-3">
-              {subCategories.map((subCat) => {
+              {sortedSubCategories.map((subCat) => {
                 const productCount = getSubCategoryProductCount(subCat);
                 const isMenuOpen = activeMenuId === subCat;
 
@@ -229,7 +239,7 @@ export default function SubCategoriesPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E5DFD2] dark:divide-[#34433A] text-sm">
-                  {subCategories.map((subCat) => {
+                  {sortedSubCategories.map((subCat) => {
                     const productCount = getSubCategoryProductCount(subCat);
                     const isMenuOpen = activeMenuId === subCat;
 

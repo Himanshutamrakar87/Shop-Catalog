@@ -23,16 +23,26 @@ export default function CategoriesPage() {
 
   const isOwner = Boolean(authStatus?.isOwner);
 
+  const sortedCategories = useMemo(
+    () =>
+      [...categories].sort(
+        (a, b) =>
+          getCategoryProductCount(b) - getCategoryProductCount(a) ||
+          String(a.name || '').localeCompare(String(b.name || ''))
+      ),
+    [categories, products, getCategoryProductCount]
+  );
+
   const classificationItems = useMemo(
     () =>
-      categories.map((cat) => ({
+      sortedCategories.map((cat) => ({
         id: cat.id,
         name: cat.name,
         code: cat.code,
         count: getCategoryProductCount(cat),
         raw: cat,
       })),
-    [categories, products]
+    [sortedCategories, getCategoryProductCount]
   );
 
   // Modal & Dialog state
@@ -122,7 +132,7 @@ export default function CategoriesPage() {
           <>
             {/* Mobile Category Cards (Visible on screens < 768px) */}
             <div className="md:hidden space-y-3">
-              {categories.map((cat) => {
+              {sortedCategories.map((cat) => {
                 const productCount = getCategoryProductCount(cat);
                 const isMenuOpen = activeMenuId === cat.id;
 
@@ -202,7 +212,7 @@ export default function CategoriesPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E5DFD2] dark:divide-[#34433A] text-sm">
-                  {categories.map((cat) => {
+                  {sortedCategories.map((cat) => {
                     const productCount = getCategoryProductCount(cat);
                     const isMenuOpen = activeMenuId === cat.id;
 

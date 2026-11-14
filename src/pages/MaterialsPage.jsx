@@ -23,15 +23,25 @@ export default function MaterialsPage() {
 
   const isOwner = Boolean(authStatus?.isOwner);
 
+  const sortedMaterials = useMemo(
+    () =>
+      [...materials].sort(
+        (a, b) =>
+          getMaterialProductCount(b) - getMaterialProductCount(a) ||
+          String(a.name || '').localeCompare(String(b.name || ''))
+      ),
+    [materials, products, getMaterialProductCount]
+  );
+
   const classificationItems = useMemo(
     () =>
-      materials.map((mat) => ({
+      sortedMaterials.map((mat) => ({
         id: mat.id,
         name: mat.name,
         count: getMaterialProductCount(mat),
         raw: mat,
       })),
-    [materials, products]
+    [sortedMaterials, getMaterialProductCount]
   );
 
   // Modal states
@@ -148,7 +158,7 @@ export default function MaterialsPage() {
           <>
             {/* Mobile Material Cards (Screens < 768px) */}
             <div className="md:hidden space-y-3">
-              {materials.map((mat) => {
+              {sortedMaterials.map((mat) => {
                 const productCount = getMaterialProductCount(mat);
                 const isMenuOpen = activeMenuId === mat.id;
 
@@ -231,7 +241,7 @@ export default function MaterialsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E5DFD2] dark:divide-[#34433A] text-sm">
-                  {materials.map((mat) => {
+                  {sortedMaterials.map((mat) => {
                     const productCount = getMaterialProductCount(mat);
                     const isMenuOpen = activeMenuId === mat.id;
 

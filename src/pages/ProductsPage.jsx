@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { PlusCircle, Search, X, Package, Loader2 } from 'lucide-react';
+import { PlusCircle, Search, X, Package, Loader2, Download, ChevronDown } from 'lucide-react';
 import { useCatalogue } from '../context/CatalogueContext';
 import { isActiveStatus, isStockAlertStatus, isDiscontinuedStatus } from '../data/mockData';
-import ProductPreview from '../components/dashboard/ProductPreview';
+import { exportProductsToCsv } from '../utils/csvExport';
+import ProductCard from '../components/products/ProductCard';
 
 /**
  * ProductsPage Component
@@ -18,9 +19,11 @@ import ProductPreview from '../components/dashboard/ProductPreview';
  * - Empty state with "No products found", friendly message, and "Clear Search" button
  */
 export default function ProductsPage() {
-  const { products, categories, authStatus, isCatalogueLoading } = useCatalogue();
+  const { products, categories, authStatus, isCatalogueLoading, showToast } = useCatalogue();
   const isOwner = Boolean(authStatus?.isOwner);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const exportMenuRef = useRef(null);
 
   // 1. Search Query state
   const initialQuery = searchParams.get('search') || searchParams.get('q') || '';
@@ -37,6 +40,27 @@ export default function ProductsPage() {
       setSearchQuery(param);
     }
   }, [searchParams]);
+
+  // Close export dropdown on outside click or Escape
+  useEffect(() => {
+    if (!exportMenuOpen) return;
+    const handleOutside = (e) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target)) {
+        setExportMenuOpen(false);
+      }
+    };
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') setExportMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('touchstart', handleOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('touchstart', handleOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [exportMenuOpen]);
 
   // Update URL param subtly when typing without reloading page
   const handleSearchChange = (e) => {
@@ -125,10 +149,34 @@ export default function ProductsPage() {
     });
   }, [products, searchQuery, selectedCategory, selectedStatus]);
 
+  const sortedCategories = useMemo(() => {
+    return [...categories]
+      .map((cat) => {
+        const count = products.filter(
+          (p) =>
+            (p.category && p.category.toLowerCase() === String(cat.name || '').toLowerCase()) ||
+            (p.categoryCode && p.categoryCode.toLowerCase() === String(cat.code || '').toLowerCase())
+        ).length;
+        return { ...cat, count };
+      })
+      .sort((a, b) => b.count - a.count || String(a.name || '').localeCompare(String(b.name || '')));
+  }, [categories, products]);
+
   const hasActiveFilters = searchQuery.trim() !== '' || selectedCategory !== 'all' || selectedStatus !== 'all';
 
+  const handleExportCsv = (scope = 'all') => {
+    setExportMenuOpen(false);
+    const targetList = scope === 'filtered' ? filteredProducts : products;
+    if (!targetList || targetList.length === 0) {
+      showToast('No products available to export.', 'error');
+      return;
+    }
+    const { count, filename } = exportProductsToCsv(targetList, { scope });
+    showToast(`Exported ${count} ${count === 1 ? 'product' : 'products'} to ${filename}`);
+  };
+
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-6xl mx-auto">
       {/* 1. Header & Primary CTA */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -142,15 +190,78 @@ export default function ProductsPage() {
           </p>
         </div>
 
-        {isOwner && (
-          <Link
-            to="/products/new"
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-xl bg-[#D4A64A] hover:bg-[#E9D5A5] dark:hover:bg-[#E7C477] text-[#173F35] dark:text-[#141C19] font-bold text-sm shadow-sm transition-all active:scale-[0.98] self-stretch sm:self-auto text-center whitespace-nowrap shrink-0"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Add Product</span>
-          </Link>
-        )}
+        <div className="flex flex-wrap items-center gap-2.5 self-stretch sm:self-auto">
+          {/* Export CSV Button / Filtered Menu */}
+          <div className="relative flex-1 sm:flex-initial" ref={exportMenuRef}>
+            {hasActiveFilters ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setExportMenuOpen((prev) => !prev)}
+                  disabled={products.length === 0}
+                  aria-expanded={exportMenuOpen}
+                  title="Export product catalogue as CSV"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 rounded-xl bg-[#FFFFFF] dark:bg-[#202A25] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] text-[#292D2B] dark:text-[#F7F3EA] border border-[#E5DFD2] dark:border-[#34433A] hover:border-[#E9D5A5] dark:hover:border-[#E7C477] disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm shadow-2xs dark:shadow-none transition-all cursor-pointer whitespace-nowrap"
+                >
+                  <Download className="w-4 h-4 text-[#D4A64A] shrink-0" />
+                  <span>Export CSV</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-[#73776F] dark:text-[#B6C0B8] transition-transform ${exportMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {exportMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-60 rounded-2xl bg-[#FFFFFF] dark:bg-[#202A25] border border-[#E5DFD2] dark:border-[#34433A] shadow-lg dark:shadow-[0_10px_28px_-8px_rgba(10,16,13,0.65)] p-1.5 z-30">
+                    <button
+                      type="button"
+                      onClick={() => handleExportCsv('filtered')}
+                      disabled={filteredProducts.length === 0}
+                      className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] disabled:opacity-45 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    >
+                      <span className="text-xs font-bold text-[#292D2B] dark:text-[#F7F3EA] block">
+                        Export Filtered ({filteredProducts.length})
+                      </span>
+                      <span className="text-[11px] text-[#73776F] dark:text-[#B6C0B8] block mt-0.5">
+                        Only items matching current filters
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleExportCsv('all')}
+                      className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] transition-colors cursor-pointer"
+                    >
+                      <span className="text-xs font-bold text-[#292D2B] dark:text-[#F7F3EA] block">
+                        Export Full Catalogue ({products.length})
+                      </span>
+                      <span className="text-[11px] text-[#73776F] dark:text-[#B6C0B8] block mt-0.5">
+                        Complete offline backup CSV
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleExportCsv('all')}
+                disabled={products.length === 0}
+                title={products.length === 0 ? 'No products to export' : 'Download full product catalogue as CSV'}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 rounded-xl bg-[#FFFFFF] dark:bg-[#202A25] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] text-[#292D2B] dark:text-[#F7F3EA] border border-[#E5DFD2] dark:border-[#34433A] hover:border-[#E9D5A5] dark:hover:border-[#E7C477] disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm shadow-2xs dark:shadow-none transition-all active:scale-[0.98] cursor-pointer whitespace-nowrap"
+              >
+                <Download className="w-4 h-4 text-[#D4A64A] shrink-0" />
+                <span>Export CSV</span>
+              </button>
+            )}
+          </div>
+
+          {isOwner && (
+            <Link
+              to="/products/new"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-xl bg-[#D4A64A] hover:bg-[#E9D5A5] dark:hover:bg-[#E7C477] text-[#173F35] dark:text-[#141C19] font-bold text-sm shadow-sm transition-all active:scale-[0.98] text-center whitespace-nowrap shrink-0"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Add Product</span>
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* 2. Mobile-Friendly Search & Filter Panel */}
@@ -194,10 +305,10 @@ export default function ProductsPage() {
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="w-full sm:w-auto px-3 py-2 text-xs font-semibold rounded-xl border border-[#E5DFD2] dark:border-[#34433A] bg-[#F7F3EA] dark:bg-[#141C19] text-[#292D2B] dark:text-[#F7F3EA] focus:bg-[#FFFFFF] dark:focus:bg-[#202A25] focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/30 focus:border-[#D4A64A] hover:border-[#E9D5A5] dark:hover:border-[#E7C477] transition-all cursor-pointer"
             >
-              <option value="all">All Categories</option>
-              {categories.map((cat) => (
+              <option value="all">All Categories ({products.length})</option>
+              {sortedCategories.map((cat) => (
                 <option key={cat.id} value={cat.name}>
-                  {cat.name}
+                  {cat.name} ({cat.count})
                 </option>
               ))}
             </select>
@@ -231,12 +342,14 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* 3. Product Results List or No Results State */}
-      <div className="space-y-3">
+      {/* 3. Product Results Card Grid or Empty/Loading States */}
+      <div>
         {filteredProducts.length > 0 ? (
-          filteredProducts.map((product) => (
-            <ProductPreview key={product.id} product={product} />
-          ))
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
         ) : products.length === 0 && isCatalogueLoading ? (
           /* Initial Loading State */
           <div className="p-8 sm:p-14 text-center bg-[#FFFFFF] dark:bg-[#202A25] rounded-2xl border border-[#E5DFD2] dark:border-[#34433A] shadow-xs dark:shadow-none space-y-3">

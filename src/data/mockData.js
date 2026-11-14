@@ -225,19 +225,21 @@ export function getCategoryDistribution(products = INITIAL_PRODUCTS, categories 
     'bg-gradient-to-r from-[#B8862D] to-[#D4A64A]',
   ];
 
-  return categories.map((cat, idx) => {
-    const count = products.filter(
-      (p) => p.category === cat.name || p.categoryCode === cat.code
-    ).length;
-    const percentage = Number(((count / total) * 100).toFixed(1));
-    return {
-      name: cat.name,
-      code: cat.code,
-      count,
-      percentage,
-      color: colors[idx % colors.length],
-    };
-  });
+  return categories
+    .map((cat, idx) => {
+      const count = products.filter(
+        (p) => p.category === cat.name || p.categoryCode === cat.code
+      ).length;
+      const percentage = Number(((count / total) * 100).toFixed(1));
+      return {
+        name: cat.name,
+        code: cat.code,
+        count,
+        percentage,
+        color: colors[idx % colors.length],
+      };
+    })
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
 
 /**
@@ -276,18 +278,20 @@ export function getMaterialDistribution(products = INITIAL_PRODUCTS, materials =
     }
   }
 
-  return materialNames.map((matName, idx) => {
-    const count = products.filter(
-      (p) => String(p.material || '').trim().toLowerCase() === matName.toLowerCase()
-    ).length;
-    const percentage = Number(((count / total) * 100).toFixed(1));
-    return {
-      name: matName,
-      count,
-      percentage,
-      color: palette[idx % palette.length],
-    };
-  });
+  return materialNames
+    .map((matName, idx) => {
+      const count = products.filter(
+        (p) => String(p.material || '').trim().toLowerCase() === matName.toLowerCase()
+      ).length;
+      const percentage = Number(((count / total) * 100).toFixed(1));
+      return {
+        name: matName,
+        count,
+        percentage,
+        color: palette[idx % palette.length],
+      };
+    })
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
 
 /**

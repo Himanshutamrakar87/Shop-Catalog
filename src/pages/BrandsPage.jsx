@@ -23,15 +23,25 @@ export default function BrandsPage() {
 
   const isOwner = Boolean(authStatus?.isOwner);
 
+  const sortedBrands = useMemo(
+    () =>
+      [...brands].sort(
+        (a, b) =>
+          getBrandProductCount(b) - getBrandProductCount(a) ||
+          String(a.name || '').localeCompare(String(b.name || ''))
+      ),
+    [brands, products, getBrandProductCount]
+  );
+
   const classificationItems = useMemo(
     () =>
-      brands.map((br) => ({
+      sortedBrands.map((br) => ({
         id: br.id,
         name: br.name,
         count: getBrandProductCount(br),
         raw: br,
       })),
-    [brands, products]
+    [sortedBrands, getBrandProductCount]
   );
 
   // Modal states
@@ -148,7 +158,7 @@ export default function BrandsPage() {
           <>
             {/* Mobile Brand Cards (Screens < 768px) */}
             <div className="md:hidden space-y-3">
-              {brands.map((br) => {
+              {sortedBrands.map((br) => {
                 const productCount = getBrandProductCount(br);
                 const isMenuOpen = activeMenuId === br.id;
 
@@ -233,7 +243,7 @@ export default function BrandsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E5DFD2] dark:divide-[#34433A] text-sm">
-                  {brands.map((br) => {
+                  {sortedBrands.map((br) => {
                     const productCount = getBrandProductCount(br);
                     const isMenuOpen = activeMenuId === br.id;
 
