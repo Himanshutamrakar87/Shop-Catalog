@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Tag, Layers, Award, Box, IndianRupee, Image as ImageIcon } from 'lucide-react';
 import { useCatalogue } from '../context/CatalogueContext';
+import { isStockAlertStatus, isDiscontinuedStatus } from '../data/mockData';
 
 /**
  * Product Detail Page
@@ -74,8 +75,16 @@ export default function ProductDetailPage() {
             <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200">
               {product.productCode}
             </span>
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 capitalize">
-              {product.status.replace('_', ' ')}
+            <span
+              className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border capitalize ${
+                isStockAlertStatus(product.status)
+                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                  : isDiscontinuedStatus(product.status)
+                  ? 'bg-slate-100 text-slate-700 border-slate-200'
+                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              }`}
+            >
+              {(product.status || 'In Stock').replace('_', ' ')}
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">

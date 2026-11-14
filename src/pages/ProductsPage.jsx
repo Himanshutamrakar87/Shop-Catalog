@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { PlusCircle, Search, X, Package } from 'lucide-react';
 import { useCatalogue } from '../context/CatalogueContext';
+import { isActiveStatus, isStockAlertStatus, isDiscontinuedStatus } from '../data/mockData';
 import ProductPreview from '../components/dashboard/ProductPreview';
 
 /**
@@ -80,8 +81,14 @@ export default function ProductsPage() {
         (prod.categoryCode && prod.categoryCode.toLowerCase() === selectedCategory.toLowerCase());
 
       // Condition B: Status Filter
-      const matchesStatus =
-        selectedStatus === 'all' || prod.status === selectedStatus;
+      let matchesStatus = true;
+      if (selectedStatus === 'active') {
+        matchesStatus = isActiveStatus(prod.status);
+      } else if (selectedStatus === 'stock_alert') {
+        matchesStatus = isStockAlertStatus(prod.status);
+      } else if (selectedStatus === 'discontinued') {
+        matchesStatus = isDiscontinuedStatus(prod.status);
+      }
 
       // Condition C: Search Query across 7 required fields
       let matchesSearch = true;

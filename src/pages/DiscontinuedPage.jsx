@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Archive, PlusCircle } from 'lucide-react';
 import { useCatalogue } from '../context/CatalogueContext';
+import { isDiscontinuedStatus } from '../data/mockData';
 import ProductPreview from '../components/dashboard/ProductPreview';
 
 /**
@@ -11,7 +12,7 @@ import ProductPreview from '../components/dashboard/ProductPreview';
 export default function DiscontinuedPage() {
   const { products } = useCatalogue();
   const discontinuedProducts = useMemo(
-    () => products.filter((p) => p.status === 'discontinued'),
+    () => products.filter((p) => isDiscontinuedStatus(p.status)),
     [products]
   );
 

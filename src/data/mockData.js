@@ -176,11 +176,30 @@ export function getNextProductCode(categoryCode, products = [], sequenceHistory 
 }
 
 /**
+ * Shared product status classification helpers.
+ * Supports both UI labels ('In Stock', 'Out of Stock', 'Discontinued')
+ * and legacy normalized keys ('active', 'stock_alert', 'discontinued').
+ */
+export function isStockAlertStatus(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+  return normalized === 'stock_alert' || normalized === 'out of stock' || normalized === 'stock alert';
+}
+
+export function isDiscontinuedStatus(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+  return normalized === 'discontinued';
+}
+
+export function isActiveStatus(status) {
+  return !isStockAlertStatus(status) && !isDiscontinuedStatus(status);
+}
+
+/**
  * Returns summary stats for the dashboard.
  */
 export function getCatalogueStats(products = INITIAL_PRODUCTS, categories = INITIAL_CATEGORIES) {
-  const stockAlertCount = products.filter((p) => p.status === 'stock_alert').length;
-  const discontinuedCount = products.filter((p) => p.status === 'discontinued').length;
+  const stockAlertCount = products.filter((p) => isStockAlertStatus(p.status)).length;
+  const discontinuedCount = products.filter((p) => isDiscontinuedStatus(p.status)).length;
 
   return {
     totalProducts: products.length,

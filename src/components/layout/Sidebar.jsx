@@ -52,14 +52,14 @@ export default function Sidebar({
     }`;
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 min-h-screen sticky top-0 shrink-0 select-none">
+    <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 h-screen sticky top-0 shrink-0 select-none">
       {/* Brand Header */}
-      <div className="h-16 flex items-center px-6 border-b border-slate-100">
+      <div className="h-16 shrink-0 flex items-center px-6 border-b border-slate-100">
         <BrandLogo />
       </div>
 
-      {/* Navigation Links */}
-      <div className="flex-1 overflow-y-auto px-4 py-5 space-y-6">
+      {/* Navigation Links (scrolls only when cursor hovers over sidebar) */}
+      <div className="flex-1 min-h-0 overflow-hidden hover:overflow-y-auto overscroll-contain px-4 py-5 space-y-6">
         {/* Core Overview */}
         <div className="space-y-1">
           <NavLink to={isOwner ? '/dashboard' : '/products'} className={getNavLinkClass}>
@@ -236,7 +236,7 @@ export default function Sidebar({
       </div>
 
       {/* Footer Section */}
-      <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+      <div className="shrink-0 p-4 border-t border-slate-100 bg-slate-50/50">
         {isOwner ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">

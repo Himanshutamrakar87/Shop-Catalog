@@ -18,6 +18,7 @@ import {
   getOwnerAuthStatus,
   signOutOwner,
   createProductInSupabase,
+  updateProductInSupabase,
   peekNextDbProductCode,
   ensureCategoryInDb,
   createCategoryInDb,
@@ -520,13 +521,13 @@ export function CatalogueProvider({ children }) {
    */
   const getCategoryProductCount = (categoryOrName) => {
     if (!categoryOrName) return 0;
-    const name = typeof categoryOrName === 'string' ? categoryOrName : categoryOrName.name;
-    const code = typeof categoryOrName === 'object' ? categoryOrName.code : null;
+    const name = String(typeof categoryOrName === 'string' ? categoryOrName : categoryOrName.name || '').trim().toLowerCase();
+    const code = String(typeof categoryOrName === 'object' ? categoryOrName.code || '' : '').trim().toLowerCase();
 
     return products.filter((p) => {
-      const pCat = p.category || p.categoryName;
-      const pCode = p.categoryCode;
-      if (pCat === name) return true;
+      const pCat = String(p.category || p.categoryName || '').trim().toLowerCase();
+      const pCode = String(p.categoryCode || '').trim().toLowerCase();
+      if (name && pCat === name) return true;
       if (code && pCode === code) return true;
       return false;
     }).length;
@@ -611,8 +612,9 @@ export function CatalogueProvider({ children }) {
    */
   const getBrandProductCount = (brandOrName) => {
     if (!brandOrName) return 0;
-    const name = typeof brandOrName === 'string' ? brandOrName : brandOrName.name;
-    return products.filter((p) => p.brand === name).length;
+    const name = String(typeof brandOrName === 'string' ? brandOrName : brandOrName.name || '').trim().toLowerCase();
+    if (!name) return 0;
+    return products.filter((p) => String(p.brand || '').trim().toLowerCase() === name).length;
   };
 
   /**
@@ -687,8 +689,9 @@ export function CatalogueProvider({ children }) {
    */
   const getMaterialProductCount = (materialOrName) => {
     if (!materialOrName) return 0;
-    const name = typeof materialOrName === 'string' ? materialOrName : materialOrName.name;
-    return products.filter((p) => p.material === name).length;
+    const name = String(typeof materialOrName === 'string' ? materialOrName : materialOrName.name || '').trim().toLowerCase();
+    if (!name) return 0;
+    return products.filter((p) => String(p.material || '').trim().toLowerCase() === name).length;
   };
 
   /**
@@ -986,7 +989,17 @@ export function CatalogueProvider({ children }) {
   /**
    * Update an existing product
    */
-  const updateProduct = (id, productData) => {
+  const updateProduct = async (id, productData, imageFiles = {}) => {
+    const isUuid = typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (isSupabaseConfigured && isUuid) {
+      const updatedInDb = await updateProductInSupabase(id, productData, imageFiles);
+      setProducts((prev) =>
+        prev.map((p) => (p.id === id ? updatedInDb : p))
+      );
+      return updatedInDb;
+    }
+
+    let updatedLocal = null;
     setProducts((prev) =>
       prev.map((p) => {
         if (p.id !== id) return p;
@@ -994,7 +1007,7 @@ export function CatalogueProvider({ children }) {
         const productName = productData.name || productData.productName || p.productName;
         const imagesList = productData.images || [productData.image1, productData.image2].filter(Boolean);
 
-        return {
+        updatedLocal = {
           ...p,
           ...productData,
           name: productName,
@@ -1010,8 +1023,10 @@ export function CatalogueProvider({ children }) {
           purchaseUnit: productData.purchaseUnit !== undefined ? productData.purchaseUnit : (p.purchaseUnit || 'Piece'),
           updatedAt: new Date().toISOString(),
         };
+        return updatedLocal;
       })
     );
+    return updatedLocal;
   };
 
   /**

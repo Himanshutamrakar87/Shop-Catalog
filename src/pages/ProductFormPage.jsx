@@ -500,8 +500,14 @@ export default function ProductFormPage() {
 
       let savedProduct;
       if (isEditing) {
-        updateProduct(id, productPayload);
-        savedProduct = { id, ...productPayload };
+        savedProduct = await updateProduct(
+          id,
+          { ...productPayload, code: productCode, productCode },
+          { file1: image1.file, file2: image2.file }
+        );
+        if (!savedProduct) {
+          savedProduct = { id, ...productPayload };
+        }
         showToast('Product updated successfully!');
       } else {
         // In Add Product mode: pass image files for Supabase Storage bucket upload ('product-images')

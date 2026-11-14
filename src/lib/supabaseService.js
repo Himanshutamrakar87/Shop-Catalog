@@ -1025,3 +1025,159 @@ export async function createProductInSupabase(formPayload, imageFiles = {}) {
     updatedAt: insertedProduct.updated_at
   };
 }
+
+/**
+ * Update an existing Product Record in Supabase
+ */
+export async function updateProductInSupabase(id, formPayload, imageFiles = {}) {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured. Please supply VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+  }
+
+  const authStatus = await getOwnerAuthStatus();
+  if (!authStatus.isAuthenticated || !authStatus.isOwner) {
+    throw new Error(
+      'Authentication required: Please sign in to your owner account to update products in Supabase.'
+    );
+  }
+
+  const productName = formPayload.name?.trim() || formPayload.productName?.trim();
+  if (!productName) {
+    throw new Error('Product name is required.');
+  }
+
+  const categoryCode = formPayload.categoryCode?.trim() || 'GN';
+  const categoryName = formPayload.categoryName?.trim() || formPayload.category?.trim() || 'General';
+
+  const dbCategory = await ensureCategoryInDb({
+    name: categoryName,
+    code: categoryCode,
+    description: formPayload.categoryDescription || ''
+  });
+
+  const brandId = formPayload.brand ? await ensureBrandInDb(formPayload.brand) : null;
+  const materialId = formPayload.material ? await ensureMaterialInDb(formPayload.material) : null;
+
+  if (formPayload.subCategory) {
+    ensureSubCategoryInDb(formPayload.subCategory, dbCategory.id).catch(() => {});
+  }
+  if (formPayload.sizeCapacity || formPayload.sizeOrCapacity) {
+    ensureSizeInDb(formPayload.sizeCapacity || formPayload.sizeOrCapacity).catch(() => {});
+  }
+
+  const uploadedPaths = [];
+  const permanentUrls = [];
+  const codeForStorage = formPayload.code || formPayload.productCode || id;
+
+  try {
+    if (imageFiles.file1) {
+      const res1 = await uploadProductImage(imageFiles.file1, codeForStorage, 1);
+      if (res1) {
+        uploadedPaths.push(res1.path);
+        permanentUrls.push(res1.publicUrl);
+      }
+    } else if (formPayload.image1 && !formPayload.image1.startsWith('blob:')) {
+      permanentUrls.push(formPayload.image1);
+    }
+
+    if (imageFiles.file2) {
+      const res2 = await uploadProductImage(imageFiles.file2, codeForStorage, 2);
+      if (res2) {
+        uploadedPaths.push(res2.path);
+        permanentUrls.push(res2.publicUrl);
+      }
+    } else if (formPayload.image2 && !formPayload.image2.startsWith('blob:')) {
+      permanentUrls.push(formPayload.image2);
+    }
+  } catch (uploadError) {
+    if (uploadedPaths.length > 0) {
+      await deleteStorageFiles(uploadedPaths);
+    }
+    throw new Error(`Image storage upload failed: ${uploadError.message}`);
+  }
+
+  const dbPayload = {
+    name: productName,
+    category_id: dbCategory.id,
+    brand_id: brandId,
+    material_id: materialId,
+    sub_category: formPayload.subCategory?.trim() || '',
+    size_capacity: (formPayload.sizeCapacity || formPayload.sizeOrCapacity || '').trim(),
+    purchase_price: formPayload.purchasePrice !== undefined && formPayload.purchasePrice !== null && formPayload.purchasePrice !== ''
+      ? Number(formPayload.purchasePrice)
+      : 0,
+    purchase_unit: (formPayload.purchaseUnit || formPayload.purchase_unit || 'Piece').trim(),
+    special_details: formPayload.specialDetails?.trim() || '',
+    images: permanentUrls,
+    image1: permanentUrls[0] || '',
+    image2: permanentUrls[1] || '',
+    status: formPayload.status || 'In Stock'
+  };
+
+  let { data: updatedProduct, error: updateError } = await supabase
+    .from('products')
+    .update(dbPayload)
+    .eq('id', id)
+    .select(`
+      *,
+      category:categories(id, name, code),
+      brand:brands(id, name),
+      material:materials(id, name)
+    `)
+    .single();
+
+  if (updateError && (updateError.code === '42703' || updateError.message?.includes('purchase_unit'))) {
+    const { purchase_unit: _discard, ...fallbackPayload } = dbPayload;
+    const retryResult = await supabase
+      .from('products')
+      .update(fallbackPayload)
+      .eq('id', id)
+      .select(`
+        *,
+        category:categories(id, name, code),
+        brand:brands(id, name),
+        material:materials(id, name)
+      `)
+      .single();
+
+    if (!retryResult.error) {
+      updatedProduct = retryResult.data;
+      updateError = null;
+    }
+  }
+
+  if (updateError) {
+    if (uploadedPaths.length > 0) {
+      await deleteStorageFiles(uploadedPaths);
+    }
+    throw new Error(`Database error updating product in Supabase: ${updateError.message}`);
+  }
+
+  return {
+    ...updatedProduct,
+    id: updatedProduct.id,
+    name: updatedProduct.name,
+    productName: updatedProduct.name,
+    code: updatedProduct.code,
+    productCode: updatedProduct.code,
+    categoryId: updatedProduct.category_id,
+    categoryName: updatedProduct.category?.name || categoryName,
+    category: updatedProduct.category?.name || categoryName,
+    categoryCode: updatedProduct.category?.code || categoryCode,
+    brand: updatedProduct.brand?.name || formPayload.brand || '',
+    material: updatedProduct.material?.name || formPayload.material || '',
+    subCategory: updatedProduct.sub_category,
+    sizeCapacity: updatedProduct.size_capacity,
+    sizeOrCapacity: updatedProduct.size_capacity,
+    purchasePrice: Number(updatedProduct.purchase_price) || 0,
+    purchaseUnit: updatedProduct.purchase_unit || formPayload.purchaseUnit || 'Piece',
+    specialDetails: updatedProduct.special_details,
+    images: updatedProduct.images || permanentUrls,
+    image1: updatedProduct.image1 || permanentUrls[0] || '',
+    image2: updatedProduct.image2 || permanentUrls[1] || '',
+    status: updatedProduct.status,
+    isSupabaseSynced: true,
+    createdAt: updatedProduct.created_at,
+    updatedAt: updatedProduct.updated_at
+  };
+}

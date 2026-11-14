@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, PlusCircle, ArrowLeft } from 'lucide-react';
 import { useCatalogue } from '../context/CatalogueContext';
+import { isStockAlertStatus } from '../data/mockData';
 import ProductPreview from '../components/dashboard/ProductPreview';
 
 /**
@@ -11,7 +12,7 @@ import ProductPreview from '../components/dashboard/ProductPreview';
 export default function StockAlertPage() {
   const { products } = useCatalogue();
   const alertProducts = useMemo(
-    () => products.filter((p) => p.status === 'stock_alert'),
+    () => products.filter((p) => isStockAlertStatus(p.status)),
     [products]
   );
 
