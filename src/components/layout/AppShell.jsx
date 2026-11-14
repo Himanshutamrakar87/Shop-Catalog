@@ -15,19 +15,38 @@ import { useCatalogue } from '../../context/CatalogueContext';
  */
 export default function AppShell() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { stats, authStatus, isSupabaseMode, signOut } = useCatalogue();
+  const {
+    products,
+    categories,
+    brands,
+    materials,
+    stats,
+    authStatus,
+    isSupabaseMode,
+    signOut,
+  } = useCatalogue();
 
   // If authenticated into Supabase with an unauthorized non-owner email, show access restricted
   if (isSupabaseMode && authStatus?.isAuthenticated && !authStatus?.isOwner) {
     return <OwnerAccessDeniedScreen onSignOut={signOut} />;
   }
 
+  const navCounts = {
+    products: products.length,
+    categories: categories.length,
+    brands: brands.length,
+    materials: materials.length,
+    stockAlert: stats.stockAlert,
+    discontinued: stats.discontinued,
+  };
+
   return (
     <div className="min-h-screen flex bg-slate-50 text-slate-900 font-sans antialiased">
       {/* Desktop Sidebar */}
       <Sidebar 
         alertCount={stats.stockAlert} 
-        discontinuedCount={stats.discontinued} 
+        discontinuedCount={stats.discontinued}
+        counts={navCounts}
         onSignOut={signOut}
         authStatus={authStatus}
       />
@@ -38,6 +57,7 @@ export default function AppShell() {
         onClose={() => setMobileMenuOpen(false)}
         alertCount={stats.stockAlert}
         discontinuedCount={stats.discontinued}
+        counts={navCounts}
         onSignOut={signOut}
         authStatus={authStatus}
       />

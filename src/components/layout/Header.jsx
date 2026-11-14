@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, Plus, Bell, Search, X, LogOut, Lock } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import BrandLogo from '../common/BrandLogo';
@@ -6,7 +6,7 @@ import DevotionalBanner from '../common/DevotionalBanner';
 
 /**
  * Responsive Header
- * - On Mobile: Compact header with hamburger button, compact brand mark, and contextual action
+ * - On Mobile: Compact header with hamburger button, compact brand mark, contextual action, and mobile search bar
  * - On Desktop: Clean bar showing active section title, quick global catalogue search, and contextual buttons
  * - Adapts cleanly between Public Catalogue Visitor Mode and Verified Owner Mode
  */
@@ -15,6 +15,13 @@ export default function Header({ onOpenMobileMenu, alertCount = 0, onSignOut, au
   const navigate = useNavigate();
   const [headerSearch, setHeaderSearch] = useState('');
   const isOwner = Boolean(authStatus?.isOwner);
+
+  // Keep header search synced with URL ?search= parameter
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const param = params.get('search') || params.get('q') || '';
+    setHeaderSearch((prev) => (prev !== param ? param : prev));
+  }, [location.search]);
 
   // Page title mapping based on current pathname
   const getPageTitle = (path) => {
@@ -36,12 +43,18 @@ export default function Header({ onOpenMobileMenu, alertCount = 0, onSignOut, au
   const handleHeaderSearch = (e) => {
     const val = e.target.value;
     setHeaderSearch(val);
-    navigate(`/products?search=${encodeURIComponent(val)}`);
+    if (val) {
+      navigate(`/products?search=${encodeURIComponent(val)}`, {
+        replace: location.pathname === '/products',
+      });
+    } else {
+      navigate('/products', { replace: location.pathname === '/products' });
+    }
   };
 
   const handleClearHeaderSearch = () => {
     setHeaderSearch('');
-    navigate('/products');
+    navigate('/products', { replace: location.pathname === '/products' });
   };
 
   return (
@@ -151,6 +164,31 @@ export default function Header({ onOpenMobileMenu, alertCount = 0, onSignOut, au
                 <Lock className="w-3.5 h-3.5" />
                 <span>Owner Login</span>
               </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Search Bar (Visible below md breakpoint) */}
+        <div className="md:hidden pb-3 pt-0.5">
+          <div className="relative w-full">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={headerSearch}
+              onChange={handleHeaderSearch}
+              aria-label="Search products"
+              className="w-full pl-9 pr-9 py-2 text-base sm:text-sm rounded-xl border border-slate-200 bg-slate-50/80 text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+            />
+            {headerSearch && (
+              <button
+                type="button"
+                onClick={handleClearHeaderSearch}
+                aria-label="Clear search"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-200/60"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             )}
           </div>
         </div>

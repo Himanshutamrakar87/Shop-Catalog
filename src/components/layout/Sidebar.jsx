@@ -22,8 +22,18 @@ import BrandLogo from '../common/BrandLogo';
  * - Public Visitors: Catalogue browsing (Products, Categories, Brands, Materials) + Owner Sign In Portal
  * - Verified Owner: Full administrative dashboard, Add Product, Stock Alert, Discontinued, and Sign Out
  */
-export default function Sidebar({ alertCount = 0, discontinuedCount = 0, onSignOut, authStatus }) {
+export default function Sidebar({
+  alertCount = 0,
+  discontinuedCount = 0,
+  counts = {},
+  onSignOut,
+  authStatus,
+}) {
   const isOwner = Boolean(authStatus?.isOwner);
+  const productsCount = counts.products ?? 0;
+  const categoriesCount = counts.categories ?? 0;
+  const brandsCount = counts.brands ?? 0;
+  const materialsCount = counts.materials ?? 0;
 
   const getNavLinkClass = ({ isActive }) =>
     `group flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all ${
@@ -75,10 +85,21 @@ export default function Sidebar({ alertCount = 0, discontinuedCount = 0, onSignO
           </p>
           <div className="space-y-1">
             <NavLink to="/products" end className={getSubLinkClass}>
-              <div className="flex items-center gap-3">
-                <Package className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-blue-600" />
-                <span>All Products</span>
-              </div>
+              {({ isActive }) => (
+                <>
+                  <div className="flex items-center gap-3">
+                    <Package className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-blue-600" />
+                    <span>All Products</span>
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 text-xs font-semibold rounded-full tabular-nums ${
+                      isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {productsCount}
+                  </span>
+                </>
+              )}
             </NavLink>
           </div>
         </div>
@@ -90,22 +111,55 @@ export default function Sidebar({ alertCount = 0, discontinuedCount = 0, onSignO
           </p>
           <div className="space-y-1">
             <NavLink to="/categories" className={getSubLinkClass}>
-              <div className="flex items-center gap-3">
-                <Layers className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-blue-600" />
-                <span>Categories</span>
-              </div>
+              {({ isActive }) => (
+                <>
+                  <div className="flex items-center gap-3">
+                    <Layers className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-blue-600" />
+                    <span>Categories</span>
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 text-xs font-semibold rounded-full tabular-nums ${
+                      isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {categoriesCount}
+                  </span>
+                </>
+              )}
             </NavLink>
             <NavLink to="/brands" className={getSubLinkClass}>
-              <div className="flex items-center gap-3">
-                <Award className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-blue-600" />
-                <span>Brands</span>
-              </div>
+              {({ isActive }) => (
+                <>
+                  <div className="flex items-center gap-3">
+                    <Award className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-blue-600" />
+                    <span>Brands</span>
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 text-xs font-semibold rounded-full tabular-nums ${
+                      isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {brandsCount}
+                  </span>
+                </>
+              )}
             </NavLink>
             <NavLink to="/materials" className={getSubLinkClass}>
-              <div className="flex items-center gap-3">
-                <Box className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-blue-600" />
-                <span>Materials</span>
-              </div>
+              {({ isActive }) => (
+                <>
+                  <div className="flex items-center gap-3">
+                    <Box className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-blue-600" />
+                    <span>Materials</span>
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 text-xs font-semibold rounded-full tabular-nums ${
+                      isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {materialsCount}
+                  </span>
+                </>
+              )}
             </NavLink>
           </div>
         </div>
@@ -122,11 +176,9 @@ export default function Sidebar({ alertCount = 0, discontinuedCount = 0, onSignO
                   <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
                   <span>Stock Alert</span>
                 </div>
-                {alertCount > 0 && (
-                  <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">
-                    {alertCount}
-                  </span>
-                )}
+                <span className="px-2 py-0.5 text-xs font-semibold rounded-full tabular-nums bg-amber-100 text-amber-800">
+                  {alertCount}
+                </span>
               </NavLink>
 
               <NavLink to="/discontinued" className={getSubLinkClass}>
@@ -134,11 +186,9 @@ export default function Sidebar({ alertCount = 0, discontinuedCount = 0, onSignO
                   <Archive className="w-4 h-4 shrink-0 text-slate-500" />
                   <span>Discontinued</span>
                 </div>
-                {discontinuedCount > 0 && (
-                  <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-600">
-                    {discontinuedCount}
-                  </span>
-                )}
+                <span className="px-2 py-0.5 text-xs font-semibold rounded-full tabular-nums bg-slate-100 text-slate-600">
+                  {discontinuedCount}
+                </span>
               </NavLink>
             </div>
           </div>

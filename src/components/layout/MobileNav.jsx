@@ -21,9 +21,21 @@ import BrandLogo from '../common/BrandLogo';
  * Mobile Navigation Drawer
  * Adapts between Public Visitor Mode and Verified Owner Mode
  */
-export default function MobileNav({ isOpen, onClose, alertCount = 0, discontinuedCount = 0, onSignOut, authStatus }) {
+export default function MobileNav({
+  isOpen,
+  onClose,
+  alertCount = 0,
+  discontinuedCount = 0,
+  counts = {},
+  onSignOut,
+  authStatus,
+}) {
   const location = useLocation();
   const isOwner = Boolean(authStatus?.isOwner);
+  const productsCount = counts.products ?? 0;
+  const categoriesCount = counts.categories ?? 0;
+  const brandsCount = counts.brands ?? 0;
+  const materialsCount = counts.materials ?? 0;
 
   // Close drawer whenever the route changes
   useEffect(() => {
@@ -137,11 +149,21 @@ export default function MobileNav({ isOpen, onClose, alertCount = 0, discontinue
             </p>
             <div className="space-y-1">
               <NavLink to="/products" end className={getSubLinkClass}>
-                <div className="flex items-center gap-3">
-                  <Package className="w-5 h-5 text-slate-500" />
-                  <span>All Products</span>
-                </div>
-                <ChevronRight className="w-4 h-4 opacity-40" />
+                {({ isActive }) => (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <Package className="w-5 h-5 text-slate-500" />
+                      <span>All Products</span>
+                    </div>
+                    <span
+                      className={`px-2 py-0.5 text-xs font-bold rounded-full tabular-nums ${
+                        isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {productsCount}
+                    </span>
+                  </>
+                )}
               </NavLink>
             </div>
           </div>
@@ -153,27 +175,57 @@ export default function MobileNav({ isOpen, onClose, alertCount = 0, discontinue
             </p>
             <div className="space-y-1">
               <NavLink to="/categories" className={getSubLinkClass}>
-                <div className="flex items-center gap-3">
-                  <Layers className="w-5 h-5 text-slate-500" />
-                  <span>Categories</span>
-                </div>
-                <ChevronRight className="w-4 h-4 opacity-40" />
+                {({ isActive }) => (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <Layers className="w-5 h-5 text-slate-500" />
+                      <span>Categories</span>
+                    </div>
+                    <span
+                      className={`px-2 py-0.5 text-xs font-bold rounded-full tabular-nums ${
+                        isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {categoriesCount}
+                    </span>
+                  </>
+                )}
               </NavLink>
 
               <NavLink to="/brands" className={getSubLinkClass}>
-                <div className="flex items-center gap-3">
-                  <Award className="w-5 h-5 text-slate-500" />
-                  <span>Brands</span>
-                </div>
-                <ChevronRight className="w-4 h-4 opacity-40" />
+                {({ isActive }) => (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <Award className="w-5 h-5 text-slate-500" />
+                      <span>Brands</span>
+                    </div>
+                    <span
+                      className={`px-2 py-0.5 text-xs font-bold rounded-full tabular-nums ${
+                        isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {brandsCount}
+                    </span>
+                  </>
+                )}
               </NavLink>
 
               <NavLink to="/materials" className={getSubLinkClass}>
-                <div className="flex items-center gap-3">
-                  <Box className="w-5 h-5 text-slate-500" />
-                  <span>Materials</span>
-                </div>
-                <ChevronRight className="w-4 h-4 opacity-40" />
+                {({ isActive }) => (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <Box className="w-5 h-5 text-slate-500" />
+                      <span>Materials</span>
+                    </div>
+                    <span
+                      className={`px-2 py-0.5 text-xs font-bold rounded-full tabular-nums ${
+                        isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {materialsCount}
+                    </span>
+                  </>
+                )}
               </NavLink>
             </div>
           </div>
@@ -190,11 +242,9 @@ export default function MobileNav({ isOpen, onClose, alertCount = 0, discontinue
                     <AlertTriangle className="w-5 h-5 text-amber-500" />
                     <span>Stock Alert</span>
                   </div>
-                  {alertCount > 0 && (
-                    <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-amber-100 text-amber-800">
-                      {alertCount}
-                    </span>
-                  )}
+                  <span className="px-2 py-0.5 text-xs font-bold rounded-full tabular-nums bg-amber-100 text-amber-800">
+                    {alertCount}
+                  </span>
                 </NavLink>
 
                 <NavLink to="/discontinued" className={getSubLinkClass}>
@@ -202,11 +252,9 @@ export default function MobileNav({ isOpen, onClose, alertCount = 0, discontinue
                     <Archive className="w-5 h-5 text-slate-500" />
                     <span>Discontinued</span>
                   </div>
-                  {discontinuedCount > 0 && (
-                    <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-600">
-                      {discontinuedCount}
-                    </span>
-                  )}
+                  <span className="px-2 py-0.5 text-xs font-bold rounded-full tabular-nums bg-slate-100 text-slate-600">
+                    {discontinuedCount}
+                  </span>
                 </NavLink>
               </div>
             </div>
