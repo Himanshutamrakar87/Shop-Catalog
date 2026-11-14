@@ -41,12 +41,15 @@ export const INITIAL_SIZES = [];
  */
 export function generateSuggestedCategoryCode(name, existingCodes = []) {
   if (!name || typeof name !== 'string') return '';
+
+  const existingSet = new Set(
+    (Array.isArray(existingCodes) ? existingCodes : [])
+      .filter((c) => typeof c === 'string' && c.trim().length > 0)
+      .map((c) => c.trim().toUpperCase())
+  );
+
   const clean = name.trim().toUpperCase().replace(/[^A-Z\s]/g, '');
-  if (!clean) return 'CA';
-
   const words = clean.split(/\s+/).filter(Boolean);
-  const existingSet = new Set(existingCodes.map((c) => c.toUpperCase()));
-
   const candidates = [];
 
   if (words.length >= 2) {
@@ -67,8 +70,8 @@ export function generateSuggestedCategoryCode(name, existingCodes = []) {
     if (words[0].length >= 3) {
       candidates.push(words[0][0] + words[0][2]);
     }
-  } else {
-    const word = words[0] || 'CATEGORY';
+  } else if (words.length === 1) {
+    const word = words[0];
 
     // Compound match: Tableware -> TW
     const compoundMatch = word.match(/^(TABLE|COOK|GLASS|BAKE|SILVER|BRASS|FLAT)(WARE|POT|PAN|DISP)/);
@@ -90,6 +93,9 @@ export function generateSuggestedCategoryCode(name, existingCodes = []) {
     if (word.length >= 4) {
       candidates.push(word[0] + word[3]);
     }
+  } else {
+    // Non-ASCII (e.g. Hindi) or numeric category names
+    candidates.push('CA', 'CT', 'CG', 'CB', 'CC');
   }
 
   // Return the first candidate that isn't already taken
@@ -116,6 +122,16 @@ export function generateSuggestedCategoryCode(name, existingCodes = []) {
     const code = firstChar + String.fromCharCode(charCode);
     if (!existingSet.has(code)) {
       return code;
+    }
+  }
+
+  // Ultimate fallback: scan A-Z x A-Z for any unused 2-letter code
+  for (let i = 65; i <= 90; i++) {
+    for (let j = 65; j <= 90; j++) {
+      const code = String.fromCharCode(i) + String.fromCharCode(j);
+      if (!existingSet.has(code)) {
+        return code;
+      }
     }
   }
 

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import {
   INITIAL_CATEGORIES,
   INITIAL_PRODUCTS,
@@ -20,6 +20,9 @@ import {
   createProductInSupabase,
   peekNextDbProductCode,
   ensureCategoryInDb,
+  createCategoryInDb,
+  updateCategoryInDb,
+  deleteCategoryInDb,
   ensureBrandInDb,
   ensureMaterialInDb,
   ensureSubCategoryInDb,
@@ -492,17 +495,25 @@ export function CatalogueProvider({ children }) {
   /**
    * Generates a suggested unique 2-letter category code
    */
-  const suggestCategoryCode = (name) => {
-    const existingCodes = categories.map((c) => c.code);
-    return generateSuggestedCategoryCode(name, existingCodes);
-  };
+  const suggestCategoryCode = useCallback(
+    (name) => {
+      const existingCodes = categories
+        .map((c) => (c && typeof c.code === 'string' ? c.code : ''))
+        .filter(Boolean);
+      return generateSuggestedCategoryCode(name, existingCodes);
+    },
+    [categories]
+  );
 
   /**
    * Generates next sequential product code for a category
    */
-  const generateProductCodeForCategory = (categoryCode) => {
-    return getNextProductCode(categoryCode, products, sequenceHistory);
-  };
+  const generateProductCodeForCategory = useCallback(
+    (categoryCode) => {
+      return getNextProductCode(categoryCode, products, sequenceHistory);
+    },
+    [products, sequenceHistory]
+  );
 
   /**
    * Count products in a category
@@ -522,25 +533,52 @@ export function CatalogueProvider({ children }) {
   };
 
   /**
-   * Add a new category
+   * Add a new category (persists to Supabase when configured, or localStorage in offline mode)
    */
-  const addCategory = ({ name, code, description = '' }) => {
-    const trimmedName = name.trim();
+  const addCategory = async ({ name, code, description = '' }) => {
+    const trimmedName = (name || '').trim();
+    if (!trimmedName) {
+      throw new Error('Please enter a category name.');
+    }
+
+    const nameExists = categories.some(
+      (c) => String(c?.name || '').trim().toLowerCase() === trimmedName.toLowerCase()
+    );
+    if (nameExists) {
+      throw new Error(`Category "${trimmedName}" already exists.`);
+    }
+
     let finalCode = (code || suggestCategoryCode(trimmedName)).toUpperCase().trim();
 
     const codeExists = categories.some(
-      (c) => c.code.toUpperCase() === finalCode.toUpperCase()
+      (c) => String(c?.code || '').trim().toUpperCase() === finalCode.toUpperCase()
     );
 
-    if (codeExists) {
+    if (codeExists || !finalCode) {
       finalCode = suggestCategoryCode(trimmedName);
+    }
+
+    if (isSupabaseConfigured) {
+      const savedInDb = await createCategoryInDb(
+        {
+          name: trimmedName,
+          code: finalCode,
+          description: (description || '').trim(),
+        },
+        generateSuggestedCategoryCode
+      );
+      setCategories((prev) => {
+        if (prev.some((c) => c.id === savedInDb.id)) return prev;
+        return [...prev, savedInDb];
+      });
+      return savedInDb;
     }
 
     const newCategory = {
       id: 'cat-' + Date.now(),
       name: trimmedName,
       code: finalCode,
-      description: description.trim(),
+      description: (description || '').trim(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -789,13 +827,29 @@ export function CatalogueProvider({ children }) {
   /**
    * Edit an existing category
    */
-  const updateCategory = (id, { name, description }) => {
+  const updateCategory = async (id, { name, description }) => {
     const target = categories.find((c) => c.id === id);
     if (!target) return { success: false, error: 'Category not found' };
 
     const oldName = target.name;
     const updatedName = name ? name.trim() : target.name;
-    const updatedDesc = description !== undefined ? description.trim() : target.description;
+    const updatedDesc = description !== undefined ? description.trim() : (target.description || '');
+
+    const duplicateName = categories.some(
+      (c) => c.id !== id && String(c?.name || '').trim().toLowerCase() === updatedName.toLowerCase()
+    );
+    if (duplicateName) {
+      return { success: false, error: `Category "${updatedName}" already exists.` };
+    }
+
+    const isUuid = typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (isSupabaseConfigured && isUuid) {
+      try {
+        await updateCategoryInDb(id, { name: updatedName, description: updatedDesc });
+      } catch (err) {
+        return { success: false, error: err?.message || 'Failed to update category in Supabase.' };
+      }
+    }
 
     setCategories((prev) =>
       prev.map((c) =>
@@ -826,7 +880,7 @@ export function CatalogueProvider({ children }) {
   /**
    * Delete a category
    */
-  const deleteCategory = (id) => {
+  const deleteCategory = async (id) => {
     const target = categories.find((c) => c.id === id);
     if (!target) return { success: false, error: 'Category not found' };
 
@@ -839,6 +893,15 @@ export function CatalogueProvider({ children }) {
       };
     }
 
+    const isUuid = typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (isSupabaseConfigured && isUuid) {
+      try {
+        await deleteCategoryInDb(id);
+      } catch (err) {
+        return { success: false, error: err?.message || 'Failed to delete category in Supabase.' };
+      }
+    }
+
     setCategories((prev) => prev.filter((c) => c.id !== id));
     return { success: true };
   };
@@ -846,13 +909,13 @@ export function CatalogueProvider({ children }) {
   /**
    * Preview product code without incrementing counter
    */
-  const peekProductCodeForCategory = async (categoryCode) => {
+  const peekProductCodeForCategory = useCallback(async (categoryCode) => {
     if (!categoryCode) return '';
     if (isSupabaseConfigured) {
       return await peekNextDbProductCode(categoryCode);
     }
     return getNextProductCode(categoryCode, products, sequenceHistory);
-  };
+  }, [products, sequenceHistory]);
 
   /**
    * Add a new product
@@ -995,6 +1058,7 @@ export function CatalogueProvider({ children }) {
         refreshAuthStatus,
         signOut,
         peekProductCodeForCategory,
+        suggestCategoryCode,
         generateProductCodeForCategory,
         getCategoryProductCount,
         getSubCategoryProductCount,

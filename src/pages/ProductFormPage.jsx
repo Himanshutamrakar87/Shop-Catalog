@@ -337,13 +337,18 @@ export default function ProductFormPage() {
 
   // Inline "+ Add New" Category callback
   const handleCategoryCreated = async (newCategory) => {
+    if (!newCategory?.name) return;
     setSelectedCategoryName(newCategory.name);
-    if (isSupabaseMode) {
-      const newCode = await peekProductCodeForCategory(newCategory.code);
-      setProductCode(newCode || `RBB-${newCategory.code}-001`);
-    } else {
-      const newCode = generateProductCodeForCategory(newCategory.code);
-      setProductCode(newCode);
+    try {
+      if (isSupabaseMode) {
+        const newCode = await peekProductCodeForCategory(newCategory.code);
+        setProductCode(newCode || `RBB-${newCategory.code || 'GN'}-001`);
+      } else {
+        const newCode = generateProductCodeForCategory(newCategory.code);
+        setProductCode(newCode);
+      }
+    } catch {
+      setProductCode(`RBB-${newCategory.code || 'GN'}-001`);
     }
     showToast(`Category "${newCategory.name}" created and selected!`);
   };

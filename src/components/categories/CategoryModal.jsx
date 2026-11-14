@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, CheckCircle2, Lock } from 'lucide-react';
+import { X, CheckCircle2, Loader2 } from 'lucide-react';
 import { useCatalogue } from '../../context/CatalogueContext';
 
 /**
@@ -25,6 +25,7 @@ export default function CategoryModal({
   const [code, setCode] = useState('');
   const [adjustedCodeNotice, setAdjustedCodeNotice] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize or reset form when modal opens
   useEffect(() => {
@@ -41,6 +42,7 @@ export default function CategoryModal({
       setAdjustedCodeNotice('');
       setError('');
     }
+    setIsSubmitting(false);
   }, [isOpen, mode, category]);
 
   // Compute suggested code and collision note in Add mode
@@ -65,7 +67,10 @@ export default function CategoryModal({
     const suggested = suggestCategoryCode(name);
     setCode(suggested);
 
-    const existingCodes = categories.map((c) => c.code.toUpperCase());
+    const existingCodes = (Array.isArray(categories) ? categories : [])
+      .map((c) => (c && typeof c.code === 'string' ? c.code.trim().toUpperCase() : ''))
+      .filter(Boolean);
+
     if (naiveCode && suggested && naiveCode !== suggested && existingCodes.includes(naiveCode)) {
       setAdjustedCodeNotice(`We adjusted the category code because ${naiveCode} is already in use.`);
     } else {
@@ -75,31 +80,42 @@ export default function CategoryModal({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     const trimmedName = name.trim();
     if (!trimmedName) {
       setError('Please enter a category name.');
       return;
     }
 
-    if (mode === 'add') {
-      const newCat = addCategory({
-        name: trimmedName,
-        code: code,
-      });
-      if (onSuccess) onSuccess(newCat);
-      onClose();
-    } else if (mode === 'edit' && category) {
-      const result = updateCategory(category.id, {
-        name: trimmedName,
-      });
-      if (result.success) {
-        if (onSuccess) onSuccess({ ...category, name: trimmedName });
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      if (mode === 'add') {
+        const newCat = await addCategory({
+          name: trimmedName,
+          code: code,
+        });
+        if (onSuccess && newCat) await onSuccess(newCat);
         onClose();
-      } else {
-        setError(result.error || 'Failed to update category.');
+      } else if (mode === 'edit' && category) {
+        const result = await updateCategory(category.id, {
+          name: trimmedName,
+        });
+        if (result?.success) {
+          if (onSuccess) await onSuccess({ ...category, name: trimmedName });
+          onClose();
+        } else {
+          setError(result?.error || 'Failed to update category.');
+        }
       }
+    } catch (err) {
+      setError(err?.message || 'Failed to save category. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -206,18 +222,26 @@ export default function CategoryModal({
           <div className="pt-2 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5">
             <button
               type="button"
+              disabled={isSubmitting}
               onClick={onClose}
-              className="w-full sm:w-auto py-3 sm:py-2.5 px-5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-colors text-center"
+              className="w-full sm:w-auto py-3 sm:py-2.5 px-5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-50 font-semibold text-sm transition-colors text-center"
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              disabled={!name.trim() || !code}
-              className="w-full sm:w-auto py-3 sm:py-2.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 text-white font-bold text-sm shadow-xs transition-all text-center"
+              disabled={!name.trim() || !code || isSubmitting}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 sm:py-2.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 text-white font-bold text-sm shadow-xs transition-all text-center"
             >
-              {mode === 'add' ? 'Create Category' : 'Save Changes'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{mode === 'add' ? 'Creating...' : 'Saving...'}</span>
+                </>
+              ) : (
+                <span>{mode === 'add' ? 'Create Category' : 'Save Changes'}</span>
+              )}
             </button>
           </div>
         </form>

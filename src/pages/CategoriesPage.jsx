@@ -19,6 +19,7 @@ export default function CategoriesPage() {
     categories,
     getCategoryProductCount,
     deleteCategory,
+    showToast,
     authStatus,
   } = useCatalogue();
 
@@ -295,6 +296,15 @@ export default function CategoriesPage() {
         mode={modalState.mode}
         category={modalState.category}
         onClose={() => setModalState({ isOpen: false, mode: 'add', category: null })}
+        onSuccess={(cat) => {
+          if (cat?.name) {
+            showToast(
+              modalState.mode === 'add'
+                ? `Category "${cat.name}" created!`
+                : `Category "${cat.name}" updated!`
+            );
+          }
+        }}
       />
 
       {/* ========================================================================= */}
@@ -305,7 +315,14 @@ export default function CategoriesPage() {
         category={deleteDialog.category}
         productCount={deleteDialog.productCount}
         onClose={() => setDeleteDialog({ isOpen: false, category: null, productCount: 0 })}
-        onConfirmDelete={(id) => deleteCategory(id)}
+        onConfirmDelete={async (id) => {
+          const res = await deleteCategory(id);
+          if (res?.success) {
+            showToast('Category removed.');
+          } else if (res?.error) {
+            showToast(res.error, 'error');
+          }
+        }}
       />
     </div>
   );

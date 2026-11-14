@@ -304,7 +304,14 @@ export async function fetchPublicCategories() {
       console.warn('[Fetch Categories Warning]', error.message);
       return null;
     }
-    return data || [];
+    return (data || []).map((c) => ({
+      ...c,
+      name: c.name || '',
+      code: c.code || '',
+      description: c.description || '',
+      createdAt: c.created_at,
+      updatedAt: c.updated_at
+    }));
   } catch (err) {
     console.warn('[Fetch Categories Error]', err);
     return null;
@@ -529,8 +536,8 @@ export async function deleteStorageFiles(paths) {
  * Returns the record with its UUID id
  */
 export async function ensureCategoryInDb({ name, code, description = '' }) {
-  const cleanCode = code.toUpperCase().trim();
-  const cleanName = name.trim();
+  const cleanCode = (code || '').toUpperCase().trim();
+  const cleanName = (name || '').trim();
 
   // Try to find existing category by code
   const { data: existing, error: findError } = await supabase
@@ -565,6 +572,137 @@ export async function ensureCategoryInDb({ name, code, description = '' }) {
   }
 
   return inserted;
+}
+
+/**
+ * Create a new category in Supabase with duplicate name/code protection
+ */
+export async function createCategoryInDb({ name, code, description = '' }, generateCodeFn) {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured.');
+  }
+
+  const authStatus = await getOwnerAuthStatus();
+  if (!authStatus.isAuthenticated || !authStatus.isOwner) {
+    throw new Error('Please sign in as the Owner to add categories to Supabase.');
+  }
+
+  const cleanName = (name || '').trim();
+  if (!cleanName) {
+    throw new Error('Category name is required.');
+  }
+
+  const { data: existingRows, error: fetchErr } = await supabase
+    .from('categories')
+    .select('id, name, code');
+
+  if (fetchErr) {
+    throw new Error(`Database error checking existing categories: ${fetchErr.message}`);
+  }
+
+  const rows = existingRows || [];
+  const nameExists = rows.some(
+    (c) => String(c.name || '').trim().toLowerCase() === cleanName.toLowerCase()
+  );
+  if (nameExists) {
+    throw new Error(`Category "${cleanName}" already exists.`);
+  }
+
+  const existingCodes = rows.map((c) => String(c.code || '').toUpperCase()).filter(Boolean);
+  let finalCode = (code || '').toUpperCase().trim();
+  if (!finalCode || existingCodes.includes(finalCode)) {
+    finalCode = typeof generateCodeFn === 'function'
+      ? generateCodeFn(cleanName, existingCodes)
+      : finalCode;
+  }
+
+  const { data: inserted, error: insertError } = await supabase
+    .from('categories')
+    .insert([
+      {
+        name: cleanName,
+        code: finalCode,
+        description: (description || '').trim()
+      }
+    ])
+    .select('id, name, code, description, created_at, updated_at')
+    .single();
+
+  if (insertError) {
+    throw new Error(`Failed to create category "${cleanName}": ${insertError.message}`);
+  }
+
+  return {
+    ...inserted,
+    name: inserted.name || cleanName,
+    code: inserted.code || finalCode,
+    description: inserted.description || '',
+    createdAt: inserted.created_at,
+    updatedAt: inserted.updated_at
+  };
+}
+
+/**
+ * Update an existing category in Supabase
+ */
+export async function updateCategoryInDb(id, { name, description }) {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured.');
+  }
+
+  const authStatus = await getOwnerAuthStatus();
+  if (!authStatus.isAuthenticated || !authStatus.isOwner) {
+    throw new Error('Please sign in as the Owner to update categories.');
+  }
+
+  const updates = {};
+  if (name !== undefined) updates.name = name.trim();
+  if (description !== undefined) updates.description = description.trim();
+
+  const { data, error } = await supabase
+    .from('categories')
+    .update(updates)
+    .eq('id', id)
+    .select('id, name, code, description, created_at, updated_at')
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to update category: ${error.message}`);
+  }
+
+  return {
+    ...data,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at
+  };
+}
+
+/**
+ * Delete a category from Supabase
+ */
+export async function deleteCategoryInDb(id) {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured.');
+  }
+
+  const authStatus = await getOwnerAuthStatus();
+  if (!authStatus.isAuthenticated || !authStatus.isOwner) {
+    throw new Error('Please sign in as the Owner to delete categories.');
+  }
+
+  const { error } = await supabase
+    .from('categories')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    if (error.code === '23503') {
+      throw new Error('This category is used by products in the database. Move or delete those products first.');
+    }
+    throw new Error(`Failed to delete category: ${error.message}`);
+  }
+
+  return true;
 }
 
 /**
