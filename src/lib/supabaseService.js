@@ -20,6 +20,8 @@ let lockoutUntil = 0;
 
 // In-memory owner auth cache to avoid redundant network roundtrips on every fetch/save
 const OWNER_AUTH_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const OWNER_HINT_STORAGE_KEY = 'rbb_verified_owner_hint_v1';
+
 let ownerAuthCache = {
   userId: null,
   accessToken: null,
@@ -27,6 +29,124 @@ let ownerAuthCache = {
   cachedAt: 0
 };
 let inFlightAuthCheck = null;
+let inFlightSignInPromise = null;
+
+function readStoredSupabaseSession() {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        const parsed = JSON.parse(raw);
+        const session = parsed?.currentSession || parsed?.session || parsed;
+        const user = session?.user;
+        const expiresAt = Number(session?.expires_at || 0);
+        if (user?.id && (!expiresAt || expiresAt * 1000 > Date.now() - 30000)) {
+          return {
+            user,
+            accessToken: session?.access_token || null
+          };
+        }
+      }
+    }
+  } catch {
+    // Ignore storage read/parse errors
+  }
+  return null;
+}
+
+function saveVerifiedOwnerHint(user) {
+  if (!user?.id) return;
+  try {
+    localStorage.setItem(
+      OWNER_HINT_STORAGE_KEY,
+      JSON.stringify({
+        userId: user.id,
+        email: user.email || '',
+        verifiedAt: Date.now()
+      })
+    );
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+function clearVerifiedOwnerHint() {
+  try {
+    localStorage.removeItem(OWNER_HINT_STORAGE_KEY);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+/**
+ * Synchronous optimistic auth status for instant UI hydration on mount/reload.
+ * Background server verification (is_rbb_owner) always still runs to enforce truth,
+ * and PostgreSQL RLS enforces server-side security on every write.
+ */
+export function getOptimisticOwnerStatus() {
+  if (!isSupabaseConfigured) {
+    return {
+      isConfigured: false,
+      isAuthenticated: false,
+      isOwner: false,
+      isLoading: false,
+      user: null,
+      role: null,
+      reason: 'Local offline mode'
+    };
+  }
+
+  const storedSession = readStoredSupabaseSession();
+  if (!storedSession?.user?.id) {
+    clearVerifiedOwnerHint();
+    return {
+      isConfigured: true,
+      isAuthenticated: false,
+      isOwner: false,
+      isLoading: false,
+      user: null,
+      role: null,
+      reason: 'Public visitor'
+    };
+  }
+
+  try {
+    const rawHint = localStorage.getItem(OWNER_HINT_STORAGE_KEY);
+    if (rawHint) {
+      const hint = JSON.parse(rawHint);
+      if (hint?.userId && hint.userId === storedSession.user.id) {
+        return {
+          isConfigured: true,
+          isAuthenticated: true,
+          isOwner: true,
+          isLoading: false,
+          user: storedSession.user,
+          role: 'owner',
+          reason: 'Authenticated as RBB Owner'
+        };
+      }
+    }
+  } catch {
+    // Ignore parse errors
+  }
+
+  // Session exists locally without cached owner hint: brief verification state
+  return {
+    isConfigured: true,
+    isAuthenticated: true,
+    isOwner: storedSession.user.app_metadata?.role === 'owner',
+    isLoading: storedSession.user.app_metadata?.role !== 'owner',
+    user: storedSession.user,
+    role: storedSession.user.app_metadata?.role || null,
+    reason: 'Verifying Supabase authentication...'
+  };
+}
+
+export function isOwnerSignInInFlight() {
+  return Boolean(inFlightSignInPromise);
+}
 
 export function invalidateOwnerAuthCache() {
   ownerAuthCache = {
@@ -72,6 +192,19 @@ export async function getOwnerAuthStatus(forceRefresh = false) {
     };
   }
 
+  // If a password sign-in flow is currently executing its own authoritative owner RPC check,
+  // share its result instead of firing a duplicate parallel is_rbb_owner() RPC.
+  if (!forceRefresh && inFlightSignInPromise) {
+    try {
+      const signInRes = await inFlightSignInPromise;
+      if (signInRes?.authStatus) {
+        return signInRes.authStatus;
+      }
+    } catch {
+      // Fall through to standard check if sign-in failed
+    }
+  }
+
   if (!forceRefresh && inFlightAuthCheck) {
     return inFlightAuthCheck;
   }
@@ -86,6 +219,7 @@ export async function getOwnerAuthStatus(forceRefresh = false) {
 
       if (sessionError || !user) {
         invalidateOwnerAuthCache();
+        clearVerifiedOwnerHint();
         return {
           isConfigured: true,
           isAuthenticated: false,
@@ -123,6 +257,12 @@ export async function getOwnerAuthStatus(forceRefresh = false) {
         } catch (e) {
           console.warn('[Owner RPC Check]', e);
         }
+      }
+
+      if (isOwner) {
+        saveVerifiedOwnerHint(user);
+      } else {
+        clearVerifiedOwnerHint();
       }
 
       const resolvedStatus = {
@@ -201,52 +341,52 @@ export async function signInOwnerWithPassword(arg1, arg2) {
     throw new Error('Please enter both your owner email and password.');
   }
 
-  try {
-    // 1. Real Supabase Auth sign-in
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+  const executeSignIn = async () => {
+    try {
+      // 1. Real Supabase Auth sign-in
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-    if (error) {
-      failedAttempts += 1;
-      if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
-        lockoutUntil = Date.now() + LOCKOUT_DURATION_MS;
-      }
-      throw new Error(error.message || 'Invalid email or password. Please verify your credentials and try again.');
-    }
-
-    if (!data?.user) {
-      throw new Error('Authentication failed. No user record returned.');
-    }
-
-    // 2. Authoritative Server/Database Check: Verify owner status
-    let isOwner = data.user.app_metadata?.role === 'owner';
-    if (!isOwner) {
-      try {
-        const { data: rpcIsOwner } = await supabase.rpc('is_rbb_owner');
-        if (rpcIsOwner === true) {
-          isOwner = true;
+      if (error) {
+        failedAttempts += 1;
+        if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+          lockoutUntil = Date.now() + LOCKOUT_DURATION_MS;
         }
-      } catch {}
-    }
+        throw new Error(error.message || 'Invalid email or password. Please verify your credentials and try again.');
+      }
 
-    if (!isOwner) {
-      // Non-owner authenticated account detected: immediately sign out to prevent privilege leak
-      await supabase.auth.signOut();
-      throw new Error(
-        'Access Denied: Your account is authenticated, but is not authorized as the designated RBB Owner.'
-      );
-    }
+      if (!data?.user) {
+        throw new Error('Authentication failed. No user record returned.');
+      }
 
-    // Success: reset rate limit tracking and warm auth cache immediately
-    // so post-login navigation/checks resolve in 0ms without re-querying is_rbb_owner()
-    failedAttempts = 0;
-    lockoutUntil = 0;
-    ownerAuthCache = {
-      userId: data.user.id,
-      accessToken: data.session?.access_token || null,
-      status: {
+      // 2. Authoritative Server/Database Check: Verify owner status
+      let isOwner = data.user.app_metadata?.role === 'owner';
+      if (!isOwner) {
+        try {
+          const { data: rpcIsOwner } = await supabase.rpc('is_rbb_owner');
+          if (rpcIsOwner === true) {
+            isOwner = true;
+          }
+        } catch {}
+      }
+
+      if (!isOwner) {
+        clearVerifiedOwnerHint();
+        // Non-owner authenticated account detected: immediately sign out to prevent privilege leak
+        await supabase.auth.signOut();
+        throw new Error(
+          'Access Denied: Your account is authenticated, but is not authorized as the designated RBB Owner.'
+        );
+      }
+
+      // Success: reset rate limit tracking and warm auth cache immediately
+      // so post-login navigation/checks resolve in 0ms without re-querying is_rbb_owner()
+      failedAttempts = 0;
+      lockoutUntil = 0;
+
+      const resolvedStatus = {
         isConfigured: true,
         isAuthenticated: true,
         isOwner: true,
@@ -254,29 +394,42 @@ export async function signInOwnerWithPassword(arg1, arg2) {
         user: data.user,
         role: 'owner',
         reason: 'Authenticated as RBB Owner'
-      },
-      cachedAt: Date.now()
-    };
-    inFlightAuthCheck = null;
+      };
 
-    // Purge any legacy client flags
-    try {
-      localStorage.removeItem('rbb_owner_session');
-    } catch {}
+      ownerAuthCache = {
+        userId: data.user.id,
+        accessToken: data.session?.access_token || null,
+        status: resolvedStatus,
+        cachedAt: Date.now()
+      };
+      inFlightAuthCheck = null;
+      saveVerifiedOwnerHint(data.user);
 
-    return {
-      ...data,
-      isOwner: true
-    };
-  } catch (err) {
-    if (!rateLimit.isLocked && !err.message?.includes('Too many failed')) {
-      failedAttempts += 1;
-      if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
-        lockoutUntil = Date.now() + LOCKOUT_DURATION_MS;
+      // Purge any legacy client flags
+      try {
+        localStorage.removeItem('rbb_owner_session');
+      } catch {}
+
+      return {
+        ...data,
+        isOwner: true,
+        authStatus: resolvedStatus
+      };
+    } catch (err) {
+      if (!rateLimit.isLocked && !err.message?.includes('Too many failed')) {
+        failedAttempts += 1;
+        if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+          lockoutUntil = Date.now() + LOCKOUT_DURATION_MS;
+        }
       }
+      throw err;
+    } finally {
+      inFlightSignInPromise = null;
     }
-    throw err;
-  }
+  };
+
+  inFlightSignInPromise = executeSignIn();
+  return inFlightSignInPromise;
 }
 
 /**
@@ -302,6 +455,7 @@ export async function sendOwnerPasswordReset(email) {
  */
 export async function signOutOwner() {
   invalidateOwnerAuthCache();
+  clearVerifiedOwnerHint();
   try {
     localStorage.removeItem('rbb_owner_session');
   } catch {}
@@ -315,20 +469,59 @@ export async function signOutOwner() {
 }
 
 /**
+ * Enrich normalized product objects with category/brand/material display fields
+ * from separate metadata tables (avoids slower PostgREST lateral joins).
+ */
+export function enrichProductsWithLookups(productsList, categoriesList = [], brandsList = [], materialsList = []) {
+  if (!Array.isArray(productsList) || productsList.length === 0) return productsList;
+
+  const categoryById = new Map();
+  for (const c of categoriesList || []) {
+    if (c?.id) categoryById.set(c.id, c);
+  }
+  const brandById = new Map();
+  for (const b of brandsList || []) {
+    if (b?.id) brandById.set(b.id, b);
+  }
+  const materialById = new Map();
+  for (const m of materialsList || []) {
+    if (m?.id) materialById.set(m.id, m);
+  }
+
+  return productsList.map((p) => {
+    const cat = p.categoryId ? categoryById.get(p.categoryId) : null;
+    const br = p.brandId ? brandById.get(p.brandId) : null;
+    const mat = p.materialId ? materialById.get(p.materialId) : null;
+
+    const categoryName = cat?.name || p.categoryName || p.category || '';
+    const categoryCode = cat?.code || p.categoryCode || '';
+    const brandName = br?.name || p.brand || '';
+    const materialName = mat?.name || p.material || '';
+
+    return {
+      ...p,
+      categoryName,
+      category: categoryName,
+      categoryCode,
+      brand: brandName,
+      material: materialName
+    };
+  });
+}
+
+/**
  * Public Catalogue Query: Fetch products from Supabase
+ * Uses a fast single-table indexed scan without lateral joins; metadata is merged in JS.
  * Accessible to everyone without login
  */
-export async function fetchPublicProducts() {
+export async function fetchPublicProducts(lookups = null) {
   if (!isSupabaseConfigured) return null;
   try {
     const { data, error } = await supabase
       .from('products')
-      .select(`
-        *,
-        category:categories(id, name, code),
-        brand:brands(id, name),
-        material:materials(id, name)
-      `)
+      .select(
+        'id, name, code, category_id, brand_id, material_id, sub_category, size_capacity, purchase_price, purchase_unit, special_details, images, image1, image2, status, created_at, updated_at'
+      )
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -336,7 +529,7 @@ export async function fetchPublicProducts() {
       return null;
     }
 
-    return (data || []).map((p) => ({
+    const normalized = (data || []).map((p) => ({
       ...p,
       id: p.id,
       name: p.name,
@@ -344,11 +537,13 @@ export async function fetchPublicProducts() {
       code: p.code,
       productCode: p.code,
       categoryId: p.category_id,
-      categoryName: p.category?.name || '',
-      category: p.category?.name || '',
-      categoryCode: p.category?.code || '',
-      brand: p.brand?.name || '',
-      material: p.material?.name || '',
+      brandId: p.brand_id,
+      materialId: p.material_id,
+      categoryName: '',
+      category: '',
+      categoryCode: '',
+      brand: '',
+      material: '',
       subCategory: p.sub_category || '',
       sizeCapacity: p.size_capacity || '',
       sizeOrCapacity: p.size_capacity || '',
@@ -362,6 +557,17 @@ export async function fetchPublicProducts() {
       createdAt: p.created_at,
       updatedAt: p.updated_at
     }));
+
+    if (lookups) {
+      return enrichProductsWithLookups(
+        normalized,
+        lookups.categories,
+        lookups.brands,
+        lookups.materials
+      );
+    }
+
+    return normalized;
   } catch (err) {
     console.warn('[Fetch Products Error]', err);
     return null;

@@ -59,13 +59,13 @@ export default function OwnerLoginScreen({ onLoginSuccess }) {
     setIsLoading(true);
 
     try {
-      await signInOwnerWithPassword(email.trim(), password.trim());
+      const signInResult = await signInOwnerWithPassword(email.trim(), password.trim());
       setSuccessMsg('Owner authentication verified! Accessing management workspace...');
       setEmail('');
       setPassword('');
 
       if (onLoginSuccess) {
-        await onLoginSuccess();
+        onLoginSuccess(signInResult?.authStatus || false);
       }
 
       // Navigate immediately to dashboard upon successful login

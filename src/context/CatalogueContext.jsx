@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   INITIAL_CATEGORIES,
   INITIAL_PRODUCTS,
@@ -16,8 +16,11 @@ import {
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import {
   getOwnerAuthStatus,
+  getOptimisticOwnerStatus,
+  isOwnerSignInInFlight,
   invalidateOwnerAuthCache,
   signOutOwner,
+  enrichProductsWithLookups,
   createProductInSupabase,
   updateProductInSupabase,
   peekNextDbProductCode,
@@ -284,27 +287,268 @@ export function CatalogueProvider({ children }) {
     }
   });
 
-  // 8. Supabase Auth & Owner Status State (Real session verification, no localStorage flag)
-  const [authStatus, setAuthStatus] = useState({
-    isConfigured: isSupabaseConfigured,
-    isAuthenticated: false,
-    isOwner: false,
-    isLoading: isSupabaseConfigured,
-    user: null,
-    role: null,
-    reason: isSupabaseConfigured ? 'Verifying Supabase authentication...' : 'Local offline mode'
-  });
+  // 8. Supabase Auth & Owner Status State (Optimistic local hydration + background server verification)
+  const [authStatus, setAuthStatus] = useState(() => getOptimisticOwnerStatus());
 
-  const [isCatalogueLoading, setIsCatalogueLoading] = useState(isSupabaseConfigured);
+  // Only show blocking skeleton/spinner if Supabase is configured AND we have zero cached products
+  const [isCatalogueLoading, setIsCatalogueLoading] = useState(
+    () => isSupabaseConfigured && products.length === 0
+  );
 
-  const refreshAuthStatus = useCallback(async (forceRefresh = false) => {
+  // Refs for instant lookup enrichment and deduplicated loading
+  const productsRef = useRef(products);
+  const categoriesRef = useRef(categories);
+  const brandsRef = useRef(brands);
+  const materialsRef = useRef(materials);
+  const inFlightCatalogueLoadRef = useRef(null);
+  const lastLoadedAuthKeyRef = useRef(null);
+  const catalogueLoadSeqRef = useRef(0);
+
+  useEffect(() => {
+    productsRef.current = products;
+  }, [products]);
+  useEffect(() => {
+    categoriesRef.current = categories;
+  }, [categories]);
+  useEffect(() => {
+    brandsRef.current = brands;
+  }, [brands]);
+  useEffect(() => {
+    materialsRef.current = materials;
+  }, [materials]);
+
+  const loadPublicCatalogueData = useCallback(async ({ background = false, force = false, authKey = null } = {}) => {
+    if (!isSupabaseConfigured) {
+      setIsCatalogueLoading(false);
+      return;
+    }
+
+    if (inFlightCatalogueLoadRef.current && !force) {
+      return inFlightCatalogueLoadRef.current;
+    }
+
+    const seq = ++catalogueLoadSeqRef.current;
+    const shouldShowLoading = !background && productsRef.current.length === 0;
+    if (shouldShowLoading) {
+      setIsCatalogueLoading(true);
+    }
+
+    const runLoad = async () => {
+      try {
+        if (authKey !== null) {
+          lastLoadedAuthKeyRef.current = authKey;
+        } else if (lastLoadedAuthKeyRef.current === null) {
+          lastLoadedAuthKeyRef.current = 'public';
+        }
+
+        // Prioritize core 4 tables in parallel without heavy SQL lateral joins;
+        // clear loading flag as soon as products arrive instead of waiting for slower metadata tables.
+        const productsPromise = fetchPublicProducts().then((dbProducts) => {
+          if (seq !== catalogueLoadSeqRef.current) return dbProducts;
+          if (Array.isArray(dbProducts)) {
+            const enriched = enrichProductsWithLookups(
+              dbProducts,
+              categoriesRef.current,
+              brandsRef.current,
+              materialsRef.current
+            );
+            productsRef.current = enriched;
+            setProducts(enriched);
+            setIsCatalogueLoading(false);
+
+            const productSubNames = enriched
+              .map((p) => (typeof p?.subCategory === 'string' ? p.subCategory.trim() : ''))
+              .filter(Boolean);
+            if (productSubNames.length > 0) {
+              setSubCategories((prev) => {
+                const seen = new Set(prev.map((item) => item.toLowerCase()));
+                const merged = [...prev];
+                for (const name of productSubNames) {
+                  if (!seen.has(name.toLowerCase())) {
+                    seen.add(name.toLowerCase());
+                    merged.push(name);
+                  }
+                }
+                return merged;
+              });
+            }
+
+            const productSizeNames = enriched
+              .map((p) => (typeof p?.sizeCapacity === 'string' ? p.sizeCapacity.trim() : ''))
+              .filter(Boolean);
+            if (productSizeNames.length > 0) {
+              setSizes((prev) => {
+                const seen = new Set(prev.map((item) => item.toLowerCase()));
+                const merged = [...prev];
+                for (const name of productSizeNames) {
+                  if (!seen.has(name.toLowerCase())) {
+                    seen.add(name.toLowerCase());
+                    merged.push(name);
+                  }
+                }
+                return merged;
+              });
+            }
+          }
+          return dbProducts;
+        });
+
+        const categoriesPromise = fetchPublicCategories().then((dbCategories) => {
+          if (seq !== catalogueLoadSeqRef.current) return dbCategories;
+          if (Array.isArray(dbCategories)) {
+            categoriesRef.current = dbCategories;
+            setCategories(dbCategories);
+          }
+          return dbCategories;
+        });
+
+        const brandsPromise = fetchPublicBrands().then((dbBrands) => {
+          if (seq !== catalogueLoadSeqRef.current) return dbBrands;
+          if (Array.isArray(dbBrands)) {
+            brandsRef.current = dbBrands;
+            setBrands(dbBrands);
+          }
+          return dbBrands;
+        });
+
+        const materialsPromise = fetchPublicMaterials().then((dbMaterials) => {
+          if (seq !== catalogueLoadSeqRef.current) return dbMaterials;
+          if (Array.isArray(dbMaterials)) {
+            materialsRef.current = dbMaterials;
+            setMaterials(dbMaterials);
+          }
+          return dbMaterials;
+        });
+
+        await Promise.allSettled([
+          productsPromise,
+          categoriesPromise,
+          brandsPromise,
+          materialsPromise
+        ]);
+
+        if (seq !== catalogueLoadSeqRef.current) return;
+
+        // Re-enrich products once all metadata lookup tables settle so names are 100% synced
+        if (productsRef.current.length > 0) {
+          setProducts((prev) =>
+            enrichProductsWithLookups(
+              prev,
+              categoriesRef.current,
+              brandsRef.current,
+              materialsRef.current
+            )
+          );
+        }
+
+        setIsCatalogueLoading(false);
+
+        // Fetch secondary form metadata in background without blocking main loading state
+        fetchPublicSubCategories().then((dbSubCategories) => {
+          const dbSubNames = (Array.isArray(dbSubCategories) ? dbSubCategories.map((s) => s?.name) : [])
+            .map((s) => (typeof s === 'string' ? s.trim() : ''))
+            .filter(Boolean);
+          if (dbSubNames.length > 0) {
+            setSubCategories((prev) => {
+              const seen = new Set(prev.map((item) => item.toLowerCase()));
+              const merged = [...prev];
+              for (const name of dbSubNames) {
+                if (!seen.has(name.toLowerCase())) {
+                  seen.add(name.toLowerCase());
+                  merged.push(name);
+                }
+              }
+              return merged;
+            });
+          }
+        }).catch(() => {});
+
+        fetchPublicSizes().then((dbSizes) => {
+          const dbSizeNames = (Array.isArray(dbSizes) ? dbSizes.map((s) => s?.name) : [])
+            .map((s) => (typeof s === 'string' ? s.trim() : ''))
+            .filter(Boolean);
+          if (dbSizeNames.length > 0) {
+            setSizes((prev) => {
+              const seen = new Set(prev.map((item) => item.toLowerCase()));
+              const merged = [...prev];
+              for (const name of dbSizeNames) {
+                if (!seen.has(name.toLowerCase())) {
+                  seen.add(name.toLowerCase());
+                  merged.push(name);
+                }
+              }
+              return merged;
+            });
+          }
+        }).catch(() => {});
+      } catch (err) {
+        console.warn('[Supabase Public Data Load]', err);
+        setIsCatalogueLoading(false);
+      } finally {
+        inFlightCatalogueLoadRef.current = null;
+      }
+    };
+
+    const promise = runLoad();
+    inFlightCatalogueLoadRef.current = promise;
+    return promise;
+  }, []);
+
+  const refreshAuthStatus = useCallback(async (forceRefreshOrStatus = false, preverifiedStatus = null) => {
     try {
+      const resolvedPreverified =
+        forceRefreshOrStatus &&
+        typeof forceRefreshOrStatus === 'object' &&
+        'isAuthenticated' in forceRefreshOrStatus
+          ? forceRefreshOrStatus
+          : preverifiedStatus;
+      const forceRefresh = typeof forceRefreshOrStatus === 'boolean' ? forceRefreshOrStatus : false;
+
+      // Fast-path: Apply verified login result synchronously so dashboard renders in 0ms
+      if (resolvedPreverified && typeof resolvedPreverified === 'object' && 'isAuthenticated' in resolvedPreverified) {
+        const appliedStatus = {
+          ...resolvedPreverified,
+          isLoading: false
+        };
+        setAuthStatus(appliedStatus);
+
+        const nextUserId = appliedStatus.user?.id || null;
+        if (
+          isSupabaseConfigured &&
+          appliedStatus.isOwner &&
+          (productsRef.current.length === 0 || lastLoadedAuthKeyRef.current !== nextUserId)
+        ) {
+          // Kick off silent background sync without blocking post-login redirect
+          loadPublicCatalogueData({
+            background: productsRef.current.length > 0,
+            force: lastLoadedAuthKeyRef.current !== nextUserId || productsRef.current.length === 0,
+            authKey: nextUserId
+          });
+        }
+        return appliedStatus;
+      }
+
       if (forceRefresh) invalidateOwnerAuthCache();
       const status = await getOwnerAuthStatus(forceRefresh);
       setAuthStatus({
         ...status,
         isLoading: false
       });
+
+      const nextUserId = status?.user?.id || null;
+      if (
+        isSupabaseConfigured &&
+        status?.isOwner &&
+        nextUserId &&
+        (productsRef.current.length === 0 || lastLoadedAuthKeyRef.current !== nextUserId)
+      ) {
+        loadPublicCatalogueData({
+          background: productsRef.current.length > 0,
+          force: lastLoadedAuthKeyRef.current !== nextUserId || productsRef.current.length === 0,
+          authKey: nextUserId
+        });
+      }
+
       return status;
     } catch (err) {
       console.warn('[Owner Auth Check]', err);
@@ -314,11 +558,12 @@ export function CatalogueProvider({ children }) {
         reason: 'Error checking authentication status.'
       }));
     }
-  }, []);
+  }, [loadPublicCatalogueData]);
 
   const signOut = async () => {
     try {
       await signOutOwner();
+      lastLoadedAuthKeyRef.current = 'public';
       await refreshAuthStatus(true);
       showToast('Signed out of owner session');
     } catch (err) {
@@ -327,143 +572,21 @@ export function CatalogueProvider({ children }) {
     }
   };
 
-  const loadPublicCatalogueData = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      setIsCatalogueLoading(false);
-      return;
-    }
-
-    setIsCatalogueLoading(true);
-    try {
-      // Prioritize core 4 tables (products, categories, brands, materials) first
-      // so Dashboard & Products render immediately without competing with form metadata.
-      const productsPromise = fetchPublicProducts().then((dbProducts) => {
-        if (Array.isArray(dbProducts)) {
-          setProducts(dbProducts);
-
-          const productSubNames = dbProducts
-            .map((p) => (typeof p?.subCategory === 'string' ? p.subCategory.trim() : ''))
-            .filter(Boolean);
-          if (productSubNames.length > 0) {
-            setSubCategories((prev) => {
-              const seen = new Set(prev.map((item) => item.toLowerCase()));
-              const merged = [...prev];
-              for (const name of productSubNames) {
-                if (!seen.has(name.toLowerCase())) {
-                  seen.add(name.toLowerCase());
-                  merged.push(name);
-                }
-              }
-              return merged;
-            });
-          }
-
-          const productSizeNames = dbProducts
-            .map((p) => (typeof p?.sizeCapacity === 'string' ? p.sizeCapacity.trim() : ''))
-            .filter(Boolean);
-          if (productSizeNames.length > 0) {
-            setSizes((prev) => {
-              const seen = new Set(prev.map((item) => item.toLowerCase()));
-              const merged = [...prev];
-              for (const name of productSizeNames) {
-                if (!seen.has(name.toLowerCase())) {
-                  seen.add(name.toLowerCase());
-                  merged.push(name);
-                }
-              }
-              return merged;
-            });
-          }
-        }
-        return dbProducts;
-      });
-
-      const categoriesPromise = fetchPublicCategories().then((dbCategories) => {
-        if (Array.isArray(dbCategories)) {
-          setCategories(dbCategories);
-        }
-        return dbCategories;
-      });
-
-      const brandsPromise = fetchPublicBrands().then((dbBrands) => {
-        if (Array.isArray(dbBrands)) {
-          setBrands(dbBrands);
-        }
-        return dbBrands;
-      });
-
-      const materialsPromise = fetchPublicMaterials().then((dbMaterials) => {
-        if (Array.isArray(dbMaterials)) {
-          setMaterials(dbMaterials);
-        }
-        return dbMaterials;
-      });
-
-      await Promise.allSettled([
-        productsPromise,
-        categoriesPromise,
-        brandsPromise,
-        materialsPromise
-      ]);
-
-      // Fetch secondary form metadata in background without blocking main loading state
-      setIsCatalogueLoading(false);
-
-      fetchPublicSubCategories().then((dbSubCategories) => {
-        const dbSubNames = (Array.isArray(dbSubCategories) ? dbSubCategories.map((s) => s?.name) : [])
-          .map((s) => (typeof s === 'string' ? s.trim() : ''))
-          .filter(Boolean);
-        if (dbSubNames.length > 0) {
-          setSubCategories((prev) => {
-            const seen = new Set(prev.map((item) => item.toLowerCase()));
-            const merged = [...prev];
-            for (const name of dbSubNames) {
-              if (!seen.has(name.toLowerCase())) {
-                seen.add(name.toLowerCase());
-                merged.push(name);
-              }
-            }
-            return merged;
-          });
-        }
-      }).catch(() => {});
-
-      fetchPublicSizes().then((dbSizes) => {
-        const dbSizeNames = (Array.isArray(dbSizes) ? dbSizes.map((s) => s?.name) : [])
-          .map((s) => (typeof s === 'string' ? s.trim() : ''))
-          .filter(Boolean);
-        if (dbSizeNames.length > 0) {
-          setSizes((prev) => {
-            const seen = new Set(prev.map((item) => item.toLowerCase()));
-            const merged = [...prev];
-            for (const name of dbSizeNames) {
-              if (!seen.has(name.toLowerCase())) {
-                seen.add(name.toLowerCase());
-                merged.push(name);
-              }
-            }
-            return merged;
-          });
-        }
-      }).catch(() => {});
-    } catch (err) {
-      console.warn('[Supabase Public Data Load]', err);
-      setIsCatalogueLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    // 1. Authoritative Auth Check
+    // 1. Authoritative Auth Check (background if optimistic session already matched)
     refreshAuthStatus();
 
-    // 2. If Supabase is configured, fetch live public catalogue data for all visitors
+    // 2. If Supabase is configured, fetch live public catalogue data immediately
     if (isSupabaseConfigured) {
-      loadPublicCatalogueData();
+      loadPublicCatalogueData({ background: productsRef.current.length > 0 });
 
-      // Listen for real auth state transitions (avoid duplicating INITIAL_SESSION on mount
-      // and keep warm owner auth cache on SIGNED_IN so post-login redirect is instant)
+      // Listen for real auth state transitions (skip duplicate check during active sign-in)
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
         if (event === 'INITIAL_SESSION') return;
+        if (event === 'SIGNED_IN' && isOwnerSignInInFlight()) {
+          // signInOwnerWithPassword already verifies is_rbb_owner() and notifies UI
+          return;
+        }
         if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
           invalidateOwnerAuthCache();
           refreshAuthStatus(true);
@@ -506,7 +629,23 @@ export function CatalogueProvider({ children }) {
     try {
       localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
     } catch (e) {
-      console.warn('Failed to save products', e);
+      // Fallback on QuotaExceededError (e.g. oversized base64 images): persist lightweight cache
+      // so instant hydration on reload/login still works while live images fetch from Supabase.
+      try {
+        const compactProducts = products.map((p) => {
+          const stripLargeDataUri = (val) =>
+            typeof val === 'string' && val.startsWith('data:') && val.length > 20000 ? '' : val;
+          return {
+            ...p,
+            image1: stripLargeDataUri(p.image1),
+            image2: stripLargeDataUri(p.image2),
+            images: Array.isArray(p.images) ? p.images.map(stripLargeDataUri).filter(Boolean) : []
+          };
+        });
+        localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(compactProducts));
+      } catch (fallbackErr) {
+        console.warn('Failed to save products cache', fallbackErr || e);
+      }
     }
   }, [products]);
 

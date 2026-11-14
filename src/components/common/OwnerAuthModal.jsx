@@ -48,11 +48,11 @@ export default function OwnerAuthModal({ isOpen, onClose, authStatus, onAuthChan
     setIsLoading(true);
 
     try {
-      await signInOwnerWithPassword(email.trim(), password.trim());
+      const signInResult = await signInOwnerWithPassword(email.trim(), password.trim());
       setSuccessMsg('Successfully signed in as RBB Owner!');
       setEmail('');
       setPassword('');
-      if (onAuthChanged) await onAuthChanged();
+      if (onAuthChanged) onAuthChanged(signInResult?.authStatus || false);
       onClose();
     } catch (err) {
       setErrorMsg(err.message || 'Invalid credentials. Please verify your owner email and password.');
