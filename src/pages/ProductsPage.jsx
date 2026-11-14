@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { PlusCircle, Search, X, Package } from 'lucide-react';
+import { PlusCircle, Search, X, Package, Loader2 } from 'lucide-react';
 import { useCatalogue } from '../context/CatalogueContext';
 import { isActiveStatus, isStockAlertStatus, isDiscontinuedStatus } from '../data/mockData';
 import ProductPreview from '../components/dashboard/ProductPreview';
@@ -18,7 +18,7 @@ import ProductPreview from '../components/dashboard/ProductPreview';
  * - Empty state with "No products found", friendly message, and "Clear Search" button
  */
 export default function ProductsPage() {
-  const { products, categories, authStatus } = useCatalogue();
+  const { products, categories, authStatus, isCatalogueLoading } = useCatalogue();
   const isOwner = Boolean(authStatus?.isOwner);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -132,10 +132,10 @@ export default function ProductsPage() {
       {/* 1. Header & Primary CTA */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#292D2B] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#292D2B] dark:text-[#F7F3EA] tracking-tight">
             All Products
           </h1>
-          <p className="text-sm text-[#555B58] mt-1">
+          <p className="text-sm text-[#73776F] dark:text-[#B6C0B8] mt-1">
             {hasActiveFilters
               ? `Showing ${filteredProducts.length} of ${products.length} products`
               : `${products.length} products in catalogue`}
@@ -145,7 +145,7 @@ export default function ProductsPage() {
         {isOwner && (
           <Link
             to="/products/new"
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] font-bold text-sm shadow-md shadow-[#173F35]/15 hover:shadow-lg hover:shadow-[#D4A64A]/25 transition-all active:scale-[0.98] self-stretch sm:self-auto text-center whitespace-nowrap shrink-0"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-xl bg-[#D4A64A] hover:bg-[#E9D5A5] dark:hover:bg-[#E7C477] text-[#173F35] dark:text-[#141C19] font-bold text-sm shadow-sm transition-all active:scale-[0.98] self-stretch sm:self-auto text-center whitespace-nowrap shrink-0"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Add Product</span>
@@ -154,10 +154,10 @@ export default function ProductsPage() {
       </div>
 
       {/* 2. Mobile-Friendly Search & Filter Panel */}
-      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#E6DFCE] shadow-xs space-y-3.5">
+      <div className="bg-[#FFFFFF] dark:bg-[#202A25] p-4 sm:p-5 rounded-2xl border border-[#E5DFD2] dark:border-[#34433A] shadow-xs dark:shadow-none space-y-3.5 transition-colors duration-200">
         {/* Full-width Search Bar */}
         <div className="relative w-full">
-          <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9A7120] pointer-events-none" />
+          <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#D4A64A] pointer-events-none" />
           <input
             type="text"
             placeholder="Search products..."
@@ -165,7 +165,7 @@ export default function ProductsPage() {
             onChange={handleSearchChange}
             autoComplete="off"
             spellCheck="false"
-            className="w-full h-12 pl-11 pr-10 text-base sm:text-sm rounded-xl border border-[#E6DFCE] bg-[#FAF7F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/30 focus:border-[#D4A64A] transition-all font-medium text-[#292D2B] placeholder:text-[#787E7A]"
+            className="w-full h-12 pl-11 pr-10 text-base sm:text-sm rounded-xl border border-[#E5DFD2] dark:border-[#34433A] bg-[#F7F3EA] dark:bg-[#141C19] focus:bg-[#FFFFFF] dark:focus:bg-[#202A25] focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/30 focus:border-[#D4A64A] transition-all font-medium text-[#292D2B] dark:text-[#F7F3EA] placeholder:text-[#73776F] dark:placeholder:text-[#B6C0B8]/70"
           />
           {searchQuery && (
             <button
@@ -175,7 +175,7 @@ export default function ProductsPage() {
                 setSearchParams({}, { replace: true });
               }}
               aria-label="Clear search input"
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-[#6E7470] hover:text-[#173F35] hover:bg-[#F7F3EA] transition-colors cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-[#73776F] dark:text-[#B6C0B8] hover:text-[#173F35] dark:hover:text-[#F7F3EA] hover:bg-[#E9D5A5]/40 dark:hover:bg-[#34433A] transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -186,13 +186,13 @@ export default function ProductsPage() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
           {/* Category Dropdown */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-[#555B58] shrink-0 hidden sm:inline">
+            <span className="text-xs font-bold text-[#73776F] dark:text-[#B6C0B8] shrink-0 hidden sm:inline">
               Category:
             </span>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full sm:w-auto px-3 py-2 text-xs font-semibold rounded-xl border border-[#E6DFCE] bg-[#FAF7F0] text-[#292D2B] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/30 focus:border-[#D4A64A] hover:border-[#D4A64A] transition-all cursor-pointer"
+              className="w-full sm:w-auto px-3 py-2 text-xs font-semibold rounded-xl border border-[#E5DFD2] dark:border-[#34433A] bg-[#F7F3EA] dark:bg-[#141C19] text-[#292D2B] dark:text-[#F7F3EA] focus:bg-[#FFFFFF] dark:focus:bg-[#202A25] focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/30 focus:border-[#D4A64A] hover:border-[#E9D5A5] dark:hover:border-[#E7C477] transition-all cursor-pointer"
             >
               <option value="all">All Categories</option>
               {categories.map((cat) => (
@@ -219,8 +219,8 @@ export default function ProductsPage() {
                   onClick={() => setSelectedStatus(tab.id)}
                   className={`px-3.5 py-2 sm:py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 border ${
                     isActive
-                      ? 'bg-[#173F35] text-[#F7F3EA] border-[#173F35] shadow-sm'
-                      : 'bg-[#FAF7F0] text-[#292D2B] border-[#E6DFCE] hover:border-[#D4A64A] hover:bg-[#FBF5E6] hover:text-[#173F35]'
+                      ? 'bg-[#173F35] dark:bg-[#203D32] text-[#F7F3EA] border-[#173F35] dark:border-[#34433A] shadow-2xs'
+                      : 'bg-[#F7F3EA] dark:bg-[#141C19] text-[#292D2B] dark:text-[#F7F3EA] border-[#E5DFD2] dark:border-[#34433A] hover:border-[#E9D5A5] dark:hover:border-[#E7C477] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C]'
                   }`}
                 >
                   {tab.label}
@@ -237,44 +237,57 @@ export default function ProductsPage() {
           filteredProducts.map((product) => (
             <ProductPreview key={product.id} product={product} />
           ))
+        ) : products.length === 0 && isCatalogueLoading ? (
+          /* Initial Loading State */
+          <div className="p-8 sm:p-14 text-center bg-[#FFFFFF] dark:bg-[#202A25] rounded-2xl border border-[#E5DFD2] dark:border-[#34433A] shadow-xs dark:shadow-none space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-[#F7F3EA] dark:bg-[#141C19] border border-[#D4A64A]/40 flex items-center justify-center mx-auto">
+              <Loader2 className="w-6 h-6 animate-spin text-[#D4A64A]" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-[#292D2B] dark:text-[#F7F3EA]">Loading catalogue...</h2>
+              <p className="text-xs text-[#73776F] dark:text-[#B6C0B8] mt-1">Fetching latest products from database.</p>
+            </div>
+          </div>
         ) : products.length === 0 ? (
           /* Empty Catalogue Initial State */
-          <div className="p-8 sm:p-14 text-center bg-white rounded-2xl border border-[#E6DFCE] shadow-xs space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#173F35] to-[#1E5245] flex items-center justify-center mx-auto text-[#F4D58D] shadow-md shadow-[#173F35]/20">
+          <div className="p-8 sm:p-14 text-center bg-[#FFFFFF] dark:bg-[#202A25] rounded-2xl border border-[#E5DFD2] dark:border-[#34433A] shadow-xs dark:shadow-none space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#173F35] dark:bg-[#203D32] flex items-center justify-center mx-auto text-[#D4A64A]">
               <Package className="w-7 h-7" />
             </div>
 
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-[#292D2B]">
+              <h2 className="text-base sm:text-lg font-bold text-[#292D2B] dark:text-[#F7F3EA]">
                 No products in catalogue yet
               </h2>
-              <p className="text-sm text-[#555B58] mt-1 max-w-sm mx-auto leading-relaxed">
+              <p className="text-sm text-[#73776F] dark:text-[#B6C0B8] mt-1 max-w-sm mx-auto leading-relaxed">
                 Your inventory is ready for fresh production items. Add your first product to get started.
               </p>
             </div>
 
-            <div>
-              <Link
-                to="/products/new"
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] text-xs sm:text-sm font-bold shadow-md shadow-[#173F35]/15 transition-all active:scale-[0.98]"
-              >
-                <PlusCircle className="w-4 h-4" />
-                <span>Add First Product</span>
-              </Link>
-            </div>
+            {isOwner && (
+              <div>
+                <Link
+                  to="/products/new"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#D4A64A] hover:bg-[#E9D5A5] dark:hover:bg-[#E7C477] text-[#173F35] dark:text-[#141C19] text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-[0.98]"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>Add First Product</span>
+                </Link>
+              </div>
+            )}
           </div>
         ) : (
           /* Empty Search / Filter Results State */
-          <div className="p-8 sm:p-14 text-center bg-white rounded-2xl border border-[#E6DFCE] shadow-xs space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#FBF5E6] border border-[#D4A64A]/40 flex items-center justify-center mx-auto text-[#9A7120]">
+          <div className="p-8 sm:p-14 text-center bg-[#FFFFFF] dark:bg-[#202A25] rounded-2xl border border-[#E5DFD2] dark:border-[#34433A] shadow-xs dark:shadow-none space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#F7F3EA] dark:bg-[#141C19] border border-[#E5DFD2] dark:border-[#34433A] flex items-center justify-center mx-auto text-[#D4A64A]">
               <Package className="w-7 h-7" />
             </div>
 
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-[#292D2B]">
+              <h2 className="text-base sm:text-lg font-bold text-[#292D2B] dark:text-[#F7F3EA]">
                 No products found
               </h2>
-              <p className="text-sm text-[#555B58] mt-1 max-w-sm mx-auto leading-relaxed">
+              <p className="text-sm text-[#73776F] dark:text-[#B6C0B8] mt-1 max-w-sm mx-auto leading-relaxed">
                 Try a different search term or clear your search.
               </p>
             </div>
@@ -283,7 +296,7 @@ export default function ProductsPage() {
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] text-xs sm:text-sm font-bold shadow-md shadow-[#173F35]/15 transition-all active:scale-[0.98] cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#D4A64A] hover:bg-[#E9D5A5] dark:hover:bg-[#E7C477] text-[#173F35] dark:text-[#141C19] text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-[0.98] cursor-pointer"
               >
                 <span>Clear Search</span>
               </button>

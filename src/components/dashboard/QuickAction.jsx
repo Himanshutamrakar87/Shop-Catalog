@@ -18,8 +18,8 @@ export default function QuickActions() {
       to: '/products/new',
       icon: PlusCircle,
       primary: true,
-      color: 'bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] border-[#B98B32]/40 shadow-md shadow-[#173F35]/15 hover:shadow-lg hover:shadow-[#D4A64A]/30',
-      iconBg: 'bg-[#173F35] text-[#F4D58D] shadow-xs',
+      color: 'bg-[#D4A64A] hover:bg-[#E9D5A5] dark:hover:bg-[#E7C477] text-[#173F35] dark:text-[#141C19] border-[#B98B32]/40 shadow-sm dark:shadow-none',
+      iconBg: 'bg-[#173F35] dark:bg-[#141C19] text-[#D4A64A] shadow-xs dark:shadow-none',
     },
     {
       title: 'View All Products',
@@ -27,8 +27,8 @@ export default function QuickActions() {
       to: '/products',
       icon: Package,
       primary: false,
-      color: 'bg-white hover:bg-[#FCF9F2] text-[#292D2B] border-[#E6DFCE] hover:border-[#D4A64A] hover:shadow-[#D4A64A]/15',
-      iconBg: 'bg-gradient-to-br from-[#173F35] to-[#1E5245] text-[#F4D58D] shadow-xs',
+      color: 'bg-[#FFFFFF] dark:bg-[#202A25] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] text-[#292D2B] dark:text-[#F7F3EA] border-[#E5DFD2] dark:border-[#34433A] hover:border-[#E9D5A5] dark:hover:border-[#E7C477]',
+      iconBg: 'bg-[#173F35] dark:bg-[#203D32] text-[#D4A64A] shadow-xs dark:shadow-none',
     },
     {
       title: 'Manage Categories',
@@ -36,8 +36,8 @@ export default function QuickActions() {
       to: '/categories',
       icon: Layers,
       primary: false,
-      color: 'bg-white hover:bg-[#FCF9F2] text-[#292D2B] border-[#E6DFCE] hover:border-[#D4A64A] hover:shadow-[#D4A64A]/15',
-      iconBg: 'bg-gradient-to-br from-[#292D2B] to-[#3E4441] text-[#F4D58D] shadow-xs',
+      color: 'bg-[#FFFFFF] dark:bg-[#202A25] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] text-[#292D2B] dark:text-[#F7F3EA] border-[#E5DFD2] dark:border-[#34433A] hover:border-[#E9D5A5] dark:hover:border-[#E7C477]',
+      iconBg: 'bg-[#292D2B] dark:bg-[#141C19] text-[#D4A64A] shadow-xs dark:shadow-none',
     },
     {
       title: 'Manage Brands',
@@ -45,8 +45,8 @@ export default function QuickActions() {
       to: '/brands',
       icon: Award,
       primary: false,
-      color: 'bg-white hover:bg-[#FCF9F2] text-[#292D2B] border-[#E6DFCE] hover:border-[#D4A64A] hover:shadow-[#D4A64A]/15',
-      iconBg: 'bg-gradient-to-br from-[#D4A64A] to-[#B5862B] text-[#173F35] shadow-xs',
+      color: 'bg-[#FFFFFF] dark:bg-[#202A25] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] text-[#292D2B] dark:text-[#F7F3EA] border-[#E5DFD2] dark:border-[#34433A] hover:border-[#E9D5A5] dark:hover:border-[#E7C477]',
+      iconBg: 'bg-[#D4A64A] text-[#173F35] dark:text-[#141C19] shadow-xs dark:shadow-none',
     },
   ];
 
@@ -58,23 +58,23 @@ export default function QuickActions() {
           <Link
             key={act.title}
             to={act.to}
-            className={`group p-4 rounded-2xl border transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] shadow-xs hover:shadow-md flex items-center justify-between gap-3 min-h-[78px] ${act.color}`}
+            className={`group p-4 rounded-2xl border transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] shadow-xs dark:shadow-none hover:shadow-md flex items-center justify-between gap-3 min-h-[78px] ${act.color}`}
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${act.iconBg}`}>
                 {Icon && <Icon className="w-5 h-5" />}
               </div>
               <div className="min-w-0">
-                <span className={`text-sm font-bold block truncate ${act.primary ? 'text-[#173F35]' : 'text-[#292D2B] group-hover:text-[#173F35]'}`}>
+                <span className={`text-sm font-bold block truncate ${act.primary ? 'text-[#173F35] dark:text-[#141C19]' : 'text-[#292D2B] dark:text-[#F7F3EA]'}`}>
                   {act.title}
                 </span>
-                <span className={`text-xs block truncate ${act.primary ? 'text-[#173F35]/85 font-medium' : 'text-[#555B58]'}`}>
+                <span className={`text-xs block truncate ${act.primary ? 'text-[#173F35]/85 dark:text-[#141C19]/85 font-medium' : 'text-[#73776F] dark:text-[#B6C0B8]'}`}>
                   {act.description}
                 </span>
               </div>
             </div>
 
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all group-hover:translate-x-0.5 ${act.primary ? 'bg-[#173F35]/15 text-[#173F35]' : 'bg-[#F7F3EA] text-[#555B58] group-hover:bg-[#D4A64A] group-hover:text-[#173F35]'}`}>
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all group-hover:translate-x-0.5 ${act.primary ? 'bg-[#173F35]/15 text-[#173F35] dark:text-[#141C19]' : 'bg-[#F7F3EA] dark:bg-[#141C19] text-[#73776F] dark:text-[#B6C0B8] group-hover:bg-[#D4A64A] group-hover:text-[#173F35] dark:group-hover:text-[#141C19]'}`}>
               <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </Link>

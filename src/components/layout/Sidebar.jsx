@@ -16,6 +16,7 @@ import {
   Shield
 } from 'lucide-react';
 import BrandLogo from '../common/BrandLogo';
+import ThemeSwitcher from '../common/ThemeSwitcher';
 
 /**
  * Desktop Sidebar Navigation
@@ -40,21 +41,21 @@ export default function Sidebar({
   const getNavLinkClass = ({ isActive }) =>
     `group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
       isActive
-        ? 'bg-gradient-to-r from-[#D4A64A] to-[#C29236] text-[#173F35] shadow-md shadow-black/20 font-bold'
-        : 'text-[#DCE6E2] hover:text-[#F4D58D] hover:bg-[#1E4F43]'
+        ? 'bg-[#D4A64A] text-[#173F35] dark:text-[#141C19] shadow-sm font-bold'
+        : 'text-[#DCE6E2] hover:text-[#E9D5A5] dark:hover:text-[#E7C477] hover:bg-[#1E4F43] dark:hover:bg-[#2A4E40]'
     }`;
 
   const getSubLinkClass = ({ isActive }) =>
     `group flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
       isActive
-        ? 'bg-[#D4A64A]/18 text-[#F4D58D] font-semibold ring-1 ring-[#D4A64A]/45 shadow-2xs'
-        : 'text-[#C9D8D2] hover:text-[#F4D58D] hover:bg-[#1E4F43]/90'
+        ? 'bg-[#D4A64A]/18 text-[#E9D5A5] dark:text-[#E7C477] font-semibold ring-1 ring-[#D4A64A]/45'
+        : 'text-[#C9D8D2] dark:text-[#B6C0B8] hover:text-[#E9D5A5] dark:hover:text-[#E7C477] hover:bg-[#1E4F43]/90 dark:hover:bg-[#2A4E40]'
     }`;
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 bg-gradient-to-b from-[#173F35] via-[#153930] to-[#0F2D25] border-r border-[#D4A64A]/25 h-screen sticky top-0 shrink-0 select-none text-[#F7F3EA]">
+    <aside className="hidden lg:flex flex-col w-64 bg-[#173F35] dark:bg-[#203D32] border-r border-[#E5DFD2]/20 dark:border-[#34433A] h-screen sticky top-0 shrink-0 select-none text-[#F7F3EA] transition-colors duration-200">
       {/* Brand Header */}
-      <div className="h-16 shrink-0 flex items-center px-6 border-b border-[#D4A64A]/20 bg-[#12332B]/70">
+      <div className="h-16 shrink-0 flex items-center px-6 border-b border-[#D4A64A]/20 dark:border-[#34433A] bg-[#12332B]/75 dark:bg-[#182E26]/80">
         <BrandLogo inverted />
       </div>
 
@@ -82,7 +83,7 @@ export default function Sidebar({
 
         {/* Catalogue Section (Public for everyone) */}
         <div>
-          <p className="px-3 text-[11px] font-bold text-[#D4A64A]/80 uppercase tracking-wider mb-2">
+          <p className="px-3 text-[11px] font-bold text-[#D4A64A]/85 uppercase tracking-wider mb-2">
             Catalogue
           </p>
           <div className="space-y-1">
@@ -90,12 +91,12 @@ export default function Sidebar({
               {({ isActive }) => (
                 <>
                   <div className="flex items-center gap-3">
-                    <Package className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB] group-hover:text-[#D4A64A]'}`} />
+                    <Package className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB] dark:text-[#B6C0B8] group-hover:text-[#D4A64A]'}`} />
                     <span>All Products</span>
                   </div>
                   <span
                     className={`px-2 py-0.5 text-xs font-semibold rounded-md tabular-nums ${
-                      isActive ? 'bg-[#D4A64A] text-[#173F35]' : 'bg-[#0F2D25] text-[#C9D8D2] border border-[#D4A64A]/15'
+                      isActive ? 'bg-[#D4A64A] text-[#173F35] dark:text-[#141C19]' : 'bg-[#12332B] dark:bg-[#141C19] text-[#C9D8D2] dark:text-[#B6C0B8] border border-[#D4A64A]/15 dark:border-[#34433A]'
                     }`}
                   >
                     {productsCount}
@@ -108,7 +109,7 @@ export default function Sidebar({
 
         {/* Classification Section (Publicly browsable) */}
         <div>
-          <p className="px-3 text-[11px] font-bold text-[#D4A64A]/80 uppercase tracking-wider mb-2">
+          <p className="px-3 text-[11px] font-bold text-[#D4A64A]/85 uppercase tracking-wider mb-2">
             Classification
           </p>
           <div className="space-y-1">
@@ -116,12 +117,12 @@ export default function Sidebar({
               {({ isActive }) => (
                 <>
                   <div className="flex items-center gap-3">
-                    <Layers className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB] group-hover:text-[#D4A64A]'}`} />
+                    <Layers className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB] dark:text-[#B6C0B8] group-hover:text-[#D4A64A]'}`} />
                     <span>Categories</span>
                   </div>
                   <span
                     className={`px-2 py-0.5 text-xs font-semibold rounded-md tabular-nums ${
-                      isActive ? 'bg-[#D4A64A] text-[#173F35]' : 'bg-[#0F2D25] text-[#C9D8D2] border border-[#D4A64A]/15'
+                      isActive ? 'bg-[#D4A64A] text-[#173F35] dark:text-[#141C19]' : 'bg-[#12332B] dark:bg-[#141C19] text-[#C9D8D2] dark:text-[#B6C0B8] border border-[#D4A64A]/15 dark:border-[#34433A]'
                     }`}
                   >
                     {categoriesCount}
@@ -133,12 +134,12 @@ export default function Sidebar({
               {({ isActive }) => (
                 <>
                   <div className="flex items-center gap-3">
-                    <FolderTree className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB] group-hover:text-[#D4A64A]'}`} />
+                    <FolderTree className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB] dark:text-[#B6C0B8] group-hover:text-[#D4A64A]'}`} />
                     <span>Sub-Categories</span>
                   </div>
                   <span
                     className={`px-2 py-0.5 text-xs font-semibold rounded-md tabular-nums ${
-                      isActive ? 'bg-[#D4A64A] text-[#173F35]' : 'bg-[#0F2D25] text-[#C9D8D2] border border-[#D4A64A]/15'
+                      isActive ? 'bg-[#D4A64A] text-[#173F35] dark:text-[#141C19]' : 'bg-[#12332B] dark:bg-[#141C19] text-[#C9D8D2] dark:text-[#B6C0B8] border border-[#D4A64A]/15 dark:border-[#34433A]'
                     }`}
                   >
                     {subCategoriesCount}
@@ -150,12 +151,12 @@ export default function Sidebar({
               {({ isActive }) => (
                 <>
                   <div className="flex items-center gap-3">
-                    <Award className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB] group-hover:text-[#D4A64A]'}`} />
+                    <Award className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB] dark:text-[#B6C0B8] group-hover:text-[#D4A64A]'}`} />
                     <span>Brands</span>
                   </div>
                   <span
                     className={`px-2 py-0.5 text-xs font-semibold rounded-md tabular-nums ${
-                      isActive ? 'bg-[#D4A64A] text-[#173F35]' : 'bg-[#0F2D25] text-[#C9D8D2] border border-[#D4A64A]/15'
+                      isActive ? 'bg-[#D4A64A] text-[#173F35] dark:text-[#141C19]' : 'bg-[#12332B] dark:bg-[#141C19] text-[#C9D8D2] dark:text-[#B6C0B8] border border-[#D4A64A]/15 dark:border-[#34433A]'
                     }`}
                   >
                     {brandsCount}
@@ -167,12 +168,12 @@ export default function Sidebar({
               {({ isActive }) => (
                 <>
                   <div className="flex items-center gap-3">
-                    <Box className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB] group-hover:text-[#D4A64A]'}`} />
+                    <Box className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D4A64A]' : 'text-[#9AB5AB] dark:text-[#B6C0B8] group-hover:text-[#D4A64A]'}`} />
                     <span>Materials</span>
                   </div>
                   <span
                     className={`px-2 py-0.5 text-xs font-semibold rounded-md tabular-nums ${
-                      isActive ? 'bg-[#D4A64A] text-[#173F35]' : 'bg-[#0F2D25] text-[#C9D8D2] border border-[#D4A64A]/15'
+                      isActive ? 'bg-[#D4A64A] text-[#173F35] dark:text-[#141C19]' : 'bg-[#12332B] dark:bg-[#141C19] text-[#C9D8D2] dark:text-[#B6C0B8] border border-[#D4A64A]/15 dark:border-[#34433A]'
                     }`}
                   >
                     {materialsCount}
@@ -186,7 +187,7 @@ export default function Sidebar({
         {/* Owner-Only Status & Inventory Section */}
         {isOwner ? (
           <div>
-            <p className="px-3 text-[11px] font-bold text-[#D4A64A]/80 uppercase tracking-wider mb-2">
+            <p className="px-3 text-[11px] font-bold text-[#D4A64A]/85 uppercase tracking-wider mb-2">
               Inventory Status
             </p>
             <div className="space-y-1">
@@ -195,17 +196,17 @@ export default function Sidebar({
                   <AlertTriangle className="w-4 h-4 shrink-0 text-[#D4A64A]" />
                   <span>Stock Alert</span>
                 </div>
-                <span className="px-2 py-0.5 text-xs font-bold rounded-md tabular-nums bg-[#D4A64A] text-[#173F35]">
+                <span className="px-2 py-0.5 text-xs font-bold rounded-md tabular-nums bg-[#D4A64A] text-[#173F35] dark:text-[#141C19]">
                   {alertCount}
                 </span>
               </NavLink>
 
               <NavLink to="/discontinued" className={getSubLinkClass}>
                 <div className="flex items-center gap-3">
-                  <Archive className="w-4 h-4 shrink-0 text-[#9AB5AB] group-hover:text-[#D4A64A]" />
+                  <Archive className="w-4 h-4 shrink-0 text-[#9AB5AB] dark:text-[#B6C0B8] group-hover:text-[#D4A64A]" />
                   <span>Discontinued</span>
                 </div>
-                <span className="px-2 py-0.5 text-xs font-semibold rounded-md tabular-nums bg-[#0F2D25] text-[#C9D8D2] border border-[#D4A64A]/15">
+                <span className="px-2 py-0.5 text-xs font-semibold rounded-md tabular-nums bg-[#12332B] dark:bg-[#141C19] text-[#C9D8D2] dark:text-[#B6C0B8] border border-[#D4A64A]/15 dark:border-[#34433A]">
                   {discontinuedCount}
                 </span>
               </NavLink>
@@ -218,7 +219,7 @@ export default function Sidebar({
           {isOwner ? (
             <NavLink
               to="/products/new"
-              className="flex items-center justify-center gap-2.5 w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] font-bold text-sm shadow-md shadow-black/25 hover:shadow-lg hover:shadow-[#D4A64A]/20 transition-all active:scale-[0.98]"
+              className="flex items-center justify-center gap-2.5 w-full py-2.5 px-4 rounded-xl bg-[#D4A64A] hover:bg-[#E9D5A5] dark:hover:bg-[#E7C477] text-[#173F35] dark:text-[#141C19] font-bold text-sm shadow-sm transition-all active:scale-[0.98]"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Add Product</span>
@@ -226,21 +227,24 @@ export default function Sidebar({
           ) : (
             <Link
               to="/login"
-              className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] font-bold text-xs shadow-md shadow-black/25 transition-all"
+              className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-[#D4A64A] hover:bg-[#E9D5A5] dark:hover:bg-[#E7C477] text-[#173F35] dark:text-[#141C19] font-bold text-xs shadow-sm transition-all"
             >
               <Lock className="w-3.5 h-3.5" />
               <span>Owner Management Login</span>
             </Link>
           )}
         </div>
+
+        {/* Appearance Theme Switcher */}
+        <ThemeSwitcher variant="sidebar" />
       </div>
 
       {/* Footer Section */}
-      <div className="shrink-0 p-4 border-t border-[#D4A64A]/20 bg-[#0F2D25]/90">
+      <div className="shrink-0 p-4 border-t border-[#D4A64A]/20 dark:border-[#34433A] bg-[#12332B]/90 dark:bg-[#182E26]/90">
         {isOwner ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#D4A64A] to-[#B5862B] text-[#173F35] flex items-center justify-center font-extrabold text-xs shrink-0 shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-[#D4A64A] text-[#173F35] dark:text-[#141C19] flex items-center justify-center font-extrabold text-xs shrink-0 shadow-2xs">
                 O
               </div>
               <div className="min-w-0">
@@ -253,7 +257,7 @@ export default function Sidebar({
                 type="button"
                 onClick={onSignOut}
                 title="Sign out of owner session"
-                className="p-1.5 rounded-lg text-[#B8CBC3] hover:text-[#F4D58D] hover:bg-[#1E4F43] transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-[#B8CBC3] dark:text-[#B6C0B8] hover:text-[#E9D5A5] dark:hover:text-[#E7C477] hover:bg-[#1E4F43] dark:hover:bg-[#2A4E40] transition-colors cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -261,16 +265,16 @@ export default function Sidebar({
           </div>
         ) : (
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[#DCE6E2] min-w-0">
+            <div className="flex items-center gap-2 text-[#DCE6E2] dark:text-[#B6C0B8] min-w-0">
               <Shield className="w-4 h-4 text-[#D4A64A] shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs font-medium text-[#F7F3EA] truncate">Public Catalogue</p>
-                <p className="text-[11px] text-[#9AB5AB] truncate">Browse Mode</p>
+                <p className="text-[11px] text-[#9AB5AB] dark:text-[#B6C0B8] truncate">Browse Mode</p>
               </div>
             </div>
             <Link
               to="/login"
-              className="text-xs font-bold text-[#D4A64A] hover:text-[#F4D58D]"
+              className="text-xs font-bold text-[#D4A64A] hover:text-[#E9D5A5] dark:hover:text-[#E7C477]"
             >
               Sign In
             </Link>

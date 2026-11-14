@@ -129,20 +129,20 @@ export default function CategoriesPage() {
                 return (
                   <div
                     key={cat.id}
-                    className="p-4 bg-white rounded-xl border border-[#E6DFCE] hover:border-[#D4A64A] hover:bg-[#FCF9F2] shadow-xs relative transition-all"
+                    className="p-4 bg-[#FFFFFF] dark:bg-[#202A25] rounded-xl border border-[#E5DFD2] dark:border-[#34433A] hover:border-[#E9D5A5] dark:hover:border-[#E7C477] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] shadow-xs dark:shadow-none relative transition-all"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <h2 className="text-base font-bold text-[#292D2B] truncate">
+                          <h2 className="text-base font-bold text-[#292D2B] dark:text-[#F7F3EA] truncate">
                             {cat.name}
                           </h2>
-                          <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-[#FBF5E6] border border-[#D4A64A]/50 text-[#173F35] shrink-0">
+                          <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-[#F7F3EA] dark:bg-[#141C19] border border-[#D4A64A]/50 text-[#173F35] dark:text-[#E7C477] shrink-0">
                             {cat.code}
                           </span>
                         </div>
 
-                        <p className="text-xs text-[#555B58] font-medium mt-1 tabular-nums">
+                        <p className="text-xs text-[#73776F] dark:text-[#B6C0B8] font-medium mt-1 tabular-nums">
                           {productCount} {productCount === 1 ? 'product' : 'products'}
                         </p>
                       </div>
@@ -156,28 +156,28 @@ export default function CategoriesPage() {
                               setActiveMenuId(isMenuOpen ? null : cat.id);
                             }}
                             aria-label={`Options for ${cat.name}`}
-                            className="w-9 h-9 rounded-lg flex items-center justify-center text-[#6F7571] hover:text-[#173F35] hover:bg-[#FBF5E6] transition-colors cursor-pointer"
+                            className="w-9 h-9 rounded-lg flex items-center justify-center text-[#73776F] dark:text-[#B6C0B8] hover:text-[#173F35] dark:hover:text-[#E7C477] hover:bg-[#E9D5A5]/30 dark:hover:bg-[#34433A] transition-colors cursor-pointer"
                           >
                             <MoreVertical className="w-4 h-4" />
                           </button>
 
                           {isMenuOpen && (
-                            <div className="absolute right-0 top-10 w-36 bg-white rounded-xl shadow-xl border border-[#E6DFCE] py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100">
+                            <div className="absolute right-0 top-10 w-36 bg-[#FFFFFF] dark:bg-[#202A25] rounded-xl shadow-xl dark:shadow-[0_12px_32px_rgba(10,16,13,0.5)] border border-[#E5DFD2] dark:border-[#34433A] py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100">
                               <button
                                 type="button"
                                 onClick={() => handleOpenEdit(cat)}
-                                className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-[#292D2B] hover:bg-[#FCF9F2] hover:text-[#9A7120] flex items-center gap-2.5 transition-colors cursor-pointer"
+                                className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-[#292D2B] dark:text-[#F7F3EA] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] hover:text-[#173F35] dark:hover:text-[#E7C477] flex items-center gap-2.5 transition-colors cursor-pointer"
                               >
-                                <Edit2 className="w-3.5 h-3.5 text-[#555B58]" />
+                                <Edit2 className="w-3.5 h-3.5 text-[#73776F] dark:text-[#B6C0B8]" />
                                 <span>Edit</span>
                               </button>
 
                               <button
                                 type="button"
                                 onClick={() => handleOpenDelete(cat)}
-                                className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2.5 transition-colors cursor-pointer"
                               >
-                                <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                                <Trash2 className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
                                 <span>Delete</span>
                               </button>
                             </div>
@@ -191,32 +191,32 @@ export default function CategoriesPage() {
             </div>
 
             {/* Desktop Clean Table (Visible on screens >= 768px) */}
-            <div className="hidden md:block bg-white rounded-xl border border-[#E6DFCE] shadow-xs overflow-hidden">
+            <div className="hidden md:block bg-[#FFFFFF] dark:bg-[#202A25] rounded-xl border border-[#E5DFD2] dark:border-[#34433A] shadow-xs dark:shadow-none overflow-hidden">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-[#EFE9DA] bg-gradient-to-r from-[#FBF8F1] via-[#FAF7F0] to-[#F7F3EA] text-xs font-bold text-[#6F7571] uppercase tracking-wider">
+                  <tr className="border-b border-[#E5DFD2] dark:border-[#34433A] bg-[#F7F3EA] dark:bg-[#1A2420] text-xs font-bold text-[#73776F] dark:text-[#B6C0B8] uppercase tracking-wider">
                     <th className="py-3.5 px-6">Category</th>
                     <th className="py-3.5 px-4 w-28">Code</th>
                     <th className="py-3.5 px-6 text-right w-36">Products</th>
                     {isOwner && <th className="py-3.5 px-6 text-center w-20">Actions</th>}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#EFE9DA] text-sm">
+                <tbody className="divide-y divide-[#E5DFD2] dark:divide-[#34433A] text-sm">
                   {categories.map((cat) => {
                     const productCount = getCategoryProductCount(cat);
                     const isMenuOpen = activeMenuId === cat.id;
 
                     return (
-                      <tr key={cat.id} className="hover:bg-[#FCF9F2] transition-colors group">
-                        <td className="py-4 px-6 font-semibold text-[#292D2B] group-hover:text-[#9A7120] transition-colors">
+                      <tr key={cat.id} className="hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] transition-colors group">
+                        <td className="py-4 px-6 font-semibold text-[#292D2B] dark:text-[#F7F3EA] group-hover:text-[#173F35] dark:group-hover:text-[#E7C477] transition-colors">
                           {cat.name}
                         </td>
-                        <td className="py-4 px-4 font-mono text-xs font-bold text-[#173F35]">
-                          <span className="px-2 py-0.5 rounded bg-[#FBF5E6] border border-[#D4A64A]/50">
+                        <td className="py-4 px-4 font-mono text-xs font-bold text-[#173F35] dark:text-[#E7C477]">
+                          <span className="px-2 py-0.5 rounded bg-[#F7F3EA] dark:bg-[#141C19] border border-[#D4A64A]/50">
                             {cat.code}
                           </span>
                         </td>
-                        <td className="py-4 px-6 text-right font-medium text-[#555B58] tabular-nums">
+                        <td className="py-4 px-6 text-right font-medium text-[#73776F] dark:text-[#B6C0B8] tabular-nums">
                           {productCount}
                         </td>
                         {isOwner && (
@@ -228,27 +228,27 @@ export default function CategoriesPage() {
                                 setActiveMenuId(isMenuOpen ? null : cat.id);
                               }}
                               aria-label={`Actions for ${cat.name}`}
-                              className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-[#6F7571] hover:text-[#173F35] hover:bg-[#FBF5E6] transition-colors cursor-pointer"
+                              className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-[#73776F] dark:text-[#B6C0B8] hover:text-[#173F35] dark:hover:text-[#E7C477] hover:bg-[#E9D5A5]/30 dark:hover:bg-[#34433A] transition-colors cursor-pointer"
                             >
                               <MoreVertical className="w-4 h-4" />
                             </button>
 
                             {isMenuOpen && (
-                              <div className="absolute right-6 top-11 w-36 bg-white rounded-xl shadow-xl border border-[#E6DFCE] py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100 text-left">
+                              <div className="absolute right-6 top-11 w-36 bg-[#FFFFFF] dark:bg-[#202A25] rounded-xl shadow-xl dark:shadow-[0_12px_32px_rgba(10,16,13,0.5)] border border-[#E5DFD2] dark:border-[#34433A] py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100 text-left">
                                 <button
                                   type="button"
                                   onClick={() => handleOpenEdit(cat)}
-                                  className="w-full px-3.5 py-2 text-left text-xs font-semibold text-[#292D2B] hover:bg-[#FCF9F2] hover:text-[#9A7120] flex items-center gap-2 transition-colors cursor-pointer"
+                                  className="w-full px-3.5 py-2 text-left text-xs font-semibold text-[#292D2B] dark:text-[#F7F3EA] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] hover:text-[#173F35] dark:hover:text-[#E7C477] flex items-center gap-2 transition-colors cursor-pointer"
                                 >
-                                  <Edit2 className="w-3.5 h-3.5 text-[#555B58]" />
+                                  <Edit2 className="w-3.5 h-3.5 text-[#73776F] dark:text-[#B6C0B8]" />
                                   <span>Edit</span>
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleOpenDelete(cat)}
-                                  className="w-full px-3.5 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors cursor-pointer"
+                                  className="w-full px-3.5 py-2 text-left text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2 transition-colors cursor-pointer"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
                                   <span>Delete</span>
                                 </button>
                               </div>

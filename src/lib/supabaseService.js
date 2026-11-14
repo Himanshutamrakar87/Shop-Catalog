@@ -18,6 +18,30 @@ const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 let failedAttempts = 0;
 let lockoutUntil = 0;
 
+// In-memory owner auth cache to avoid redundant network roundtrips on every fetch/save
+const OWNER_AUTH_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let ownerAuthCache = {
+  userId: null,
+  accessToken: null,
+  status: null,
+  cachedAt: 0
+};
+let inFlightAuthCheck = null;
+
+export function invalidateOwnerAuthCache() {
+  ownerAuthCache = {
+    userId: null,
+    accessToken: null,
+    status: null,
+    cachedAt: 0
+  };
+  inFlightAuthCheck = null;
+}
+
+function isValidUuid(val) {
+  return typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+}
+
 /**
  * Check if the owner login endpoint is temporarily locked due to repeated failed attempts
  */
@@ -32,10 +56,10 @@ export function getAuthRateLimitStatus() {
 
 /**
  * Check current authentication state and server-verified owner status
- * Verifies directly against Supabase Auth session and PostgreSQL is_rbb_owner() function.
- * Never relies on client-side localStorage flags.
+ * Uses local session fast-path + short-lived memory cache + in-flight deduplication
+ * to keep login transitions, page loads, and saves instantaneous.
  */
-export async function getOwnerAuthStatus() {
+export async function getOwnerAuthStatus(forceRefresh = false) {
   if (!isSupabaseConfigured) {
     return {
       isConfigured: false,
@@ -48,9 +72,80 @@ export async function getOwnerAuthStatus() {
     };
   }
 
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) {
+  if (!forceRefresh && inFlightAuthCheck) {
+    return inFlightAuthCheck;
+  }
+
+  const runCheck = async () => {
+    try {
+      // Fast-path: read current session from local storage without forcing an extra /user roundtrip
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      const user = session?.user || null;
+      const accessToken = session?.access_token || null;
+
+      if (sessionError || !user) {
+        invalidateOwnerAuthCache();
+        return {
+          isConfigured: true,
+          isAuthenticated: false,
+          isOwner: false,
+          isLoading: false,
+          user: null,
+          role: null,
+          reason: 'Public visitor'
+        };
+      }
+
+      // Return cached verified owner status if token matches and TTL hasn't expired
+      const now = Date.now();
+      if (
+        !forceRefresh &&
+        ownerAuthCache.status &&
+        ownerAuthCache.userId === user.id &&
+        ownerAuthCache.accessToken === accessToken &&
+        now - ownerAuthCache.cachedAt < OWNER_AUTH_CACHE_TTL_MS
+      ) {
+        return ownerAuthCache.status;
+      }
+
+      // Server-side check:
+      // 1. Explicit 'owner' role in app_metadata
+      let isOwner = user.app_metadata?.role === 'owner';
+
+      // 2. Query PostgreSQL public.is_rbb_owner() RPC for authoritative check
+      if (!isOwner) {
+        try {
+          const { data: rpcIsOwner, error: rpcError } = await supabase.rpc('is_rbb_owner');
+          if (!rpcError && rpcIsOwner === true) {
+            isOwner = true;
+          }
+        } catch (e) {
+          console.warn('[Owner RPC Check]', e);
+        }
+      }
+
+      const resolvedStatus = {
+        isConfigured: true,
+        isAuthenticated: true,
+        isOwner: Boolean(isOwner),
+        isLoading: false,
+        user,
+        role: isOwner ? 'owner' : (user.app_metadata?.role || 'authenticated'),
+        reason: isOwner
+          ? 'Authenticated as RBB Owner'
+          : 'Authenticated account is not authorized as the RBB Owner.'
+      };
+
+      ownerAuthCache = {
+        userId: user.id,
+        accessToken,
+        status: resolvedStatus,
+        cachedAt: now
+      };
+
+      return resolvedStatus;
+    } catch (err) {
       return {
         isConfigured: true,
         isAuthenticated: false,
@@ -58,48 +153,15 @@ export async function getOwnerAuthStatus() {
         isLoading: false,
         user: null,
         role: null,
-        reason: 'Public visitor'
+        reason: 'Error checking authentication status.'
       };
+    } finally {
+      inFlightAuthCheck = null;
     }
+  };
 
-    // Server-side check:
-    // 1. Explicit 'owner' role in app_metadata
-    let isOwner = user.app_metadata?.role === 'owner';
-
-    // 2. Query PostgreSQL public.is_rbb_owner() RPC for authoritative check
-    if (!isOwner) {
-      try {
-        const { data: rpcIsOwner, error: rpcError } = await supabase.rpc('is_rbb_owner');
-        if (!rpcError && rpcIsOwner === true) {
-          isOwner = true;
-        }
-      } catch (e) {
-        console.warn('[Owner RPC Check]', e);
-      }
-    }
-
-    return {
-      isConfigured: true,
-      isAuthenticated: true,
-      isOwner: Boolean(isOwner),
-      isLoading: false,
-      user,
-      role: isOwner ? 'owner' : (user.app_metadata?.role || 'authenticated'),
-      reason: isOwner
-        ? 'Authenticated as RBB Owner'
-        : 'Authenticated account is not authorized as the RBB Owner.'
-    };
-  } catch (err) {
-    return {
-      isConfigured: true,
-      isAuthenticated: false,
-      isOwner: false,
-      isLoading: false,
-      user: null,
-      role: null,
-      reason: 'Error checking authentication status.'
-    };
-  }
+  inFlightAuthCheck = runCheck();
+  return inFlightAuthCheck;
 }
 
 /**
@@ -177,9 +239,25 @@ export async function signInOwnerWithPassword(arg1, arg2) {
       );
     }
 
-    // Success: reset rate limit tracking
+    // Success: reset rate limit tracking and warm auth cache immediately
+    // so post-login navigation/checks resolve in 0ms without re-querying is_rbb_owner()
     failedAttempts = 0;
     lockoutUntil = 0;
+    ownerAuthCache = {
+      userId: data.user.id,
+      accessToken: data.session?.access_token || null,
+      status: {
+        isConfigured: true,
+        isAuthenticated: true,
+        isOwner: true,
+        isLoading: false,
+        user: data.user,
+        role: 'owner',
+        reason: 'Authenticated as RBB Owner'
+      },
+      cachedAt: Date.now()
+    };
+    inFlightAuthCheck = null;
 
     // Purge any legacy client flags
     try {
@@ -223,6 +301,7 @@ export async function sendOwnerPasswordReset(email) {
  * Sign out current session and revoke tokens
  */
 export async function signOutOwner() {
+  invalidateOwnerAuthCache();
   try {
     localStorage.removeItem('rbb_owner_session');
   } catch {}
@@ -482,16 +561,27 @@ export async function uploadProductImage(file, productCode, slotNumber) {
     );
   }
 
+  // Normalize MIME type (some mobile browsers emit image/jpg or empty string)
+  const extFromName = file.name?.split('.').pop()?.toLowerCase() || '';
+  let mimeType = (file.type || '').toLowerCase();
+  if (mimeType === 'image/jpg') {
+    mimeType = 'image/jpeg';
+  } else if (!mimeType) {
+    if (extFromName === 'png') mimeType = 'image/png';
+    else if (extFromName === 'webp') mimeType = 'image/webp';
+    else if (extFromName === 'jpg' || extFromName === 'jpeg') mimeType = 'image/jpeg';
+  }
+
   // Validate MIME type
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-  if (!allowedTypes.includes(file.type)) {
+  if (!allowedTypes.includes(mimeType)) {
     throw new Error(
       `Image ${slotNumber} must be JPG, PNG, or WEBP (received: ${file.type || 'unknown'}).`
     );
   }
 
   // Sanitize file extension and path
-  const ext = file.name?.split('.').pop()?.toLowerCase() || (file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg');
+  const ext = extFromName || (mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg');
   const safeCode = (productCode || 'prod').replace(/[^a-zA-Z0-9_-]/g, '_');
   const timestamp = Date.now();
   const randomSuffix = Math.random().toString(36).substring(2, 7);
@@ -502,7 +592,7 @@ export async function uploadProductImage(file, productCode, slotNumber) {
     .upload(filePath, file, {
       cacheControl: '3600',
       upsert: false,
-      contentType: file.type
+      contentType: mimeType
     });
 
   if (uploadError) {
@@ -535,23 +625,41 @@ export async function deleteStorageFiles(paths) {
  * Ensure category exists in Supabase categories table
  * Returns the record with its UUID id
  */
-export async function ensureCategoryInDb({ name, code, description = '' }) {
+export async function ensureCategoryInDb({ id, name, code, description = '' }) {
+  if (isValidUuid(id)) {
+    return { id, name: (name || '').trim(), code: (code || '').toUpperCase().trim() };
+  }
+
   const cleanCode = (code || '').toUpperCase().trim();
   const cleanName = (name || '').trim();
 
-  // Try to find existing category by code
-  const { data: existing, error: findError } = await supabase
-    .from('categories')
-    .select('id, name, code')
-    .eq('code', cleanCode)
-    .maybeSingle();
+  // Try to find existing category by code first
+  if (cleanCode) {
+    const { data: existingByCode, error: findError } = await supabase
+      .from('categories')
+      .select('id, name, code')
+      .eq('code', cleanCode)
+      .limit(1);
 
-  if (findError) {
-    throw new Error(`Database error finding category "${cleanCode}": ${findError.message}`);
+    if (findError) {
+      throw new Error(`Database error finding category "${cleanCode}": ${findError.message}`);
+    }
+    if (existingByCode && existingByCode.length > 0) {
+      return existingByCode[0];
+    }
   }
 
-  if (existing) {
-    return existing;
+  // Fallback: find by name (case-insensitive)
+  if (cleanName) {
+    const { data: existingByName } = await supabase
+      .from('categories')
+      .select('id, name, code')
+      .ilike('name', cleanName)
+      .limit(1);
+
+    if (existingByName && existingByName.length > 0) {
+      return existingByName[0];
+    }
   }
 
   // Insert new category
@@ -559,8 +667,8 @@ export async function ensureCategoryInDb({ name, code, description = '' }) {
     .from('categories')
     .insert([
       {
-        name: cleanName,
-        code: cleanCode,
+        name: cleanName || 'General',
+        code: cleanCode || 'GN',
         description: description.trim()
       }
     ])
@@ -708,17 +816,18 @@ export async function deleteCategoryInDb(id) {
 /**
  * Ensure brand exists in Supabase brands table
  */
-export async function ensureBrandInDb(brandName, origin = 'India') {
+export async function ensureBrandInDb(brandName, origin = 'India', existingId = null) {
+  if (isValidUuid(existingId)) return existingId;
   if (!brandName || !brandName.trim()) return null;
   const clean = brandName.trim();
 
-  const { data: existing } = await supabase
+  const { data: existingRows } = await supabase
     .from('brands')
     .select('id, name')
     .ilike('name', clean)
-    .maybeSingle();
+    .limit(1);
 
-  if (existing) return existing.id;
+  if (existingRows && existingRows.length > 0) return existingRows[0].id;
 
   const { data: inserted, error } = await supabase
     .from('brands')
@@ -727,13 +836,12 @@ export async function ensureBrandInDb(brandName, origin = 'India') {
     .single();
 
   if (error) {
-    // If concurrent insert occurred, re-query
-    const { data: retry } = await supabase
+    const { data: retryRows } = await supabase
       .from('brands')
       .select('id')
       .ilike('name', clean)
-      .maybeSingle();
-    return retry?.id || null;
+      .limit(1);
+    return retryRows?.[0]?.id || null;
   }
 
   return inserted.id;
@@ -742,17 +850,18 @@ export async function ensureBrandInDb(brandName, origin = 'India') {
 /**
  * Ensure material exists in Supabase materials table
  */
-export async function ensureMaterialInDb(materialName, description = '') {
+export async function ensureMaterialInDb(materialName, description = '', existingId = null) {
+  if (isValidUuid(existingId)) return existingId;
   if (!materialName || !materialName.trim()) return null;
   const clean = materialName.trim();
 
-  const { data: existing } = await supabase
+  const { data: existingRows } = await supabase
     .from('materials')
     .select('id, name')
     .ilike('name', clean)
-    .maybeSingle();
+    .limit(1);
 
-  if (existing) return existing.id;
+  if (existingRows && existingRows.length > 0) return existingRows[0].id;
 
   const { data: inserted, error } = await supabase
     .from('materials')
@@ -761,12 +870,12 @@ export async function ensureMaterialInDb(materialName, description = '') {
     .single();
 
   if (error) {
-    const { data: retry } = await supabase
+    const { data: retryRows } = await supabase
       .from('materials')
       .select('id')
       .ilike('name', clean)
-      .maybeSingle();
-    return retry?.id || null;
+      .limit(1);
+    return retryRows?.[0]?.id || null;
   }
 
   return inserted.id;
@@ -858,23 +967,19 @@ export async function createProductInSupabase(formPayload, imageFiles = {}) {
   const categoryCode = formPayload.categoryCode?.trim() || 'GN';
   const categoryName = formPayload.categoryName?.trim() || formPayload.category?.trim() || 'General';
 
-  // 3. Resolve Category Foreign Key in Supabase
-  const dbCategory = await ensureCategoryInDb({
-    name: categoryName,
-    code: categoryCode,
-    description: formPayload.categoryDescription || ''
-  });
+  // 3. Resolve Category, Brand, Material Foreign Keys in parallel
+  const [dbCategory, brandId, materialId] = await Promise.all([
+    ensureCategoryInDb({
+      id: formPayload.categoryId,
+      name: categoryName,
+      code: categoryCode,
+      description: formPayload.categoryDescription || ''
+    }),
+    formPayload.brand ? ensureBrandInDb(formPayload.brand, 'India', formPayload.brandId) : Promise.resolve(null),
+    formPayload.material ? ensureMaterialInDb(formPayload.material, '', formPayload.materialId) : Promise.resolve(null)
+  ]);
 
   const categoryId = dbCategory.id;
-
-  // 4. Resolve Brand and Material Foreign Keys
-  const brandId = formPayload.brand
-    ? await ensureBrandInDb(formPayload.brand)
-    : null;
-
-  const materialId = formPayload.material
-    ? await ensureMaterialInDb(formPayload.material)
-    : null;
 
   // Optional: Record subcategory and size in background for future dropdown auto-complete
   if (formPayload.subCategory) {
@@ -925,6 +1030,9 @@ export async function createProductInSupabase(formPayload, imageFiles = {}) {
     throw new Error(`Image storage upload failed: ${uploadError.message}`);
   }
 
+  const parsedPrice = Number(formPayload.purchasePrice);
+  const safePrice = Number.isFinite(parsedPrice) && parsedPrice >= 0 ? parsedPrice : 0;
+
   // 7. Insert Product Record into PostgreSQL
   const dbPayload = {
     name: productName,
@@ -934,9 +1042,7 @@ export async function createProductInSupabase(formPayload, imageFiles = {}) {
     material_id: materialId,
     sub_category: formPayload.subCategory?.trim() || '',
     size_capacity: (formPayload.sizeCapacity || formPayload.sizeOrCapacity || '').trim(),
-    purchase_price: formPayload.purchasePrice !== undefined && formPayload.purchasePrice !== null && formPayload.purchasePrice !== ''
-      ? Number(formPayload.purchasePrice)
-      : 0,
+    purchase_price: safePrice,
     purchase_unit: (formPayload.purchaseUnit || formPayload.purchase_unit || 'Piece').trim(),
     special_details: formPayload.specialDetails?.trim() || '',
     images: permanentUrls,
@@ -957,7 +1063,7 @@ export async function createProductInSupabase(formPayload, imageFiles = {}) {
     .single();
 
   // Graceful fallback: If Supabase table does not yet have purchase_unit column, retry without it
-  if (insertError && (insertError.code === '42703' || insertError.message?.includes('purchase_unit'))) {
+  if (insertError && (insertError.code === '42703' || insertError.code === 'PGRST204' || insertError.message?.includes('purchase_unit'))) {
     console.warn('[Supabase Insert] purchase_unit column not present in schema; retrying without it.');
     const { purchase_unit: _discard, ...fallbackPayload } = dbPayload;
     const retryResult = await supabase
@@ -974,6 +1080,8 @@ export async function createProductInSupabase(formPayload, imageFiles = {}) {
     if (!retryResult.error) {
       insertedProduct = retryResult.data;
       insertError = null;
+    } else {
+      insertError = retryResult.error;
     }
   }
 
@@ -987,6 +1095,7 @@ export async function createProductInSupabase(formPayload, imageFiles = {}) {
 
     // Provide helpful user-facing diagnostics
     if (insertError.code === '42501' || insertError.message?.includes('row-level security')) {
+      invalidateOwnerAuthCache();
       throw new Error(
         'Supabase RLS Permission Denied: Your account is authenticated, but is not authorized as the RBB Owner. ' +
         'Ensure your account is designated as the authorized RBB Owner.'
@@ -1049,14 +1158,17 @@ export async function updateProductInSupabase(id, formPayload, imageFiles = {}) 
   const categoryCode = formPayload.categoryCode?.trim() || 'GN';
   const categoryName = formPayload.categoryName?.trim() || formPayload.category?.trim() || 'General';
 
-  const dbCategory = await ensureCategoryInDb({
-    name: categoryName,
-    code: categoryCode,
-    description: formPayload.categoryDescription || ''
-  });
-
-  const brandId = formPayload.brand ? await ensureBrandInDb(formPayload.brand) : null;
-  const materialId = formPayload.material ? await ensureMaterialInDb(formPayload.material) : null;
+  // Resolve Category, Brand & Material in parallel (fast-pathing existing UUIDs)
+  const [dbCategory, brandId, materialId] = await Promise.all([
+    ensureCategoryInDb({
+      id: formPayload.categoryId,
+      name: categoryName,
+      code: categoryCode,
+      description: formPayload.categoryDescription || ''
+    }),
+    formPayload.brand ? ensureBrandInDb(formPayload.brand, 'India', formPayload.brandId) : Promise.resolve(null),
+    formPayload.material ? ensureMaterialInDb(formPayload.material, '', formPayload.materialId) : Promise.resolve(null)
+  ]);
 
   if (formPayload.subCategory) {
     ensureSubCategoryInDb(formPayload.subCategory, dbCategory.id).catch(() => {});
@@ -1096,6 +1208,9 @@ export async function updateProductInSupabase(id, formPayload, imageFiles = {}) 
     throw new Error(`Image storage upload failed: ${uploadError.message}`);
   }
 
+  const parsedPrice = Number(formPayload.purchasePrice);
+  const safePrice = Number.isFinite(parsedPrice) && parsedPrice >= 0 ? parsedPrice : 0;
+
   const dbPayload = {
     name: productName,
     category_id: dbCategory.id,
@@ -1103,9 +1218,7 @@ export async function updateProductInSupabase(id, formPayload, imageFiles = {}) 
     material_id: materialId,
     sub_category: formPayload.subCategory?.trim() || '',
     size_capacity: (formPayload.sizeCapacity || formPayload.sizeOrCapacity || '').trim(),
-    purchase_price: formPayload.purchasePrice !== undefined && formPayload.purchasePrice !== null && formPayload.purchasePrice !== ''
-      ? Number(formPayload.purchasePrice)
-      : 0,
+    purchase_price: safePrice,
     purchase_unit: (formPayload.purchaseUnit || formPayload.purchase_unit || 'Piece').trim(),
     special_details: formPayload.specialDetails?.trim() || '',
     images: permanentUrls,
@@ -1114,7 +1227,7 @@ export async function updateProductInSupabase(id, formPayload, imageFiles = {}) 
     status: formPayload.status || 'In Stock'
   };
 
-  let { data: updatedProduct, error: updateError } = await supabase
+  let { data: updatedRows, error: updateError } = await supabase
     .from('products')
     .update(dbPayload)
     .eq('id', id)
@@ -1123,10 +1236,9 @@ export async function updateProductInSupabase(id, formPayload, imageFiles = {}) 
       category:categories(id, name, code),
       brand:brands(id, name),
       material:materials(id, name)
-    `)
-    .single();
+    `);
 
-  if (updateError && (updateError.code === '42703' || updateError.message?.includes('purchase_unit'))) {
+  if (updateError && (updateError.code === '42703' || updateError.code === 'PGRST204' || updateError.message?.includes('purchase_unit'))) {
     const { purchase_unit: _discard, ...fallbackPayload } = dbPayload;
     const retryResult = await supabase
       .from('products')
@@ -1137,12 +1249,13 @@ export async function updateProductInSupabase(id, formPayload, imageFiles = {}) 
         category:categories(id, name, code),
         brand:brands(id, name),
         material:materials(id, name)
-      `)
-      .single();
+      `);
 
     if (!retryResult.error) {
-      updatedProduct = retryResult.data;
+      updatedRows = retryResult.data;
       updateError = null;
+    } else {
+      updateError = retryResult.error;
     }
   }
 
@@ -1150,7 +1263,22 @@ export async function updateProductInSupabase(id, formPayload, imageFiles = {}) 
     if (uploadedPaths.length > 0) {
       await deleteStorageFiles(uploadedPaths);
     }
+    if (updateError.code === '42501' || updateError.message?.includes('row-level security')) {
+      invalidateOwnerAuthCache();
+      throw new Error('Supabase RLS Permission Denied: Please sign in again as the RBB Owner to save edits.');
+    }
     throw new Error(`Database error updating product in Supabase: ${updateError.message}`);
+  }
+
+  const updatedProduct = Array.isArray(updatedRows) ? updatedRows[0] : updatedRows;
+  if (!updatedProduct) {
+    if (uploadedPaths.length > 0) {
+      await deleteStorageFiles(uploadedPaths);
+    }
+    invalidateOwnerAuthCache();
+    throw new Error(
+      'Update did not save any changes in Supabase (product record not found or owner permission denied). Please verify your owner sign-in and try again.'
+    );
   }
 
   return {

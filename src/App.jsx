@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CatalogueProvider, useCatalogue } from './context/CatalogueContext';
+import { ThemeProvider } from './context/ThemeContext';
 import AppShell from './components/layout/AppShell';
 import DashboardPage from './pages/DashboardPage';
 import ProductsPage from './pages/ProductsPage';
@@ -63,10 +64,10 @@ class AppErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#F7F3EA] flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-2xl border border-[#E6DFCE] shadow-lg p-6 text-center space-y-4">
-            <h2 className="text-lg font-bold text-[#292D2B]">Something went wrong</h2>
-            <p className="text-xs text-[#555B58] leading-relaxed">
+        <div className="min-h-screen bg-[#F7F3EA] dark:bg-[#141C19] flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-[#FFFFFF] dark:bg-[#202A25] rounded-2xl border border-[#E5DFD2] dark:border-[#34433A] shadow-lg dark:shadow-none p-6 text-center space-y-4">
+            <h2 className="text-lg font-bold text-[#292D2B] dark:text-[#F7F3EA]">Something went wrong</h2>
+            <p className="text-xs text-[#73776F] dark:text-[#B6C0B8] leading-relaxed">
               {this.state.errorMessage}
             </p>
             <button
@@ -75,7 +76,7 @@ class AppErrorBoundary extends React.Component {
                 this.setState({ hasError: false, errorMessage: '' });
                 window.location.reload();
               }}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] font-bold text-sm transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-[#D4A64A] hover:bg-[#E9D5A5] dark:hover:bg-[#E7C477] text-[#173F35] dark:text-[#141C19] font-bold text-sm transition-colors cursor-pointer"
             >
               Reload Page
             </button>
@@ -90,78 +91,80 @@ class AppErrorBoundary extends React.Component {
 export default function App() {
   return (
     <AppErrorBoundary>
-      <CatalogueProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Standalone Owner Login Page */}
-            <Route path="/login" element={<LoginRoute />} />
+      <ThemeProvider>
+        <CatalogueProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Standalone Owner Login Page */}
+              <Route path="/login" element={<LoginRoute />} />
 
-            <Route path="/" element={<AppShell />}>
-              {/* Dynamic entry route based on authentication */}
-              <Route index element={<IndexRedirect />} />
+              <Route path="/" element={<AppShell />}>
+                {/* Dynamic entry route based on authentication */}
+                <Route index element={<IndexRedirect />} />
 
-              {/* Management Dashboard (Owner Only) */}
-              <Route
-                path="dashboard"
-                element={
-                  <OwnerProtectedRoute>
-                    <DashboardPage />
-                  </OwnerProtectedRoute>
-                }
-              />
+                {/* Management Dashboard (Owner Only) */}
+                <Route
+                  path="dashboard"
+                  element={
+                    <OwnerProtectedRoute>
+                      <DashboardPage />
+                    </OwnerProtectedRoute>
+                  }
+                />
 
-              {/* Public Catalogue (Anyone can browse without login) */}
-              <Route path="products" element={<ProductsPage />} />
-              <Route path="products/:id" element={<ProductDetailPage />} />
+                {/* Public Catalogue (Anyone can browse without login) */}
+                <Route path="products" element={<ProductsPage />} />
+                <Route path="products/:id" element={<ProductDetailPage />} />
 
-              {/* Product Creation & Editing (Owner Only) */}
-              <Route
-                path="products/new"
-                element={
-                  <OwnerProtectedRoute>
-                    <ProductFormPage />
-                  </OwnerProtectedRoute>
-                }
-              />
-              <Route
-                path="products/:id/edit"
-                element={
-                  <OwnerProtectedRoute>
-                    <ProductFormPage />
-                  </OwnerProtectedRoute>
-                }
-              />
+                {/* Product Creation & Editing (Owner Only) */}
+                <Route
+                  path="products/new"
+                  element={
+                    <OwnerProtectedRoute>
+                      <ProductFormPage />
+                    </OwnerProtectedRoute>
+                  }
+                />
+                <Route
+                  path="products/:id/edit"
+                  element={
+                    <OwnerProtectedRoute>
+                      <ProductFormPage />
+                    </OwnerProtectedRoute>
+                  }
+                />
 
-              {/* Classification Views (Publicly visible; edits require owner) */}
-              <Route path="categories" element={<CategoriesPage />} />
-              <Route path="sub-categories" element={<SubCategoriesPage />} />
-              <Route path="brands" element={<BrandsPage />} />
-              <Route path="materials" element={<MaterialsPage />} />
+                {/* Classification Views (Publicly visible; edits require owner) */}
+                <Route path="categories" element={<CategoriesPage />} />
+                <Route path="sub-categories" element={<SubCategoriesPage />} />
+                <Route path="brands" element={<BrandsPage />} />
+                <Route path="materials" element={<MaterialsPage />} />
 
-              {/* Internal Inventory Status (Owner Only) */}
-              <Route
-                path="stock-alert"
-                element={
-                  <OwnerProtectedRoute>
-                    <StockAlertPage />
-                  </OwnerProtectedRoute>
-                }
-              />
-              <Route
-                path="discontinued"
-                element={
-                  <OwnerProtectedRoute>
-                    <DiscontinuedPage />
-                  </OwnerProtectedRoute>
-                }
-              />
+                {/* Internal Inventory Status (Owner Only) */}
+                <Route
+                  path="stock-alert"
+                  element={
+                    <OwnerProtectedRoute>
+                      <StockAlertPage />
+                    </OwnerProtectedRoute>
+                  }
+                />
+                <Route
+                  path="discontinued"
+                  element={
+                    <OwnerProtectedRoute>
+                      <DiscontinuedPage />
+                    </OwnerProtectedRoute>
+                  }
+                />
 
-              {/* Catch-all redirect */}
-              <Route path="*" element={<IndexRedirect />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </CatalogueProvider>
+                {/* Catch-all redirect */}
+                <Route path="*" element={<IndexRedirect />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </CatalogueProvider>
+      </ThemeProvider>
     </AppErrorBoundary>
   );
 }

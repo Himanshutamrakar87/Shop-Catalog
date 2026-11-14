@@ -54,21 +54,21 @@ export default function BrandLogo({
       {!collapsed && !imageOnly && (
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className={`text-base sm:text-lg font-extrabold tracking-tight ${inverted ? 'text-[#F7F3EA]' : 'text-[#292D2B]'}`}>
+            <span className={`text-base sm:text-lg font-extrabold tracking-tight ${inverted ? 'text-[#F7F3EA]' : 'text-[#292D2B] dark:text-[#F7F3EA]'}`}>
               Catalogue
             </span>
             <span
               className={`text-[11px] font-bold px-2 py-0.5 rounded-md border shrink-0 ${
                 inverted
-                  ? 'bg-[#D4A64A]/20 text-[#F4D58D] border-[#D4A64A]/40'
-                  : 'bg-[#FBF5E6] text-[#8E6518] border-[#D4A64A]/50'
+                  ? 'bg-[#D4A64A]/20 text-[#E9D5A5] border-[#D4A64A]/40'
+                  : 'bg-[#F7F3EA] dark:bg-[#141C19] text-[#173F35] dark:text-[#D4A64A] border-[#E5DFD2] dark:border-[#34433A]'
               }`}
             >
               Manager
             </span>
           </div>
           {showTagline && (
-            <span className={`text-[11px] font-medium tracking-tight truncate ${inverted ? 'text-[#B8CBC3]' : 'text-[#555B58]'}`}>
+            <span className={`text-[11px] font-medium tracking-tight truncate ${inverted ? 'text-[#B8CBC3] dark:text-[#B6C0B8]' : 'text-[#73776F] dark:text-[#B6C0B8]'}`}>
               Commercial &amp; Domestic Utensils
             </span>
           )}

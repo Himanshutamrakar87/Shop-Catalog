@@ -123,7 +123,7 @@ export default function CategoryModal({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-[#0F2D25]/65 backdrop-blur-xs transition-opacity duration-200"
+        className="fixed inset-0 bg-[#141C19]/70 dark:bg-[#141C19]/80 backdrop-blur-xs transition-opacity duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -133,18 +133,18 @@ export default function CategoryModal({
         role="dialog"
         aria-modal="true"
         aria-label={mode === 'add' ? 'Add Category' : 'Edit Category'}
-        className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-[#E6DFCE] overflow-hidden z-10 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
+        className="relative w-full sm:max-w-md bg-[#FFFFFF] dark:bg-[#202A25] rounded-t-2xl sm:rounded-2xl shadow-2xl dark:shadow-[0_20px_50px_rgba(10,16,13,0.6)] border border-[#E5DFD2] dark:border-[#34433A] overflow-hidden z-10 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
       >
         {/* Mobile handle indicator */}
-        <div className="sm:hidden w-12 h-1.5 bg-[#E6DFCE] rounded-full mx-auto mt-3" />
+        <div className="sm:hidden w-12 h-1.5 bg-[#E5DFD2] dark:bg-[#34433A] rounded-full mx-auto mt-3" />
 
         {/* Header */}
-        <div className="px-6 pt-4 pb-3 sm:py-5 flex items-center justify-between border-b border-[#EFE9DA] bg-gradient-to-r from-[#FBF8F1] via-white to-[#F7F3EA]/70">
+        <div className="px-6 pt-4 pb-3 sm:py-5 flex items-center justify-between border-b border-[#E5DFD2] dark:border-[#34433A] bg-[#F7F3EA] dark:bg-[#1A2420]">
           <div>
-            <h2 className="text-lg font-bold text-[#292D2B] tracking-tight">
+            <h2 className="text-lg font-bold text-[#292D2B] dark:text-[#F7F3EA] tracking-tight">
               {mode === 'add' ? 'Add Category' : 'Edit Category'}
             </h2>
-            <p className="text-xs text-[#555B58] mt-0.5">
+            <p className="text-xs text-[#73776F] dark:text-[#B6C0B8] mt-0.5">
               {mode === 'add' ? 'Create a category to group your products' : 'Update category name'}
             </p>
           </div>
@@ -153,7 +153,7 @@ export default function CategoryModal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="w-9 h-9 rounded-full flex items-center justify-center text-[#6F7571] hover:text-[#292D2B] hover:bg-[#FBF5E6] transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-[#73776F] dark:text-[#B6C0B8] hover:text-[#292D2B] dark:hover:text-[#F7F3EA] hover:bg-[#E9D5A5]/30 dark:hover:bg-[#34433A] transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -162,14 +162,14 @@ export default function CategoryModal({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {error && (
-            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+            <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-200 text-xs font-medium">
               {error}
             </div>
           )}
 
           {/* Category Name Input */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-[#292D2B]">
+            <label className="block text-xs font-bold text-[#292D2B] dark:text-[#F7F3EA]">
               Category Name
             </label>
             <input
@@ -182,29 +182,29 @@ export default function CategoryModal({
                 setName(e.target.value);
                 if (error) setError('');
               }}
-              className="w-full px-4 py-3 text-sm rounded-xl border border-[#E6DFCE] bg-[#FAF7F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/30 focus:border-[#D4A64A] transition-all font-medium text-[#292D2B] placeholder:text-[#7D827E]"
+              className="w-full px-4 py-3 text-sm rounded-xl border border-[#E5DFD2] dark:border-[#34433A] bg-[#F7F3EA] dark:bg-[#141C19] focus:bg-[#FFFFFF] dark:focus:bg-[#202A25] focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/30 focus:border-[#D4A64A] transition-all font-medium text-[#292D2B] dark:text-[#F7F3EA] placeholder:text-[#73776F] dark:placeholder:text-[#B6C0B8]/70"
             />
           </div>
 
           {/* Category Code Preview (Visually Secondary, Section 2 & 3) */}
-          <div className="p-3.5 rounded-xl bg-[#FAF7F0] border border-[#E6DFCE]">
-            <span className="block text-[11px] font-semibold text-[#555B58] mb-1">
+          <div className="p-3.5 rounded-xl bg-[#F7F3EA] dark:bg-[#141C19] border border-[#E5DFD2] dark:border-[#34433A]">
+            <span className="block text-[11px] font-semibold text-[#73776F] dark:text-[#B6C0B8] mb-1">
               Category code
             </span>
 
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-sm font-extrabold px-2.5 py-1 rounded bg-white text-[#173F35] border border-[#D4A64A]/50 shadow-2xs tracking-wider">
+                <span className="font-mono text-sm font-extrabold px-2.5 py-1 rounded bg-[#FFFFFF] dark:bg-[#202A25] text-[#173F35] dark:text-[#E7C477] border border-[#D4A64A]/50 shadow-2xs tracking-wider">
                   {code || '—'}
                 </span>
-                <span className="text-xs text-[#555B58]">
+                <span className="text-xs text-[#73776F] dark:text-[#B6C0B8]">
                   {mode === 'add' ? 'Automatically generated' : 'Automatically assigned'}
                 </span>
               </div>
 
               {code && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#173F35]">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#173F35]" />
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#173F35] dark:text-[#E7C477]">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#173F35] dark:text-[#D4A64A]" />
                   Ready
                 </span>
               )}
@@ -212,7 +212,7 @@ export default function CategoryModal({
 
             {/* Subtle adjustment notification (Section 4) */}
             {adjustedCodeNotice && (
-              <p className="text-[11px] text-[#9A7120] mt-2 font-medium">
+              <p className="text-[11px] text-[#9A7120] dark:text-[#E7C477] mt-2 font-medium">
                 {adjustedCodeNotice}
               </p>
             )}
@@ -224,7 +224,7 @@ export default function CategoryModal({
               type="button"
               disabled={isSubmitting}
               onClick={onClose}
-              className="w-full sm:w-auto py-3 sm:py-2.5 px-5 rounded-xl border border-[#E6DFCE] text-[#292D2B] hover:border-[#D4A64A] hover:bg-[#FCF9F2] disabled:opacity-50 font-semibold text-sm transition-colors text-center cursor-pointer"
+              className="w-full sm:w-auto py-3 sm:py-2.5 px-5 rounded-xl border border-[#E5DFD2] dark:border-[#34433A] text-[#292D2B] dark:text-[#F7F3EA] hover:border-[#E9D5A5] dark:hover:border-[#E7C477] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] disabled:opacity-50 font-semibold text-sm transition-colors text-center cursor-pointer"
             >
               Cancel
             </button>
@@ -232,7 +232,7 @@ export default function CategoryModal({
             <button
               type="submit"
               disabled={!name.trim() || !code || isSubmitting}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 sm:py-2.5 px-6 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] disabled:opacity-50 text-[#173F35] font-bold text-sm shadow-md shadow-[#173F35]/15 transition-all text-center whitespace-nowrap shrink-0 cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 sm:py-2.5 px-6 rounded-xl bg-[#D4A64A] hover:bg-[#E9D5A5] dark:hover:bg-[#E7C477] disabled:opacity-50 text-[#173F35] dark:text-[#141C19] font-bold text-sm shadow-sm transition-all text-center whitespace-nowrap shrink-0 cursor-pointer"
             >
               {isSubmitting ? (
                 <>

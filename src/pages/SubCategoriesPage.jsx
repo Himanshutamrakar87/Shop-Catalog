@@ -160,17 +160,17 @@ export default function SubCategoriesPage() {
                 return (
                   <div
                     key={subCat}
-                    className="p-4 bg-white rounded-xl border border-[#E6DFCE] hover:border-[#D4A64A] hover:bg-[#FCF9F2] shadow-xs relative transition-all"
+                    className="p-4 bg-[#FFFFFF] dark:bg-[#202A25] rounded-xl border border-[#E5DFD2] dark:border-[#34433A] hover:border-[#E9D5A5] dark:hover:border-[#E7C477] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] shadow-xs dark:shadow-none relative transition-all"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <h2 className="text-base font-bold text-[#292D2B] truncate">
+                        <h2 className="text-base font-bold text-[#292D2B] dark:text-[#F7F3EA] truncate">
                           {subCat}
                         </h2>
 
-                        <div className="flex items-center gap-3 mt-1.5 text-xs text-[#555B58] font-medium">
-                          <span className="inline-flex items-center gap-1 font-semibold text-[#173F35] tabular-nums">
-                            <Package className="w-3.5 h-3.5 text-[#9A7120]" />
+                        <div className="flex items-center gap-3 mt-1.5 text-xs text-[#73776F] dark:text-[#B6C0B8] font-medium">
+                          <span className="inline-flex items-center gap-1 font-semibold text-[#173F35] dark:text-[#E7C477] tabular-nums">
+                            <Package className="w-3.5 h-3.5 text-[#D4A64A]" />
                             <span>{productCount} {productCount === 1 ? 'product' : 'products'}</span>
                           </span>
                         </div>
@@ -185,27 +185,27 @@ export default function SubCategoriesPage() {
                               setActiveMenuId(isMenuOpen ? null : subCat);
                             }}
                             aria-label={`Options for ${subCat}`}
-                            className="w-9 h-9 rounded-lg flex items-center justify-center text-[#6F7571] hover:text-[#173F35] hover:bg-[#FBF5E6] transition-colors cursor-pointer"
+                            className="w-9 h-9 rounded-lg flex items-center justify-center text-[#73776F] dark:text-[#B6C0B8] hover:text-[#173F35] dark:hover:text-[#E7C477] hover:bg-[#E9D5A5]/30 dark:hover:bg-[#34433A] transition-colors cursor-pointer"
                           >
                             <MoreVertical className="w-4 h-4" />
                           </button>
 
                           {isMenuOpen && (
-                            <div className="absolute right-0 top-10 w-36 bg-white rounded-xl shadow-xl border border-[#E6DFCE] py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100">
+                            <div className="absolute right-0 top-10 w-36 bg-[#FFFFFF] dark:bg-[#202A25] rounded-xl shadow-xl dark:shadow-[0_12px_32px_rgba(10,16,13,0.5)] border border-[#E5DFD2] dark:border-[#34433A] py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100">
                               <button
                                 type="button"
                                 onClick={() => handleOpenEdit(subCat)}
-                                className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-[#292D2B] hover:bg-[#FCF9F2] hover:text-[#9A7120] flex items-center gap-2.5 transition-colors cursor-pointer"
+                                className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-[#292D2B] dark:text-[#F7F3EA] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] hover:text-[#173F35] dark:hover:text-[#E7C477] flex items-center gap-2.5 transition-colors cursor-pointer"
                               >
-                                <Edit2 className="w-3.5 h-3.5 text-[#555B58]" />
+                                <Edit2 className="w-3.5 h-3.5 text-[#73776F] dark:text-[#B6C0B8]" />
                                 <span>Edit</span>
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleOpenDelete(subCat)}
-                                className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                className="w-full px-3.5 py-2.5 text-left text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2.5 transition-colors cursor-pointer"
                               >
-                                <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                                <Trash2 className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
                                 <span>Delete</span>
                               </button>
                             </div>
@@ -219,31 +219,31 @@ export default function SubCategoriesPage() {
             </div>
 
             {/* Desktop Clean Table (Screens >= 768px) */}
-            <div className="hidden md:block bg-white rounded-xl border border-[#E6DFCE] shadow-xs overflow-hidden">
+            <div className="hidden md:block bg-[#FFFFFF] dark:bg-[#202A25] rounded-xl border border-[#E5DFD2] dark:border-[#34433A] shadow-xs dark:shadow-none overflow-hidden">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-[#EFE9DA] bg-gradient-to-r from-[#FBF8F1] via-[#FAF7F0] to-[#F7F3EA] text-xs font-bold text-[#6F7571] uppercase tracking-wider">
+                  <tr className="border-b border-[#E5DFD2] dark:border-[#34433A] bg-[#F7F3EA] dark:bg-[#1A2420] text-xs font-bold text-[#73776F] dark:text-[#B6C0B8] uppercase tracking-wider">
                     <th className="py-3.5 px-6">Sub-Category Name</th>
                     <th className="py-3.5 px-6 text-right w-36">Products</th>
                     {isOwner && <th className="py-3.5 px-6 text-center w-20">Actions</th>}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#EFE9DA] text-sm">
+                <tbody className="divide-y divide-[#E5DFD2] dark:divide-[#34433A] text-sm">
                   {subCategories.map((subCat) => {
                     const productCount = getSubCategoryProductCount(subCat);
                     const isMenuOpen = activeMenuId === subCat;
 
                     return (
-                      <tr key={subCat} className="hover:bg-[#FCF9F2] transition-colors group">
-                        <td className="py-4 px-6 font-semibold text-[#292D2B] group-hover:text-[#9A7120] transition-colors">
+                      <tr key={subCat} className="hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] transition-colors group">
+                        <td className="py-4 px-6 font-semibold text-[#292D2B] dark:text-[#F7F3EA] group-hover:text-[#173F35] dark:group-hover:text-[#E7C477] transition-colors">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-lg bg-[#FBF5E6] border border-[#D4A64A]/40 text-[#9A7120] flex items-center justify-center shrink-0">
+                            <div className="w-7 h-7 rounded-lg bg-[#F7F3EA] dark:bg-[#141C19] border border-[#D4A64A]/40 text-[#9A7120] dark:text-[#D4A64A] flex items-center justify-center shrink-0">
                               <FolderTree className="w-4 h-4" />
                             </div>
                             <span>{subCat}</span>
                           </div>
                         </td>
-                        <td className="py-4 px-6 text-right font-semibold text-[#292D2B] tabular-nums">
+                        <td className="py-4 px-6 text-right font-semibold text-[#292D2B] dark:text-[#F7F3EA] tabular-nums">
                           {productCount}
                         </td>
                         {isOwner && (
@@ -255,27 +255,27 @@ export default function SubCategoriesPage() {
                                 setActiveMenuId(isMenuOpen ? null : subCat);
                               }}
                               aria-label={`Actions for ${subCat}`}
-                              className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-[#6F7571] hover:text-[#173F35] hover:bg-[#FBF5E6] transition-colors cursor-pointer"
+                              className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-[#73776F] dark:text-[#B6C0B8] hover:text-[#173F35] dark:hover:text-[#E7C477] hover:bg-[#E9D5A5]/30 dark:hover:bg-[#34433A] transition-colors cursor-pointer"
                             >
                               <MoreVertical className="w-4 h-4" />
                             </button>
 
                             {isMenuOpen && (
-                              <div className="absolute right-6 top-11 w-36 bg-white rounded-xl shadow-xl border border-[#E6DFCE] py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100 text-left">
+                              <div className="absolute right-6 top-11 w-36 bg-[#FFFFFF] dark:bg-[#202A25] rounded-xl shadow-xl dark:shadow-[0_12px_32px_rgba(10,16,13,0.5)] border border-[#E5DFD2] dark:border-[#34433A] py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100 text-left">
                                 <button
                                   type="button"
                                   onClick={() => handleOpenEdit(subCat)}
-                                  className="w-full px-3.5 py-2 text-left text-xs font-semibold text-[#292D2B] hover:bg-[#FCF9F2] hover:text-[#9A7120] flex items-center gap-2 transition-colors cursor-pointer"
+                                  className="w-full px-3.5 py-2 text-left text-xs font-semibold text-[#292D2B] dark:text-[#F7F3EA] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] hover:text-[#173F35] dark:hover:text-[#E7C477] flex items-center gap-2 transition-colors cursor-pointer"
                                 >
-                                  <Edit2 className="w-3.5 h-3.5 text-[#555B58]" />
+                                  <Edit2 className="w-3.5 h-3.5 text-[#73776F] dark:text-[#B6C0B8]" />
                                   <span>Edit</span>
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleOpenDelete(subCat)}
-                                  className="w-full px-3.5 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors cursor-pointer"
+                                  className="w-full px-3.5 py-2 text-left text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2 transition-colors cursor-pointer"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
                                   <span>Delete</span>
                                 </button>
                               </div>
@@ -298,7 +298,7 @@ export default function SubCategoriesPage() {
       {modalState.isOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div
-            className="fixed inset-0 bg-[#0F2D25]/65 backdrop-blur-xs transition-opacity duration-200"
+            className="fixed inset-0 bg-[#141C19]/70 dark:bg-[#141C19]/80 backdrop-blur-xs transition-opacity duration-200"
             onClick={() => setModalState({ isOpen: false, mode: 'add', subCategory: null })}
             aria-hidden="true"
           />
@@ -307,16 +307,16 @@ export default function SubCategoriesPage() {
             role="dialog"
             aria-modal="true"
             aria-label={modalState.mode === 'add' ? 'Add Sub-Category' : 'Edit Sub-Category'}
-            className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-[#E6DFCE] overflow-hidden z-10 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
+            className="relative w-full sm:max-w-md bg-[#FFFFFF] dark:bg-[#202A25] rounded-t-2xl sm:rounded-2xl shadow-2xl dark:shadow-[0_20px_50px_rgba(10,16,13,0.6)] border border-[#E5DFD2] dark:border-[#34433A] overflow-hidden z-10 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
           >
-            <div className="sm:hidden w-12 h-1.5 bg-[#E6DFCE] rounded-full mx-auto mt-3" />
+            <div className="sm:hidden w-12 h-1.5 bg-[#E5DFD2] dark:bg-[#34433A] rounded-full mx-auto mt-3" />
 
-            <div className="px-6 pt-4 pb-3 sm:py-5 flex items-center justify-between border-b border-[#EFE9DA] bg-gradient-to-r from-[#FBF8F1] via-white to-[#F7F3EA]/70">
+            <div className="px-6 pt-4 pb-3 sm:py-5 flex items-center justify-between border-b border-[#E5DFD2] dark:border-[#34433A] bg-[#F7F3EA] dark:bg-[#1A2420]">
               <div>
-                <h2 className="text-lg font-bold text-[#292D2B] tracking-tight">
+                <h2 className="text-lg font-bold text-[#292D2B] dark:text-[#F7F3EA] tracking-tight">
                   {modalState.mode === 'add' ? 'Add Sub-Category' : 'Edit Sub-Category'}
                 </h2>
-                <p className="text-xs text-[#555B58] mt-0.5">
+                <p className="text-xs text-[#73776F] dark:text-[#B6C0B8] mt-0.5">
                   {modalState.mode === 'add' ? 'Create a detailed product sub-group' : 'Rename sub-category'}
                 </p>
               </div>
@@ -325,7 +325,7 @@ export default function SubCategoriesPage() {
                 type="button"
                 onClick={() => setModalState({ isOpen: false, mode: 'add', subCategory: null })}
                 aria-label="Close"
-                className="w-9 h-9 rounded-full flex items-center justify-center text-[#6F7571] hover:text-[#292D2B] hover:bg-[#FBF5E6] transition-colors cursor-pointer"
+                className="w-9 h-9 rounded-full flex items-center justify-center text-[#73776F] dark:text-[#B6C0B8] hover:text-[#292D2B] dark:hover:text-[#F7F3EA] hover:bg-[#E9D5A5]/30 dark:hover:bg-[#34433A] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -333,13 +333,13 @@ export default function SubCategoriesPage() {
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {formError && (
-                <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+                <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-200 text-xs font-medium">
                   {formError}
                 </div>
               )}
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-[#292D2B]">
+                <label className="block text-xs font-bold text-[#292D2B] dark:text-[#F7F3EA]">
                   Sub-Category Name *
                 </label>
                 <input
@@ -352,7 +352,7 @@ export default function SubCategoriesPage() {
                     setName(e.target.value);
                     if (formError) setFormError('');
                   }}
-                  className="w-full px-4 py-3 text-sm rounded-xl border border-[#E6DFCE] bg-[#FAF7F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/30 focus:border-[#D4A64A] transition-all font-medium text-[#292D2B] placeholder:text-[#7D827E]"
+                  className="w-full px-4 py-3 text-sm rounded-xl border border-[#E5DFD2] dark:border-[#34433A] bg-[#F7F3EA] dark:bg-[#141C19] focus:bg-[#FFFFFF] dark:focus:bg-[#202A25] focus:outline-none focus:ring-2 focus:ring-[#D4A64A]/30 focus:border-[#D4A64A] transition-all font-medium text-[#292D2B] dark:text-[#F7F3EA] placeholder:text-[#73776F] dark:placeholder:text-[#B6C0B8]/70"
                 />
               </div>
 
@@ -360,14 +360,14 @@ export default function SubCategoriesPage() {
                 <button
                   type="button"
                   onClick={() => setModalState({ isOpen: false, mode: 'add', subCategory: null })}
-                  className="w-full sm:w-auto py-3 sm:py-2.5 px-5 rounded-xl border border-[#E6DFCE] text-[#292D2B] hover:border-[#D4A64A] hover:bg-[#FCF9F2] font-semibold text-sm transition-colors text-center cursor-pointer"
+                  className="w-full sm:w-auto py-3 sm:py-2.5 px-5 rounded-xl border border-[#E5DFD2] dark:border-[#34433A] text-[#292D2B] dark:text-[#F7F3EA] hover:border-[#E9D5A5] dark:hover:border-[#E7C477] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] font-semibold text-sm transition-colors text-center cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!name.trim()}
-                  className="w-full sm:w-auto py-3 sm:py-2.5 px-6 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] disabled:opacity-50 text-[#173F35] font-bold text-sm shadow-md shadow-[#173F35]/15 transition-all text-center whitespace-nowrap shrink-0 cursor-pointer"
+                  className="w-full sm:w-auto py-3 sm:py-2.5 px-6 rounded-xl bg-[#D4A64A] hover:bg-[#E9D5A5] dark:hover:bg-[#E7C477] disabled:opacity-50 text-[#173F35] dark:text-[#141C19] font-bold text-sm shadow-sm transition-all text-center whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   {modalState.mode === 'add' ? 'Save Sub-Category' : 'Save Changes'}
                 </button>
@@ -383,7 +383,7 @@ export default function SubCategoriesPage() {
       {deleteDialog.isOpen && deleteDialog.subCategory && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div
-            className="fixed inset-0 bg-[#0F2D25]/65 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-[#141C19]/70 dark:bg-[#141C19]/80 backdrop-blur-xs transition-opacity"
             onClick={() => setDeleteDialog({ isOpen: false, subCategory: null, productCount: 0 })}
             aria-hidden="true"
           />
@@ -392,22 +392,22 @@ export default function SubCategoriesPage() {
             role="dialog"
             aria-modal="true"
             aria-label={deleteDialog.productCount > 0 ? "Can't delete this sub-category" : `Delete "${deleteDialog.subCategory}"`}
-            className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-[#E6DFCE] overflow-hidden z-10 p-6 space-y-4 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
+            className="relative w-full sm:max-w-sm bg-[#FFFFFF] dark:bg-[#202A25] rounded-t-2xl sm:rounded-2xl shadow-2xl dark:shadow-[0_20px_50px_rgba(10,16,13,0.6)] border border-[#E5DFD2] dark:border-[#34433A] overflow-hidden z-10 p-6 space-y-4 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
           >
-            <div className="sm:hidden w-12 h-1 bg-[#E6DFCE] rounded-full mx-auto -mt-2 mb-2" />
+            <div className="sm:hidden w-12 h-1 bg-[#E5DFD2] dark:bg-[#34433A] rounded-full mx-auto -mt-2 mb-2" />
 
             {deleteDialog.productCount > 0 ? (
               <>
                 <div className="flex items-start gap-3.5">
-                  <div className="w-10 h-10 rounded-full bg-[#FBF5E6] text-[#9A7120] border border-[#D4A64A]/40 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-[#F7F3EA] dark:bg-[#141C19] text-[#9A7120] dark:text-[#D4A64A] border border-[#D4A64A]/40 flex items-center justify-center shrink-0">
                     <AlertCircle className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-base font-bold text-[#292D2B]">
+                    <h3 className="text-base font-bold text-[#292D2B] dark:text-[#F7F3EA]">
                       Can't delete this sub-category
                     </h3>
-                    <p className="text-sm text-[#555B58] mt-2 leading-relaxed">
-                      <strong className="text-[#292D2B]">{deleteDialog.productCount} {deleteDialog.productCount === 1 ? 'product is' : 'products are'}</strong> currently assigned to this sub-category. Update those products before deleting it.
+                    <p className="text-sm text-[#73776F] dark:text-[#B6C0B8] mt-2 leading-relaxed">
+                      <strong className="text-[#292D2B] dark:text-[#F7F3EA]">{deleteDialog.productCount} {deleteDialog.productCount === 1 ? 'product is' : 'products are'}</strong> currently assigned to this sub-category. Update those products before deleting it.
                     </p>
                   </div>
                 </div>
@@ -416,7 +416,7 @@ export default function SubCategoriesPage() {
                   <button
                     type="button"
                     onClick={() => setDeleteDialog({ isOpen: false, subCategory: null, productCount: 0 })}
-                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] font-bold text-sm transition-all text-center cursor-pointer"
+                    className="w-full py-3 px-4 rounded-xl bg-[#D4A64A] hover:bg-[#E9D5A5] dark:hover:bg-[#E7C477] text-[#173F35] dark:text-[#141C19] font-bold text-sm transition-all text-center cursor-pointer"
                   >
                     Got it
                   </button>
@@ -425,14 +425,14 @@ export default function SubCategoriesPage() {
             ) : (
               <>
                 <div className="flex items-start gap-3.5">
-                  <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
                     <Trash2 className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-base font-bold text-[#292D2B]">
+                    <h3 className="text-base font-bold text-[#292D2B] dark:text-[#F7F3EA]">
                       Delete "{deleteDialog.subCategory}"?
                     </h3>
-                    <p className="text-sm text-[#555B58] mt-1">
+                    <p className="text-sm text-[#73776F] dark:text-[#B6C0B8] mt-1">
                       This sub-category will be removed from your catalogue options.
                     </p>
                   </div>
@@ -442,7 +442,7 @@ export default function SubCategoriesPage() {
                   <button
                     type="button"
                     onClick={() => setDeleteDialog({ isOpen: false, subCategory: null, productCount: 0 })}
-                    className="py-3 px-4 rounded-xl border border-[#E6DFCE] text-[#292D2B] hover:border-[#D4A64A] hover:bg-[#FCF9F2] font-semibold text-sm transition-colors text-center cursor-pointer"
+                    className="py-3 px-4 rounded-xl border border-[#E5DFD2] dark:border-[#34433A] text-[#292D2B] dark:text-[#F7F3EA] hover:border-[#E9D5A5] dark:hover:border-[#E7C477] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] font-semibold text-sm transition-colors text-center cursor-pointer"
                   >
                     Cancel
                   </button>

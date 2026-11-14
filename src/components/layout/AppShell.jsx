@@ -43,7 +43,7 @@ export default function AppShell() {
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-[#F7F3EA] via-[#FAF7F0] to-[#EFE8D8] text-[#292D2B] font-sans antialiased">
+    <div className="min-h-screen flex bg-[#F7F3EA] dark:bg-[#141C19] text-[#292D2B] dark:text-[#F7F3EA] font-sans antialiased transition-colors duration-200">
       {/* Desktop Sidebar */}
       <Sidebar 
         alertCount={stats.stockAlert} 

@@ -15,8 +15,8 @@ export default function DevotionalBanner({ variant = 'light', className = '' }) 
       aria-label="Devotional Greeting"
       className={`w-full py-1.5 px-3 select-none flex items-center justify-center transition-colors ${
         isDark
-          ? 'bg-[#0F2D25] border-b border-[#D4A64A]/30 text-[#F3D58D]'
-          : 'bg-gradient-to-r from-[#0F2D25] via-[#173F35] to-[#0F2D25] border-b border-[#D4A64A]/30 text-[#F3D58D]'
+          ? 'bg-[#182E26] border-b border-[#34433A] text-[#E7C477]'
+          : 'bg-[#12332B] dark:bg-[#182E26] border-b border-[#D4A64A]/25 dark:border-[#34433A] text-[#E9D5A5] dark:text-[#E7C477]'
       } ${className}`}
     >
       <div className="flex items-center justify-center gap-2 sm:gap-2.5 text-xs sm:text-sm font-devanagari font-semibold tracking-wide">

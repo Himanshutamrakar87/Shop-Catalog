@@ -1,10 +1,36 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+  --rbb-primary: #173F35;
+  --rbb-accent: #D4A64A;
+  --rbb-bg: #F7F3EA;
+  --rbb-surface: #FFFFFF;
+  --rbb-heading: #292D2B;
+  --rbb-secondary: #73776F;
+  --rbb-border: #E5DFD2;
+  --rbb-hover: #E9D5A5;
+}
+
+html.dark {
+  color-scheme: dark;
+  --rbb-primary: #203D32;
+  --rbb-accent: #D4A64A;
+  --rbb-bg: #141C19;
+  --rbb-surface: #202A25;
+  --rbb-heading: #F7F3EA;
+  --rbb-secondary: #B6C0B8;
+  --rbb-border: #34433A;
+  --rbb-hover: #E7C477;
+}
 
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    background-color: #F7F3EA;
-    color: #292D2B;
+    background-color: var(--rbb-bg);
+    color: var(--rbb-heading);
+    transition: background-color 200ms ease, color 200ms ease;
   }
 
   h1, h2 {
@@ -34,4 +60,3 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(212, 166, 74, 0.65);
 }
-

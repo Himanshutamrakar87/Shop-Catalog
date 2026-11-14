@@ -215,13 +215,13 @@ export function getCatalogueStats(products = INITIAL_PRODUCTS, categories = INIT
 export function getCategoryDistribution(products = INITIAL_PRODUCTS, categories = INITIAL_CATEGORIES) {
   const total = products.length || 1;
   const colors = [
-    'bg-gradient-to-r from-[#173F35] to-[#245C4E]',
-    'bg-gradient-to-r from-[#D4A64A] to-[#B5862B]',
-    'bg-gradient-to-r from-[#292D2B] to-[#4A504D]',
+    'bg-gradient-to-r from-[#173F35] to-[#245C4E] dark:from-[#2C6B5A] dark:to-[#3E8E78]',
+    'bg-gradient-to-r from-[#D4A64A] to-[#B5862B] dark:from-[#D4A64A] dark:to-[#E7C477]',
+    'bg-gradient-to-r from-[#292D2B] to-[#4A504D] dark:from-[#6C7A72] dark:to-[#95A49B]',
     'bg-gradient-to-r from-[#9C6B21] to-[#C9963B]',
-    'bg-gradient-to-r from-[#1E5245] to-[#2F7362]',
+    'bg-gradient-to-r from-[#1E5245] to-[#2F7362] dark:from-[#286353] dark:to-[#398370]',
     'bg-gradient-to-r from-[#8C5832] to-[#B67A4B]',
-    'bg-gradient-to-r from-[#12332B] to-[#1D4E42]',
+    'bg-gradient-to-r from-[#12332B] to-[#1D4E42] dark:from-[#265A4B] dark:to-[#347865]',
     'bg-gradient-to-r from-[#B8862D] to-[#D4A64A]',
   ];
 
@@ -246,13 +246,13 @@ export function getCategoryDistribution(products = INITIAL_PRODUCTS, categories 
 export function getMaterialDistribution(products = INITIAL_PRODUCTS, materials = INITIAL_MATERIALS) {
   const total = products.length || 1;
   const palette = [
-    'bg-gradient-to-r from-[#173F35] to-[#245C4E]',
-    'bg-gradient-to-r from-[#D4A64A] to-[#B5862B]',
-    'bg-gradient-to-r from-[#292D2B] to-[#4A504D]',
+    'bg-gradient-to-r from-[#173F35] to-[#245C4E] dark:from-[#2C6B5A] dark:to-[#3E8E78]',
+    'bg-gradient-to-r from-[#D4A64A] to-[#B5862B] dark:from-[#D4A64A] dark:to-[#E7C477]',
+    'bg-gradient-to-r from-[#292D2B] to-[#4A504D] dark:from-[#6C7A72] dark:to-[#95A49B]',
     'bg-gradient-to-r from-[#8C5832] to-[#B67A4B]',
-    'bg-gradient-to-r from-[#1E5245] to-[#2F7362]',
+    'bg-gradient-to-r from-[#1E5245] to-[#2F7362] dark:from-[#286353] dark:to-[#398370]',
     'bg-gradient-to-r from-[#9C6B21] to-[#C9963B]',
-    'bg-gradient-to-r from-[#12332B] to-[#1D4E42]',
+    'bg-gradient-to-r from-[#12332B] to-[#1D4E42] dark:from-[#265A4B] dark:to-[#347865]',
     'bg-gradient-to-r from-[#B8862D] to-[#D4A64A]',
   ];
 

@@ -22,7 +22,7 @@ export default function DeleteConfirmDialog({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-[#0F2D25]/65 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-[#141C19]/70 dark:bg-[#141C19]/80 backdrop-blur-xs transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -32,24 +32,24 @@ export default function DeleteConfirmDialog({
         role="dialog"
         aria-modal="true"
         aria-label={hasProducts ? "Can't delete this category" : `Delete "${category.name}"`}
-        className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-[#E6DFCE] overflow-hidden z-10 p-6 space-y-4 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
+        className="relative w-full sm:max-w-sm bg-[#FFFFFF] dark:bg-[#202A25] rounded-t-2xl sm:rounded-2xl shadow-2xl dark:shadow-[0_20px_50px_rgba(10,16,13,0.6)] border border-[#E5DFD2] dark:border-[#34433A] overflow-hidden z-10 p-6 space-y-4 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
       >
         {/* Mobile handle indicator */}
-        <div className="sm:hidden w-12 h-1 bg-[#E6DFCE] rounded-full mx-auto -mt-2 mb-2" />
+        <div className="sm:hidden w-12 h-1 bg-[#E5DFD2] dark:bg-[#34433A] rounded-full mx-auto -mt-2 mb-2" />
 
         {hasProducts ? (
           /* Case 1: Category contains products */
           <>
             <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-full bg-[#FBF5E6] text-[#9A7120] border border-[#D4A64A]/40 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#F7F3EA] dark:bg-[#141C19] text-[#9A7120] dark:text-[#D4A64A] border border-[#D4A64A]/40 flex items-center justify-center shrink-0">
                 <AlertCircle className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-base font-bold text-[#292D2B]">
+                <h3 className="text-base font-bold text-[#292D2B] dark:text-[#F7F3EA]">
                   Can't delete this category
                 </h3>
-                <p className="text-sm text-[#555B58] mt-2 leading-relaxed">
-                  <strong className="text-[#292D2B]">{productCount} {productCount === 1 ? 'product is' : 'products are'}</strong> currently using this category. Move those products to another category before deleting it.
+                <p className="text-sm text-[#73776F] dark:text-[#B6C0B8] mt-2 leading-relaxed">
+                  <strong className="text-[#292D2B] dark:text-[#F7F3EA]">{productCount} {productCount === 1 ? 'product is' : 'products are'}</strong> currently using this category. Move those products to another category before deleting it.
                 </p>
               </div>
             </div>
@@ -58,7 +58,7 @@ export default function DeleteConfirmDialog({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#D4A64A] to-[#C29236] hover:from-[#DFB359] hover:to-[#CE9D3E] text-[#173F35] font-bold text-sm transition-all text-center cursor-pointer"
+                className="w-full py-3 px-4 rounded-xl bg-[#D4A64A] hover:bg-[#E9D5A5] dark:hover:bg-[#E7C477] text-[#173F35] dark:text-[#141C19] font-bold text-sm transition-all text-center cursor-pointer"
               >
                 Got it
               </button>
@@ -68,14 +68,14 @@ export default function DeleteConfirmDialog({
           /* Case 2: Category has 0 products */
           <>
             <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
                 <Trash2 className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-base font-bold text-[#292D2B]">
+                <h3 className="text-base font-bold text-[#292D2B] dark:text-[#F7F3EA]">
                   Delete "{category.name}"?
                 </h3>
-                <p className="text-sm text-[#555B58] mt-1">
+                <p className="text-sm text-[#73776F] dark:text-[#B6C0B8] mt-1">
                   This category will be removed.
                 </p>
               </div>
@@ -85,7 +85,7 @@ export default function DeleteConfirmDialog({
               <button
                 type="button"
                 onClick={onClose}
-                className="py-3 px-4 rounded-xl border border-[#E6DFCE] text-[#292D2B] hover:border-[#D4A64A] hover:bg-[#FCF9F2] font-semibold text-sm transition-colors text-center cursor-pointer"
+                className="py-3 px-4 rounded-xl border border-[#E5DFD2] dark:border-[#34433A] text-[#292D2B] dark:text-[#F7F3EA] hover:border-[#E9D5A5] dark:hover:border-[#E7C477] hover:bg-[#FCF9F2] dark:hover:bg-[#25322C] font-semibold text-sm transition-colors text-center cursor-pointer"
               >
                 Cancel
               </button>
