@@ -19,12 +19,14 @@ import {
   ShieldCheck,
   ShieldAlert,
   Cloud,
-  Database
+  Database,
+  Camera
 } from 'lucide-react';
 import { useCatalogue } from '../context/CatalogueContext';
 import CategoryModal from '../components/categories/CategoryModal';
 import QuickAddModal from '../components/common/QuickAddModal';
 import OwnerAuthModal from '../components/common/OwnerAuthModal';
+import CameraCaptureModal from '../components/common/CameraCaptureModal';
 
 /**
  * Product Form Page
@@ -65,9 +67,11 @@ export default function ProductFormPage() {
     showToast
   } = useCatalogue();
 
-  // Hidden native file input references
+  // Hidden native file input references (gallery & instant mobile camera)
   const fileInputRef1 = useRef(null);
   const fileInputRef2 = useRef(null);
+  const cameraInputRef1 = useRef(null);
+  const cameraInputRef2 = useRef(null);
 
   // Form Fields State
   const [name, setName] = useState('');
@@ -96,6 +100,7 @@ export default function ProductFormPage() {
   const [formErrors, setFormErrors] = useState({});
   const [submitError, setSubmitError] = useState(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [cameraModalState, setCameraModalState] = useState({ isOpen: false, slot: 1 });
 
   // Dynamic "+ Add New" Modals States
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -210,13 +215,61 @@ export default function ProductFormPage() {
     };
   }, [image1.preview, image2.preview]);
 
-  // Handle device file selection for images
-  const handleFileChange = (slot, event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  // Compress / normalize large or camera-captured images to ensure smooth upload (< 5MB JPG/PNG/WEBP)
+  const prepareImageFile = async (file) => {
+    const allowedDirectTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const isAllowedType = allowedDirectTypes.includes(file.type?.toLowerCase());
+    const maxDirectBytes = 3.5 * 1024 * 1024;
+
+    if (isAllowedType && file.size <= maxDirectBytes) {
+      return file;
+    }
+
+    try {
+      const objectUrl = URL.createObjectURL(file);
+      const img = await new Promise((resolve, reject) => {
+        const imageEl = new Image();
+        imageEl.onload = () => resolve(imageEl);
+        imageEl.onerror = reject;
+        imageEl.src = objectUrl;
+      });
+      URL.revokeObjectURL(objectUrl);
+
+      const maxDim = 1600;
+      let width = img.naturalWidth || img.width;
+      let height = img.naturalHeight || img.height;
+
+      if (width > maxDim || height > maxDim) {
+        const ratio = Math.min(maxDim / width, maxDim / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const blob = await new Promise((resolve) =>
+        canvas.toBlob(resolve, 'image/jpeg', 0.86)
+      );
+
+      if (!blob) return file;
+      const baseName = (file.name || 'product-photo').replace(/\.[^.]+$/, '');
+      return new File([blob], `${baseName}.jpg`, { type: 'image/jpeg' });
+    } catch {
+      return file;
+    }
+  };
+
+  // Apply selected or captured image file to slot 1 or 2
+  const processImageFile = async (slot, rawFile) => {
+    if (!rawFile) return;
 
     const validMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!validMimes.includes(file.type) && !file.type.startsWith('image/')) {
+    const looksLikeImageByName = /\.(jpe?g|png|webp|heic|heif)$/i.test(rawFile.name || '');
+    if (!validMimes.includes(rawFile.type) && !rawFile.type?.startsWith('image/') && !looksLikeImageByName) {
       setFormErrors((prev) => ({
         ...prev,
         images: 'Please select a supported image file (JPG, PNG, or WEBP).'
@@ -224,6 +277,7 @@ export default function ProductFormPage() {
       return;
     }
 
+    const file = await prepareImageFile(rawFile);
     setFormErrors((prev) => ({ ...prev, images: '', image1: '' }));
     const previewUrl = URL.createObjectURL(file);
 
@@ -238,8 +292,32 @@ export default function ProductFormPage() {
       }
       setImage2({ file, preview: previewUrl, name: file.name });
     }
+  };
 
+  // Handle device file / camera input selection for images
+  const handleFileChange = async (slot, event) => {
+    const file = event.target.files?.[0];
     event.target.value = '';
+    if (!file) return;
+    await processImageFile(slot, file);
+  };
+
+  // Open camera immediately (native camera on mobile, live webcam capture modal on desktop)
+  const handleOpenCamera = (slot) => {
+    const isMobile =
+      typeof navigator !== 'undefined' &&
+      (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent)));
+
+    if (isMobile) {
+      if (slot === 1) {
+        cameraInputRef1.current?.click();
+      } else {
+        cameraInputRef2.current?.click();
+      }
+    } else {
+      setCameraModalState({ isOpen: true, slot });
+    }
   };
 
   // Remove image
@@ -921,7 +999,7 @@ export default function ProductFormPage() {
           </section>
 
           {/* ========================================================================= */}
-          {/* 4. Images (Native File Picker / Gallery, No URLs)                         */}
+          {/* 4. Images (Device Gallery + Instant Camera Capture)                       */}
           {/* ========================================================================= */}
           <section id="product-images-section" className="space-y-4 pt-2">
             <div className="border-b border-slate-100 pb-2 flex items-center justify-between">
@@ -930,7 +1008,7 @@ export default function ProductFormPage() {
                   4. Product Images
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Select photos directly from your device gallery. Maximum 2 images.
+                  Upload from gallery or capture directly with camera. Maximum 2 images.
                 </p>
               </div>
               <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
@@ -938,7 +1016,7 @@ export default function ProductFormPage() {
               </span>
             </div>
 
-            {/* Hidden file inputs */}
+            {/* Hidden gallery file inputs */}
             <input
               type="file"
               ref={fileInputRef1}
@@ -954,11 +1032,29 @@ export default function ProductFormPage() {
               className="hidden"
             />
 
+            {/* Hidden instant camera inputs for mobile devices */}
+            <input
+              type="file"
+              ref={cameraInputRef1}
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => handleFileChange(1, e)}
+              className="hidden"
+            />
+            <input
+              type="file"
+              ref={cameraInputRef2}
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => handleFileChange(2, e)}
+              className="hidden"
+            />
+
             {/* Inline image validation error */}
-            {formErrors.image1 && (
+            {(formErrors.image1 || formErrors.images) && (
               <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-                <span>{formErrors.image1}</span>
+                <span>{formErrors.image1 || formErrors.images}</span>
               </div>
             )}
 
@@ -995,45 +1091,66 @@ export default function ProductFormPage() {
                       </p>
                     )}
 
-                    <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
+                    <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-3 gap-2">
                       <button
                         type="button"
                         onClick={() => fileInputRef1.current?.click()}
-                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors active:bg-slate-100"
+                        className="flex items-center justify-center gap-1 py-2.5 px-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors active:bg-slate-100"
                       >
-                        <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
-                        <span>Change</span>
+                        <RefreshCw className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <span>Gallery</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenCamera(1)}
+                        className="flex items-center justify-center gap-1 py-2.5 px-2 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-colors active:bg-blue-200"
+                      >
+                        <Camera className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        <span>Camera</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(1)}
-                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-700 text-xs font-semibold transition-colors active:bg-rose-100"
+                        className="flex items-center justify-center gap-1 py-2.5 px-2 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-700 text-xs font-semibold transition-colors active:bg-rose-100"
                       >
-                        <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                        <Trash2 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                         <span>Remove</span>
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div
-                    onClick={() => fileInputRef1.current?.click()}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === 'Enter' && fileInputRef1.current?.click()}
-                    className="p-6 flex-1 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-blue-50/40 border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-b-2xl transition-all group m-3"
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-blue-100 text-blue-600 flex items-center justify-center mb-3 transition-colors">
+                  <div className="p-5 flex-1 flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 rounded-b-2xl m-3 bg-slate-50/40">
+                    <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
                       <Upload className="w-6 h-6" />
                     </div>
-                    <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                    <span className="text-sm font-bold text-slate-900">
                       Add Image 1 *
                     </span>
                     <span className="text-xs text-slate-500 mt-1">
-                      Choose from device gallery or files
+                      Upload from gallery or capture with camera
                     </span>
-                    <span className="text-[11px] text-slate-400 mt-1">
+                    <span className="text-[11px] text-slate-400 mt-0.5 mb-4">
                       JPG, PNG, WEBP
                     </span>
+
+                    <div className="w-full grid grid-cols-2 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef1.current?.click()}
+                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-800 text-xs font-bold shadow-2xs transition-all cursor-pointer"
+                      >
+                        <Upload className="w-4 h-4 text-slate-600 shrink-0" />
+                        <span>Gallery</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenCamera(1)}
+                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+                      >
+                        <Camera className="w-4 h-4 shrink-0" />
+                        <span>Camera</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1067,45 +1184,66 @@ export default function ProductFormPage() {
                       </p>
                     )}
 
-                    <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
+                    <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-3 gap-2">
                       <button
                         type="button"
                         onClick={() => fileInputRef2.current?.click()}
-                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors active:bg-slate-100"
+                        className="flex items-center justify-center gap-1 py-2.5 px-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors active:bg-slate-100"
                       >
-                        <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
-                        <span>Change</span>
+                        <RefreshCw className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <span>Gallery</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenCamera(2)}
+                        className="flex items-center justify-center gap-1 py-2.5 px-2 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-colors active:bg-blue-200"
+                      >
+                        <Camera className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        <span>Camera</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(2)}
-                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-700 text-xs font-semibold transition-colors active:bg-rose-100"
+                        className="flex items-center justify-center gap-1 py-2.5 px-2 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-700 text-xs font-semibold transition-colors active:bg-rose-100"
                       >
-                        <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                        <Trash2 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                         <span>Remove</span>
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div
-                    onClick={() => fileInputRef2.current?.click()}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === 'Enter' && fileInputRef2.current?.click()}
-                    className="p-6 flex-1 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-blue-50/40 border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-b-2xl transition-all group m-3"
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-slate-100 group-hover:bg-blue-50 text-slate-500 group-hover:text-blue-600 flex items-center justify-center mb-3 transition-colors">
+                  <div className="p-5 flex-1 flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 rounded-b-2xl m-3 bg-slate-50/40">
+                    <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center mb-3">
                       <Upload className="w-6 h-6" />
                     </div>
-                    <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                    <span className="text-sm font-bold text-slate-900">
                       Add Image 2
                     </span>
                     <span className="text-xs text-slate-500 mt-1">
-                      Choose secondary view or packaging
+                      Secondary view or packaging photo
                     </span>
-                    <span className="text-[11px] text-slate-400 mt-1">
+                    <span className="text-[11px] text-slate-400 mt-0.5 mb-4">
                       Optional
                     </span>
+
+                    <div className="w-full grid grid-cols-2 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef2.current?.click()}
+                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-800 text-xs font-bold shadow-2xs transition-all cursor-pointer"
+                      >
+                        <Upload className="w-4 h-4 text-slate-600 shrink-0" />
+                        <span>Gallery</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenCamera(2)}
+                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+                      >
+                        <Camera className="w-4 h-4 shrink-0" />
+                        <span>Camera</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1206,6 +1344,21 @@ export default function ProductFormPage() {
         onClose={() => setAuthModalOpen(false)}
         authStatus={authStatus}
         onAuthChanged={refreshAuthStatus}
+      />
+
+      {/* Live Camera Capture Modal (for desktop / webcam browsers) */}
+      <CameraCaptureModal
+        isOpen={cameraModalState.isOpen}
+        slot={cameraModalState.slot}
+        onClose={() => setCameraModalState((prev) => ({ ...prev, isOpen: false }))}
+        onCapture={(capturedFile) => processImageFile(cameraModalState.slot, capturedFile)}
+        onFallbackToGallery={() => {
+          if (cameraModalState.slot === 1) {
+            fileInputRef1.current?.click();
+          } else {
+            fileInputRef2.current?.click();
+          }
+        }}
       />
     </div>
   );
