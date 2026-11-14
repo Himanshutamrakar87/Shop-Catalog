@@ -179,39 +179,50 @@ export default function DashboardPage() {
           viewAllLink="/materials"
           viewAllText="Manage"
         >
-          <div className="space-y-4">
-            {materialBreakdown.map((mat) => (
-              <div key={mat.name} className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs sm:text-sm">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="font-semibold text-slate-800 truncate">
-                      {mat.name}
-                    </span>
-                    <span className="text-[11px] text-slate-400 font-normal">
-                      ({mat.percentage}%)
-                    </span>
+          {materialBreakdown.length === 0 ? (
+            <div className="py-8 text-center text-slate-400">
+              <p className="text-xs">No materials added yet.</p>
+              <Link to="/materials" className="mt-2 inline-block text-xs font-semibold text-blue-600 hover:text-blue-700">
+                + Add your first material
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-4">
+                {materialBreakdown.map((mat) => (
+                  <div key={mat.name} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs sm:text-sm">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-semibold text-slate-800 truncate">
+                          {mat.name}
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-normal">
+                          ({mat.percentage}%)
+                        </span>
+                      </div>
+                      <span className="font-mono font-bold text-slate-900 shrink-0">
+                        {mat.count}
+                      </span>
+                    </div>
+                    {/* Clean, professional distribution bar */}
+                    <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${mat.color} transition-all duration-300`}
+                        style={{ width: `${mat.percentage}%` }}
+                      />
+                    </div>
                   </div>
-                  <span className="font-mono font-bold text-slate-900 shrink-0">
-                    {mat.count}
-                  </span>
-                </div>
-                {/* Clean, professional distribution bar */}
-                <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${mat.color} transition-all duration-300`}
-                    style={{ width: `${mat.percentage}%` }}
-                  />
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Core Metals: Aluminium & Stainless Steel</span>
-            <Link to="/products" className="font-semibold text-blue-600 hover:text-blue-700">
-              Filter by Material &rarr;
-            </Link>
-          </div>
+              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                <span>Catalogue Materials</span>
+                <Link to="/products" className="font-semibold text-blue-600 hover:text-blue-700">
+                  Filter by Material &rarr;
+                </Link>
+              </div>
+            </>
+          )}
         </SectionCard>
       </section>
 

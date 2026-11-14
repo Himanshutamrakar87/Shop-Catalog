@@ -31,6 +31,7 @@ export default function Header({ onOpenMobileMenu, alertCount = 0, onSignOut, au
     if (path.startsWith('/products/') && path.endsWith('/edit')) return 'Edit Product';
     if (path.startsWith('/products/')) return 'Product Details';
     if (path === '/categories') return 'Categories';
+    if (path === '/sub-categories') return 'Sub-Categories';
     if (path === '/brands') return 'Brands';
     if (path === '/materials') return 'Materials';
     if (path === '/stock-alert') return 'Stock Alert';

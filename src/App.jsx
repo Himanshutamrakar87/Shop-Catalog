@@ -7,6 +7,7 @@ import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import ProductFormPage from './pages/ProductFormPage';
 import CategoriesPage from './pages/CategoriesPage';
+import SubCategoriesPage from './pages/SubCategoriesPage';
 import BrandsPage from './pages/BrandsPage';
 import MaterialsPage from './pages/MaterialsPage';
 import StockAlertPage from './pages/StockAlertPage';
@@ -92,6 +93,7 @@ export default function App() {
 
             {/* Classification Views (Publicly visible; edits require owner) */}
             <Route path="categories" element={<CategoriesPage />} />
+            <Route path="sub-categories" element={<SubCategoriesPage />} />
             <Route path="brands" element={<BrandsPage />} />
             <Route path="materials" element={<MaterialsPage />} />
 

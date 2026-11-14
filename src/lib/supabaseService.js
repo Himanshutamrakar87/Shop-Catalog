@@ -240,7 +240,7 @@ export async function signOutOwner() {
  * Accessible to everyone without login
  */
 export async function fetchPublicProducts() {
-  if (!isSupabaseConfigured) return [];
+  if (!isSupabaseConfigured) return null;
   try {
     const { data, error } = await supabase
       .from('products')
@@ -254,7 +254,7 @@ export async function fetchPublicProducts() {
 
     if (error) {
       console.warn('[Fetch Products Warning]', error.message);
-      return [];
+      return null;
     }
 
     return (data || []).map((p) => ({
@@ -285,7 +285,7 @@ export async function fetchPublicProducts() {
     }));
   } catch (err) {
     console.warn('[Fetch Products Error]', err);
-    return [];
+    return null;
   }
 }
 
@@ -294,7 +294,7 @@ export async function fetchPublicProducts() {
  * Accessible to everyone without login
  */
 export async function fetchPublicCategories() {
-  if (!isSupabaseConfigured) return [];
+  if (!isSupabaseConfigured) return null;
   try {
     const { data, error } = await supabase
       .from('categories')
@@ -302,12 +302,12 @@ export async function fetchPublicCategories() {
       .order('name');
     if (error) {
       console.warn('[Fetch Categories Warning]', error.message);
-      return [];
+      return null;
     }
     return data || [];
   } catch (err) {
     console.warn('[Fetch Categories Error]', err);
-    return [];
+    return null;
   }
 }
 
@@ -316,7 +316,7 @@ export async function fetchPublicCategories() {
  * Accessible to everyone without login
  */
 export async function fetchPublicBrands() {
-  if (!isSupabaseConfigured) return [];
+  if (!isSupabaseConfigured) return null;
   try {
     const { data, error } = await supabase
       .from('brands')
@@ -324,12 +324,12 @@ export async function fetchPublicBrands() {
       .order('name');
     if (error) {
       console.warn('[Fetch Brands Warning]', error.message);
-      return [];
+      return null;
     }
     return data || [];
   } catch (err) {
     console.warn('[Fetch Brands Error]', err);
-    return [];
+    return null;
   }
 }
 
@@ -338,7 +338,7 @@ export async function fetchPublicBrands() {
  * Accessible to everyone without login
  */
 export async function fetchPublicMaterials() {
-  if (!isSupabaseConfigured) return [];
+  if (!isSupabaseConfigured) return null;
   try {
     const { data, error } = await supabase
       .from('materials')
@@ -346,12 +346,56 @@ export async function fetchPublicMaterials() {
       .order('name');
     if (error) {
       console.warn('[Fetch Materials Warning]', error.message);
-      return [];
+      return null;
     }
     return data || [];
   } catch (err) {
     console.warn('[Fetch Materials Error]', err);
-    return [];
+    return null;
+  }
+}
+
+/**
+ * Public Catalogue Query: Fetch sub-categories from Supabase
+ * Accessible to everyone without login
+ */
+export async function fetchPublicSubCategories() {
+  if (!isSupabaseConfigured) return null;
+  try {
+    const { data, error } = await supabase
+      .from('sub_categories')
+      .select('id, name, category_id, created_at, updated_at')
+      .order('name');
+    if (error) {
+      console.warn('[Fetch SubCategories Warning]', error.message);
+      return null;
+    }
+    return data || [];
+  } catch (err) {
+    console.warn('[Fetch SubCategories Error]', err);
+    return null;
+  }
+}
+
+/**
+ * Public Catalogue Query: Fetch sizes/capacities from Supabase
+ * Accessible to everyone without login
+ */
+export async function fetchPublicSizes() {
+  if (!isSupabaseConfigured) return null;
+  try {
+    const { data, error } = await supabase
+      .from('sizes')
+      .select('id, name, created_at, updated_at')
+      .order('name');
+    if (error) {
+      console.warn('[Fetch Sizes Warning]', error.message);
+      return null;
+    }
+    return data || [];
+  } catch (err) {
+    console.warn('[Fetch Sizes Error]', err);
+    return null;
   }
 }
 

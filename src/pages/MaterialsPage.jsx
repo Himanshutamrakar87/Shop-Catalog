@@ -129,7 +129,7 @@ export default function MaterialsPage() {
             Materials
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Metal classifications and compositions ({materials.length} materials)
+            Metal classifications and compositions ({materials.length} {materials.length === 1 ? 'material' : 'materials'})
           </p>
         </div>
 
@@ -145,10 +145,33 @@ export default function MaterialsPage() {
         )}
       </div>
 
-      {/* ========================================================================= */}
-      {/* 2. Mobile Material Cards (Screens < 768px)                                */}
-      {/* ========================================================================= */}
-      <div className="md:hidden space-y-3">
+      {/* Empty State when no materials exist */}
+      {materials.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-14 text-center max-w-lg mx-auto shadow-xs">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 mb-4 shadow-inner">
+            <Box className="w-7 h-7" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 mb-1.5">No Materials Found</h3>
+          <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+            Add your own metal or material specifications to classify items in your catalogue.
+          </p>
+          {isOwner && (
+            <button
+              type="button"
+              onClick={handleOpenAdd}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm shadow-xs transition-all active:scale-[0.98]"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Add Your First Material</span>
+            </button>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* ========================================================================= */}
+          {/* 2. Mobile Material Cards (Screens < 768px)                                */}
+          {/* ========================================================================= */}
+          <div className="md:hidden space-y-3">
         {materials.map((mat) => {
           const productCount = getMaterialProductCount(mat);
           const isMenuOpen = activeMenuId === mat.id;
@@ -297,6 +320,8 @@ export default function MaterialsPage() {
           </tbody>
         </table>
       </div>
+        </>
+      )}
 
       {/* ========================================================================= */}
       {/* 4. Add / Edit Material Modal                                              */}

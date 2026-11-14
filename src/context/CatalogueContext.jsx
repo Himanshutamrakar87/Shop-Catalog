@@ -27,7 +27,9 @@ import {
   fetchPublicProducts,
   fetchPublicCategories,
   fetchPublicBrands,
-  fetchPublicMaterials
+  fetchPublicMaterials,
+  fetchPublicSubCategories,
+  fetchPublicSizes
 } from '../lib/supabaseService';
 
 const CatalogueContext = createContext(null);
@@ -41,6 +43,78 @@ const STORAGE_KEYS = {
   SUBCATEGORIES: 'rbb_catalogue_subcategories_v1',
   SIZES: 'rbb_catalogue_sizes_v1'
 };
+
+const LEGACY_RAW_BRAND_IDS = new Set(['br-1', 'br-2', 'br-3', 'br-4', 'br-5', 'br-6', 'br-7', 'br-8']);
+const LEGACY_RAW_BRAND_NAMES = new Set([
+  'vinod platinum',
+  'hawkins contura',
+  'royal heritage',
+  'craftsman guild',
+  'pigeon crest',
+  'prestige commercial',
+  'meyer kitchen',
+  'stahl artisan'
+]);
+
+const LEGACY_RAW_MATERIAL_IDS = new Set(['mat-1', 'mat-2', 'mat-3', 'mat-4', 'mat-5', 'mat-6']);
+const LEGACY_RAW_MATERIAL_NAMES = new Set([
+  'aluminium',
+  'stainless steel',
+  'brass',
+  'copper',
+  'cast iron',
+  'glass & ceramic'
+]);
+
+const LEGACY_RAW_SUBCATEGORIES = new Set([
+  'kadai & deep frying',
+  'pressure cookers',
+  'water storage & jugs',
+  'traditional serveware',
+  'canisters & dabbas',
+  'commercial stockpots',
+  'spice organizers',
+  'thali sets & platters',
+  'frying pans & skillets',
+  'tawas & griddles'
+]);
+
+const LEGACY_RAW_SIZES = new Set([
+  '2.5 litres (24 cm)',
+  '3 litres',
+  '5 litres + 1.5l jug',
+  '4 litres (30 cm)',
+  'set of 4 (500g, 1kg, 2kg, 3kg)',
+  '15 litres (36 cm)',
+  '8.5 inch diameter (7 cups + spoon)',
+  '6-piece set (1 thali, 3 bowls, 1 glass, 1 spoon)',
+  '1.5 litres (20 cm)',
+  '5 litres (28 cm)'
+]);
+
+function isLegacyRawBrand(b) {
+  if (!b) return true;
+  if (typeof b.id === 'string' && LEGACY_RAW_BRAND_IDS.has(b.id)) return true;
+  const name = String(b.name || '').toLowerCase().trim();
+  return LEGACY_RAW_BRAND_NAMES.has(name);
+}
+
+function isLegacyRawMaterial(m) {
+  if (!m) return true;
+  if (typeof m.id === 'string' && LEGACY_RAW_MATERIAL_IDS.has(m.id)) return true;
+  const name = String(m.name || '').toLowerCase().trim();
+  return LEGACY_RAW_MATERIAL_NAMES.has(name);
+}
+
+function isLegacyRawSubCategory(name) {
+  if (!name) return true;
+  return LEGACY_RAW_SUBCATEGORIES.has(String(name).toLowerCase().trim());
+}
+
+function isLegacyRawSize(name) {
+  if (!name) return true;
+  return LEGACY_RAW_SIZES.has(String(name).toLowerCase().trim());
+}
 
 // Helper to filter out legacy development dummy/test products
 function isLegacyTestProduct(p) {
@@ -133,43 +207,75 @@ export function CatalogueProvider({ children }) {
     }
   });
 
-  // 4. Brands dynamic state
+  // 4. Brands dynamic state (clean start, purge any legacy raw mock brands)
   const [brands, setBrands] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.BRANDS);
-      return saved ? JSON.parse(saved) : INITIAL_BRANDS;
+      const parsed = saved ? JSON.parse(saved) : INITIAL_BRANDS;
+      const list = Array.isArray(parsed) ? parsed : [];
+      if (!localStorage.getItem('rbb_legacy_raw_brands_cleaned_v1')) {
+        const cleaned = list.filter((b) => !isLegacyRawBrand(b));
+        localStorage.setItem(STORAGE_KEYS.BRANDS, JSON.stringify(cleaned));
+        localStorage.setItem('rbb_legacy_raw_brands_cleaned_v1', 'true');
+        return cleaned;
+      }
+      return list;
     } catch {
-      return INITIAL_BRANDS;
+      return [];
     }
   });
 
-  // 5. Materials dynamic state
+  // 5. Materials dynamic state (clean start, purge any legacy raw mock materials)
   const [materials, setMaterials] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.MATERIALS);
-      return saved ? JSON.parse(saved) : INITIAL_MATERIALS;
+      const parsed = saved ? JSON.parse(saved) : INITIAL_MATERIALS;
+      const list = Array.isArray(parsed) ? parsed : [];
+      if (!localStorage.getItem('rbb_legacy_raw_materials_cleaned_v1')) {
+        const cleaned = list.filter((m) => !isLegacyRawMaterial(m));
+        localStorage.setItem(STORAGE_KEYS.MATERIALS, JSON.stringify(cleaned));
+        localStorage.setItem('rbb_legacy_raw_materials_cleaned_v1', 'true');
+        return cleaned;
+      }
+      return list;
     } catch {
-      return INITIAL_MATERIALS;
+      return [];
     }
   });
 
-  // 6. Subcategories dynamic state
+  // 6. Subcategories dynamic state (clean start, purge any legacy raw mock subcategories)
   const [subCategories, setSubCategories] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.SUBCATEGORIES);
-      return saved ? JSON.parse(saved) : INITIAL_SUBCATEGORIES;
+      const parsed = saved ? JSON.parse(saved) : INITIAL_SUBCATEGORIES;
+      const list = Array.isArray(parsed) ? parsed : [];
+      if (!localStorage.getItem('rbb_legacy_raw_subcategories_cleaned_v1')) {
+        const cleaned = list.filter((s) => !isLegacyRawSubCategory(s));
+        localStorage.setItem(STORAGE_KEYS.SUBCATEGORIES, JSON.stringify(cleaned));
+        localStorage.setItem('rbb_legacy_raw_subcategories_cleaned_v1', 'true');
+        return cleaned;
+      }
+      return list;
     } catch {
-      return INITIAL_SUBCATEGORIES;
+      return [];
     }
   });
 
-  // 7. Sizes / Capacities dynamic state
+  // 7. Sizes / Capacities dynamic state (clean start, purge any legacy raw mock sizes)
   const [sizes, setSizes] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.SIZES);
-      return saved ? JSON.parse(saved) : INITIAL_SIZES;
+      const parsed = saved ? JSON.parse(saved) : INITIAL_SIZES;
+      const list = Array.isArray(parsed) ? parsed : [];
+      if (!localStorage.getItem('rbb_legacy_raw_sizes_cleaned_v1')) {
+        const cleaned = list.filter((s) => !isLegacyRawSize(s));
+        localStorage.setItem(STORAGE_KEYS.SIZES, JSON.stringify(cleaned));
+        localStorage.setItem('rbb_legacy_raw_sizes_cleaned_v1', 'true');
+        return cleaned;
+      }
+      return list;
     } catch {
-      return INITIAL_SIZES;
+      return [];
     }
   });
 
@@ -221,14 +327,23 @@ export function CatalogueProvider({ children }) {
     if (isSupabaseConfigured) {
       const loadPublicCatalogueData = async () => {
         try {
-          const [dbProducts, dbCategories, dbBrands, dbMaterials] = await Promise.all([
+          const [
+            dbProducts,
+            dbCategories,
+            dbBrands,
+            dbMaterials,
+            dbSubCategories,
+            dbSizes
+          ] = await Promise.all([
             fetchPublicProducts(),
             fetchPublicCategories(),
             fetchPublicBrands(),
-            fetchPublicMaterials()
+            fetchPublicMaterials(),
+            fetchPublicSubCategories(),
+            fetchPublicSizes()
           ]);
 
-          if (Array.isArray(dbProducts) && dbProducts.length > 0) {
+          if (Array.isArray(dbProducts)) {
             setProducts(dbProducts);
           }
           if (Array.isArray(dbCategories) && dbCategories.length > 0) {
@@ -239,6 +354,50 @@ export function CatalogueProvider({ children }) {
           }
           if (Array.isArray(dbMaterials) && dbMaterials.length > 0) {
             setMaterials(dbMaterials);
+          }
+
+          // Merge Supabase sub-categories and product sub-categories without overwriting custom local entries
+          const dbSubNames = [
+            ...(Array.isArray(dbSubCategories) ? dbSubCategories.map((s) => s?.name) : []),
+            ...(Array.isArray(dbProducts) ? dbProducts.map((p) => p?.subCategory) : [])
+          ]
+            .map((s) => (typeof s === 'string' ? s.trim() : ''))
+            .filter(Boolean);
+
+          if (dbSubNames.length > 0) {
+            setSubCategories((prev) => {
+              const seen = new Set(prev.map((item) => item.toLowerCase()));
+              const merged = [...prev];
+              for (const name of dbSubNames) {
+                if (!seen.has(name.toLowerCase())) {
+                  seen.add(name.toLowerCase());
+                  merged.push(name);
+                }
+              }
+              return merged;
+            });
+          }
+
+          // Merge Supabase sizes and product sizes without overwriting custom local entries
+          const dbSizeNames = [
+            ...(Array.isArray(dbSizes) ? dbSizes.map((s) => s?.name) : []),
+            ...(Array.isArray(dbProducts) ? dbProducts.map((p) => p?.sizeCapacity) : [])
+          ]
+            .map((s) => (typeof s === 'string' ? s.trim() : ''))
+            .filter(Boolean);
+
+          if (dbSizeNames.length > 0) {
+            setSizes((prev) => {
+              const seen = new Set(prev.map((item) => item.toLowerCase()));
+              const merged = [...prev];
+              for (const name of dbSizeNames) {
+                if (!seen.has(name.toLowerCase())) {
+                  seen.add(name.toLowerCase());
+                  merged.push(name);
+                }
+              }
+              return merged;
+            });
           }
         } catch (err) {
           console.warn('[Supabase Public Data Load]', err);
@@ -555,6 +714,67 @@ export function CatalogueProvider({ children }) {
   };
 
   /**
+   * Count products by sub-category
+   */
+  const getSubCategoryProductCount = (subCatName) => {
+    if (!subCatName) return 0;
+    const target = String(subCatName).trim().toLowerCase();
+    return products.filter(
+      (p) => String(p.subCategory || '').trim().toLowerCase() === target
+    ).length;
+  };
+
+  /**
+   * Update / rename an existing sub-category
+   * Also safely updates existing products using this sub-category
+   */
+  const updateSubCategory = (oldName, newName) => {
+    const trimmedNew = (newName || '').trim();
+    if (!trimmedNew) return { success: false, error: 'Sub-category name is required.' };
+
+    const exists = subCategories.some(
+      (s) => s.toLowerCase() === trimmedNew.toLowerCase() && s !== oldName
+    );
+    if (exists) {
+      return { success: false, error: 'A sub-category with this name already exists.' };
+    }
+
+    setSubCategories((prev) =>
+      prev.map((s) => (s === oldName ? trimmedNew : s))
+    );
+
+    if (oldName !== trimmedNew) {
+      setProducts((prev) =>
+        prev.map((p) =>
+          String(p.subCategory || '').trim().toLowerCase() === String(oldName).trim().toLowerCase()
+            ? { ...p, subCategory: trimmedNew }
+            : p
+        )
+      );
+    }
+
+    return { success: true };
+  };
+
+  /**
+   * Delete a sub-category safely
+   * Prevents deletion if products currently use this sub-category
+   */
+  const deleteSubCategory = (subCatName) => {
+    const count = getSubCategoryProductCount(subCatName);
+    if (count > 0) {
+      return {
+        success: false,
+        error: `This sub-category is used by ${count} product${count === 1 ? '' : 's'}. Move or update those products before deleting it.`,
+        count,
+      };
+    }
+
+    setSubCategories((prev) => prev.filter((s) => s !== subCatName));
+    return { success: true };
+  };
+
+  /**
    * Add a new size / capacity dynamically
    */
   const addSize = (sizeName) => {
@@ -745,8 +965,8 @@ export function CatalogueProvider({ children }) {
     [products, categories]
   );
   const materialDistribution = useMemo(
-    () => getMaterialDistribution(products),
-    [products]
+    () => getMaterialDistribution(products, materials),
+    [products, materials]
   );
   const recentProducts = useMemo(
     () => getRecentlyAddedProducts(products, 5),
@@ -777,6 +997,7 @@ export function CatalogueProvider({ children }) {
         peekProductCodeForCategory,
         generateProductCodeForCategory,
         getCategoryProductCount,
+        getSubCategoryProductCount,
         getBrandProductCount,
         getMaterialProductCount,
         addCategory,
@@ -787,6 +1008,8 @@ export function CatalogueProvider({ children }) {
         updateMaterial,
         deleteMaterial,
         addSubCategory,
+        updateSubCategory,
+        deleteSubCategory,
         addSize,
         updateCategory,
         deleteCategory,

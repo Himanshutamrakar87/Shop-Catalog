@@ -13,51 +13,15 @@ export const INITIAL_CATEGORIES = [];
 // Real production products are created post-deployment.
 export const INITIAL_PRODUCTS = [];
 
-export const INITIAL_BRANDS = [
-  { id: 'br-1', name: 'Vinod Platinum', origin: 'Mumbai, India', count: 0 },
-  { id: 'br-2', name: 'Hawkins Contura', origin: 'Thane, India', count: 0 },
-  { id: 'br-3', name: 'Royal Heritage', origin: 'Moradabad, India', count: 0 },
-  { id: 'br-4', name: 'Craftsman Guild', origin: 'Jaipur, India', count: 0 },
-  { id: 'br-5', name: 'Pigeon Crest', origin: 'Bengaluru, India', count: 0 },
-  { id: 'br-6', name: 'Prestige Commercial', origin: 'Chennai, India', count: 0 },
-  { id: 'br-7', name: 'Meyer Kitchen', origin: 'International', count: 0 },
-  { id: 'br-8', name: 'Stahl Artisan', origin: 'Pune, India', count: 0 },
-];
+// Production Clean State: Empty initial brands, materials, subcategories, and sizes arrays.
+// Real production entries come from Supabase or owner input.
+export const INITIAL_BRANDS = [];
 
-export const INITIAL_MATERIALS = [
-  { id: 'mat-1', name: 'Aluminium', description: 'Lightweight, high thermal conductivity, commercial & domestic grade', count: 0 },
-  { id: 'mat-2', name: 'Stainless Steel', description: 'Rust-resistant 304 & tri-ply food-grade surgical steel', count: 0 },
-  { id: 'mat-3', name: 'Brass', description: 'Traditional heavy alloy (Pital) for slow cooking and aesthetic serveware', count: 0 },
-  { id: 'mat-4', name: 'Copper', description: 'Pure hammered metal (Tamba) for wellness water storage and table thalis', count: 0 },
-  { id: 'mat-5', name: 'Cast Iron', description: 'Pre-seasoned heavy iron skillets and tawas', count: 0 },
-  { id: 'mat-6', name: 'Glass & Ceramic', description: 'Borosilicate storage jars and serving casserole inserts', count: 0 },
-];
+export const INITIAL_MATERIALS = [];
 
-export const INITIAL_SUBCATEGORIES = [
-  'Kadai & Deep Frying',
-  'Pressure Cookers',
-  'Water Storage & Jugs',
-  'Traditional Serveware',
-  'Canisters & Dabbas',
-  'Commercial Stockpots',
-  'Spice Organizers',
-  'Thali Sets & Platters',
-  'Frying Pans & Skillets',
-  'Tawas & Griddles',
-];
+export const INITIAL_SUBCATEGORIES = [];
 
-export const INITIAL_SIZES = [
-  '2.5 Litres (24 cm)',
-  '3 Litres',
-  '5 Litres + 1.5L Jug',
-  '4 Litres (30 cm)',
-  'Set of 4 (500g, 1kg, 2kg, 3kg)',
-  '15 Litres (36 cm)',
-  '8.5 Inch Diameter (7 cups + spoon)',
-  '6-Piece Set (1 Thali, 3 Bowls, 1 Glass, 1 Spoon)',
-  '1.5 Litres (20 cm)',
-  '5 Litres (28 cm)',
-];
+export const INITIAL_SIZES = [];
 
 /**
  * Automatically generates a suggested 2-letter unique code from the category name.
@@ -242,31 +206,53 @@ export function getCategoryDistribution(products = INITIAL_PRODUCTS, categories 
 }
 
 /**
- * Dynamic material breakdown
+ * Dynamic material breakdown computed strictly from active materials and products
  */
-export function getMaterialDistribution(products = INITIAL_PRODUCTS) {
+export function getMaterialDistribution(products = INITIAL_PRODUCTS, materials = INITIAL_MATERIALS) {
   const total = products.length || 1;
-  const materials = ['Aluminium', 'Stainless Steel', 'Brass', 'Copper', 'Cast Iron'];
-  const colors = {
-    Aluminium: 'bg-slate-500',
-    'Stainless Steel': 'bg-blue-600',
-    Brass: 'bg-amber-500',
-    Copper: 'bg-orange-500',
-    'Cast Iron': 'bg-stone-600',
-  };
+  const palette = [
+    'bg-blue-600',
+    'bg-slate-500',
+    'bg-amber-500',
+    'bg-orange-500',
+    'bg-stone-600',
+    'bg-teal-500',
+    'bg-indigo-500',
+    'bg-emerald-500',
+  ];
 
-  const distribution = materials.map((mat) => {
-    const count = products.filter((p) => p.material === mat).length;
+  const materialNames = [];
+  const seen = new Set();
+
+  for (const mat of materials || []) {
+    const name = typeof mat === 'string' ? mat : mat?.name;
+    const trimmed = name ? name.trim() : '';
+    if (trimmed && !seen.has(trimmed.toLowerCase())) {
+      seen.add(trimmed.toLowerCase());
+      materialNames.push(trimmed);
+    }
+  }
+
+  for (const p of products || []) {
+    const trimmed = p?.material ? String(p.material).trim() : '';
+    if (trimmed && !seen.has(trimmed.toLowerCase())) {
+      seen.add(trimmed.toLowerCase());
+      materialNames.push(trimmed);
+    }
+  }
+
+  return materialNames.map((matName, idx) => {
+    const count = products.filter(
+      (p) => String(p.material || '').trim().toLowerCase() === matName.toLowerCase()
+    ).length;
     const percentage = Number(((count / total) * 100).toFixed(1));
     return {
-      name: mat,
+      name: matName,
       count,
       percentage,
-      color: colors[mat] || 'bg-slate-400',
+      color: palette[idx % palette.length],
     };
   });
-
-  return distribution;
 }
 
 /**

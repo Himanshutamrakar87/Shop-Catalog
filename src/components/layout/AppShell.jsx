@@ -18,6 +18,7 @@ export default function AppShell() {
   const {
     products,
     categories,
+    subCategories,
     brands,
     materials,
     stats,
@@ -34,6 +35,7 @@ export default function AppShell() {
   const navCounts = {
     products: products.length,
     categories: categories.length,
+    subCategories: subCategories.length,
     brands: brands.length,
     materials: materials.length,
     stockAlert: stats.stockAlert,

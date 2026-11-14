@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Package,
   Layers,
+  FolderTree,
   Award,
   Box,
   AlertTriangle,
@@ -32,6 +33,7 @@ export default function Sidebar({
   const isOwner = Boolean(authStatus?.isOwner);
   const productsCount = counts.products ?? 0;
   const categoriesCount = counts.categories ?? 0;
+  const subCategoriesCount = counts.subCategories ?? 0;
   const brandsCount = counts.brands ?? 0;
   const materialsCount = counts.materials ?? 0;
 
@@ -123,6 +125,23 @@ export default function Sidebar({
                     }`}
                   >
                     {categoriesCount}
+                  </span>
+                </>
+              )}
+            </NavLink>
+            <NavLink to="/sub-categories" className={getSubLinkClass}>
+              {({ isActive }) => (
+                <>
+                  <div className="flex items-center gap-3">
+                    <FolderTree className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-blue-600" />
+                    <span>Sub-Categories</span>
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 text-xs font-semibold rounded-full tabular-nums ${
+                      isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {subCategoriesCount}
                   </span>
                 </>
               )}
