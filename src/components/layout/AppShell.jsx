@@ -28,7 +28,7 @@ export default function AppShell() {
   } = useCatalogue();
 
   // If authenticated into Supabase with an unauthorized non-owner email, show access restricted
-  if (isSupabaseMode && authStatus?.isAuthenticated && !authStatus?.isOwner) {
+  if (isSupabaseMode && !authStatus?.isLoading && authStatus?.isAuthenticated && !authStatus?.isOwner) {
     return <OwnerAccessDeniedScreen onSignOut={signOut} />;
   }
 

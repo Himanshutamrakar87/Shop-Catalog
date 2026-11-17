@@ -133,14 +133,15 @@ export function getOptimisticOwnerStatus() {
   }
 
   // Session exists locally without cached owner hint: brief verification state
+  const hasJwtOwnerRole = storedSession.user.app_metadata?.role === 'owner';
   return {
     isConfigured: true,
-    isAuthenticated: true,
-    isOwner: storedSession.user.app_metadata?.role === 'owner',
-    isLoading: storedSession.user.app_metadata?.role !== 'owner',
-    user: storedSession.user,
+    isAuthenticated: hasJwtOwnerRole,
+    isOwner: hasJwtOwnerRole,
+    isLoading: !hasJwtOwnerRole,
+    user: hasJwtOwnerRole ? storedSession.user : null,
     role: storedSession.user.app_metadata?.role || null,
-    reason: 'Verifying Supabase authentication...'
+    reason: hasJwtOwnerRole ? 'Authenticated as RBB Owner' : 'Verifying Supabase authentication...'
   };
 }
 
@@ -517,12 +518,16 @@ export function enrichProductsWithLookups(productsList, categoriesList = [], bra
 export async function fetchPublicProducts(lookups = null) {
   if (!isSupabaseConfigured) return null;
   try {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('products')
-      .select(
-        'id, name, code, category_id, brand_id, material_id, sub_category, size_capacity, purchase_price, purchase_unit, special_details, images, image1, image2, status, created_at, updated_at'
-      )
+      .select('*')
       .order('created_at', { ascending: false });
+
+    if (error && (error.code === '42703' || error.message?.includes('created_at'))) {
+      const retry = await supabase.from('products').select('*');
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) {
       console.warn('[Fetch Products Warning]', error.message);
@@ -532,10 +537,10 @@ export async function fetchPublicProducts(lookups = null) {
     const normalized = (data || []).map((p) => ({
       ...p,
       id: p.id,
-      name: p.name,
-      productName: p.name,
-      code: p.code,
-      productCode: p.code,
+      name: p.name || p.product_name || '',
+      productName: p.name || p.product_name || '',
+      code: p.code || p.product_code || '',
+      productCode: p.code || p.product_code || '',
       categoryId: p.category_id,
       brandId: p.brand_id,
       materialId: p.material_id,
@@ -583,7 +588,7 @@ export async function fetchPublicCategories() {
   try {
     const { data, error } = await supabase
       .from('categories')
-      .select('id, name, code, description, created_at, updated_at')
+      .select('*')
       .order('name');
     if (error) {
       console.warn('[Fetch Categories Warning]', error.message);
@@ -612,7 +617,7 @@ export async function fetchPublicBrands() {
   try {
     const { data, error } = await supabase
       .from('brands')
-      .select('id, name, origin, created_at, updated_at')
+      .select('*')
       .order('name');
     if (error) {
       console.warn('[Fetch Brands Warning]', error.message);
@@ -634,7 +639,7 @@ export async function fetchPublicMaterials() {
   try {
     const { data, error } = await supabase
       .from('materials')
-      .select('id, name, description, created_at, updated_at')
+      .select('*')
       .order('name');
     if (error) {
       console.warn('[Fetch Materials Warning]', error.message);
@@ -656,7 +661,7 @@ export async function fetchPublicSubCategories() {
   try {
     const { data, error } = await supabase
       .from('sub_categories')
-      .select('id, name, category_id, created_at, updated_at')
+      .select('*')
       .order('name');
     if (error) {
       console.warn('[Fetch SubCategories Warning]', error.message);
@@ -678,7 +683,7 @@ export async function fetchPublicSizes() {
   try {
     const { data, error } = await supabase
       .from('sizes')
-      .select('id, name, created_at, updated_at')
+      .select('*')
       .order('name');
     if (error) {
       console.warn('[Fetch Sizes Warning]', error.message);

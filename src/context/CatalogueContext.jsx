@@ -572,13 +572,18 @@ export function CatalogueProvider({ children }) {
     }
   };
 
+  const initialAuthUserIdRef = useRef(authStatus?.user?.id || null);
+
   useEffect(() => {
     // 1. Authoritative Auth Check (background if optimistic session already matched)
     refreshAuthStatus();
 
     // 2. If Supabase is configured, fetch live public catalogue data immediately
     if (isSupabaseConfigured) {
-      loadPublicCatalogueData({ background: productsRef.current.length > 0 });
+      loadPublicCatalogueData({
+        background: productsRef.current.length > 0,
+        authKey: initialAuthUserIdRef.current || 'public'
+      });
 
       // Listen for real auth state transitions (skip duplicate check during active sign-in)
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
